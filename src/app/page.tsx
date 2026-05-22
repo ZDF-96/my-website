@@ -15,10 +15,9 @@ export default function Home() {
           {/* ========================================== */}
           {/* 左侧：文字信息区 (大留白、档案式排版) */}
           {/* ========================================== */}
-          {/* 优化点1：减小了大模块之间的间距 space-y-16 -> space-y-10 */}
           <div className="lg:col-span-7 flex flex-col space-y-10">
             
-            {/* 1. 标题区 (左对齐，极具冲击力) */}
+            {/* 1. 标题区 */}
             <header className="space-y-5">
               <div className="flex items-center gap-4 text-cyan-400 font-mono text-xs tracking-[0.4em] uppercase opacity-80">
                 <span className="w-8 h-[1px] bg-cyan-400" />
@@ -35,9 +34,8 @@ export default function Home() {
               </p>
             </header>
 
-            {/* 2. 基本信息区 (色彩层级优化，拒绝单调) */}
-            {/* 优化点2：减小列表项间距 space-y-5 -> space-y-3 */}
-            <section className="space-y-3 pt-4">
+            {/* 2. 基本信息区 */}
+            <section className="space-y-4 pt-4 max-w-xl">
               {[
                 { zh: '姓名', en: 'NAME', val: '吴　涛' },
                 { zh: '籍贯', en: 'ORIGIN', val: '云南曲靖' },
@@ -47,31 +45,30 @@ export default function Home() {
               ].map((item, index) => (
                 <div 
                   key={index} 
-                  // 优化点3：减小底部内边距 pb-3 -> pb-2，弱化边框颜色 border-white/10 -> border-white/5
-                  className="group flex flex-col sm:flex-row sm:items-end justify-between border-b border-white/5 pb-2 hover:border-cyan-500/40 transition-all duration-500"
+                  className="group flex items-center border-b border-white/5 pb-2.5 hover:border-cyan-500/30 transition-all duration-300"
                 >
-                  {/* 左侧 Label：中文半透明白，英文微弱青色点缀 */}
-                  <div className="flex items-center gap-3 mb-1 sm:mb-0">
-                    <span className="text-white/50 text-sm tracking-[0.2em] font-light group-hover:text-cyan-400 transition-colors">
+                  <div className="w-24 sm:w-28 flex-shrink-0 flex items-center justify-between pr-4">
+                    <span className="text-white/40 text-sm tracking-[0.2em] font-light group-hover:text-cyan-400/80 transition-colors">
                       {item.zh}
                     </span>
-                    <span className="text-cyan-500/30 text-[10px] font-mono tracking-widest group-hover:text-cyan-400/50 transition-colors">
-                      // {item.en}
+                    <span className="text-cyan-500/20 text-[10px] font-mono tracking-wider hidden sm:inline">
+                      //
                     </span>
                   </div>
                   
-                  {/* 右侧 Value：改用淡青色白(cyan-50)与细体(font-light)，统一科技感 */}
-                  <span className="text-cyan-50 text-base tracking-[0.15em] font-light group-hover:text-white group-hover:drop-shadow-[0_0_10px_rgba(34,211,238,0.6)] transition-all duration-500">
-                    {item.val}
-                  </span>
+                  <div className="flex-grow border-b border-dashed border-white/10 mx-2 h-0 opacity-40 group-hover:border-cyan-500/20 group-hover:opacity-100 transition-all" />
+                  
+                  <div className="w-2/3 sm:w-72 flex-shrink-0 pl-2">
+                    <span className="text-cyan-100/90 text-sm sm:text-base tracking-[0.15em] font-normal group-hover:text-cyan-400 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.4)] transition-all duration-300">
+                      {item.val}
+                    </span>
+                  </div>
                 </div>
               ))}
             </section>
 
-            {/* 3. 详情与兴趣区 (极简线条风格) */}
+            {/* 3. 详情与兴趣区 */}
             <section className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-6 border-t border-white/10">
-              
-              {/* 研究兴趣 */}
               <div className="space-y-5">
                 <h3 className="text-sm text-cyan-400 tracking-[0.2em] font-mono flex items-center gap-3">
                   <span className="w-1.5 h-1.5 bg-cyan-400 rotate-45 shadow-[0_0_8px_#22d3ee]" />
@@ -93,7 +90,6 @@ export default function Home() {
                 </ul>
               </div>
 
-              {/* 关于本站 */}
               <div className="space-y-5">
                 <h3 className="text-sm text-cyan-400 tracking-[0.2em] font-mono flex items-center gap-3">
                   <span className="w-1.5 h-1.5 bg-cyan-400 rotate-45 shadow-[0_0_8px_#22d3ee]" />
@@ -103,16 +99,13 @@ export default function Home() {
                   本站节点用于整理前沿教学资料、核心课件与科研笔记。致力于构建一个开放、严谨的物理教学与学术思想交流场域。
                 </p>
               </div>
-
             </section>
-
           </div>
 
           {/* ========================================== */}
-          {/* 右侧：图像区 (全彩肖像、保留科技感框架) */}
+          {/* 右侧：图像区 */}
           {/* ========================================== */}
           <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-end lg:sticky lg:top-24 mt-12 lg:mt-0">
-            
             <div className="group relative w-full max-w-[380px] aspect-[3/4] p-1 cursor-pointer">
               
               {/* 四角瞄准标记 */}
@@ -123,30 +116,24 @@ export default function Home() {
 
               <div className="absolute inset-0 bg-cyan-500/5 blur-3xl z-0 transition-opacity duration-500 group-hover:bg-cyan-500/15" />
 
-              <div className="relative w-full h-full overflow-hidden z-10 border border-white/5 group-hover:border-cyan-400/20 transition-colors duration-500">
-                
+              <div className="relative w-full h-full bg-[#050505] overflow-hidden z-10 border border-white/5 group-hover:border-cyan-400/20 transition-colors duration-500">
                 <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none z-20 opacity-30 mix-blend-screen" />
-                
                 <img
                   src="/avatar.jpg"
                   alt="吴涛老师头像"
-                  className="w-full h-full object-cover transition-transform duration-700 scale-105 group-hover:scale-100 opacity-90 group-hover:opacity-100"
+                  className="w-full h-full object-cover transition-transform duration-700 scale-105 group-hover:scale-100"
                 />
-                
                 <div className="absolute bottom-0 left-0 w-full p-5 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-30">
                   <div className="text-cyan-400/90 font-mono text-xs tracking-widest uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">ID: WU_TAO_01</div>
                   <div className="text-white/30 text-[10px] font-mono mt-1.5 tracking-widest">AUTHORIZATION: LEVEL 5</div>
                 </div>
               </div>
-
             </div>
           </div>
 
         </div>
 
-        {/* ========================================== */}
-        {/* 底部区：极简联络信息 */}
-        {/* ========================================== */}
+        {/* 底部区 */}
         <footer className="mt-20 pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-xs text-white/40 tracking-[0.2em] font-mono">
           <div className="font-light">
             © {new Date().getFullYear()} 沾益区第三中学 // 物理教研
