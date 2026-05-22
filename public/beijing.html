@@ -1,209 +1,487 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>粒子对撞机 · 散射背景</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body, html {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background: #05040f;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-        canvas {
-            display: block;
-            position: absolute;
-            top: 0; left: 0;
-            z-index: 1;
-        }
-        .overlay {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-            pointer-events: none;
-            background: radial-gradient(circle at center, transparent 40%, rgba(5,4,15,0.6) 100%);
-        }
-        .title {
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(100, 200, 255, 0.8);
-            font-size: 18px;
-            letter-spacing: 6px;
-            z-index: 10;
-            text-shadow: 0 0 20px rgba(100, 200, 255, 0.6);
-            white-space: nowrap;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Quantum Collider Background · 穿透监听+丰富粒子版</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#02030a;
+    font-family:Inter,"Segoe UI",sans-serif;
+}
+
+canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+}
+
+/* =========================================
+   ATMOSPHERE
+========================================= */
+.overlay{
+    position:fixed;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    background:
+        radial-gradient(circle at center, rgba(0,255,255,.05), transparent 24%),
+        radial-gradient(circle at center, rgba(0,120,255,.06), transparent 48%),
+        radial-gradient(circle at top, rgba(0,70,180,.10), transparent 60%),
+        linear-gradient(135deg, rgba(0,0,0,.92), rgba(0,0,0,.35), rgba(0,0,0,.92));
+}
+
+/* =========================================
+   GRID & NOISE
+========================================= */
+.grid{
+    position:fixed;
+    inset:0;
+    z-index:3;
+    pointer-events:none;
+    opacity:.035;
+    background-image:
+        linear-gradient(rgba(0,255,255,.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,.18) 1px, transparent 1px);
+    background-size:70px 70px;
+}
+
+.noise{
+    position:fixed;
+    inset:0;
+    z-index:4;
+    pointer-events:none;
+    opacity:.025;
+    background-image: radial-gradient(#ffffff 0.5px, transparent 0.5px);
+    background-size:4px 4px;
+}
+
+/* =========================================
+   HUD
+========================================= */
+.hud{
+    position:fixed;
+    inset:0;
+    z-index:5;
+    pointer-events:none;
+}
+
+.corner{
+    position:absolute;
+    width:130px;
+    height:130px;
+    border-color:rgba(0,255,255,.16);
+}
+.tl{ top:24px; left:24px; border-top:1px solid; border-left:1px solid; }
+.tr{ top:24px; right:24px; border-top:1px solid; border-right:1px solid; }
+.bl{ bottom:24px; left:24px; border-bottom:1px solid; border-left:1px solid; }
+.br{ bottom:24px; right:24px; border-bottom:1px solid; border-right:1px solid; }
+
+.system{
+    position:absolute;
+    top:40px;
+    left:50px;
+    color:rgba(150,240,255,.85);
+    font-size:12px;
+    font-family:monospace;
+    letter-spacing:.45em;
+    text-transform:uppercase;
+    text-shadow:0 0 12px rgba(0,255,255,.8);
+}
+.system::before{
+    content:'';
+    display:inline-block;
+    width:50px;
+    height:1px;
+    background:rgba(0,255,255,.6);
+    margin-right:14px;
+    vertical-align:middle;
+}
+
+.status{
+    position:absolute;
+    bottom:28px;
+    left:50%;
+    transform:translateX(-50%);
+    color:rgba(255,255,255,.25);
+    font-size:11px;
+    font-family:monospace;
+    letter-spacing:.3em;
+}
+
+.data-stream{
+    position:absolute;
+    color:rgba(0,255,255,.12);
+    font-size:10px;
+    font-family:monospace;
+    letter-spacing:.25em;
+    animation:float 10s linear infinite;
+}
+.data1{ top:18%; left:6%; }
+.data2{ top:62%; right:7%; animation-duration:14s; }
+.data3{ top:30%; right:12%; animation-duration:18s; }
+
+@keyframes float{
+    0%{ transform:translateY(0px); opacity:.08; }
+    50%{ transform:translateY(-15px); opacity:.18; }
+    100%{ transform:translateY(0px); opacity:.08; }
+}
+</style>
 </head>
 <body>
 
-    <canvas id="canvas"></canvas>
-    <div class="overlay"></div>
-    <div class="title">QUANTUM COLLIDER SCATTERING</div>
+<canvas id="canvas"></canvas>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+<div class="overlay"></div>
+<div class="grid"></div>
+<div class="noise"></div>
+
+<div class="hud">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <div class="system">QUANTUM COLLIDER EVENT DISPLAY</div>
+    <div class="status">DETECTOR ACTIVE · EVENT STREAM ONLINE · MAGNETIC FIELD STABLE</div>
+    <div class="data-stream data1">η φ pT μ E CALIBRATION_001</div>
+    <div class="data-stream data2">EVENT_TRIGGER ACTIVE · 13TeV</div>
+    <div class="data-stream data3">TRACKING SYSTEM SYNCHRONIZED</div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let w, h, cx, cy;
+let stars = [];
+let particles = [];
+let waves = [];
+let time = 0;
+
+// =============================================
+// 参数调优：增加粒子数量，保持无阴影渲染性能
+// =============================================
+const MAX_PARTICLES = 600;        // 提升粒子总数上限，画面更饱满
+const PARTICLE_HISTORY_LEN = 12;  // 略微增加拖尾长度
+const AUTO_COLLISION_RATE = 0.035;// 提高自动碰撞概率
+const WAVE_DECAY = 0.98;          
+
+const COLLISION_JETS = 4;          // 增加碰撞喷流数量
+const PARTICLES_PER_JET = 35;      // 增加单次生成的粒子数
+
+function randomRange(min, max) {
+    return min + Math.random() * (max - min);
+}
+
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    cx = w / 2;
+    cy = h / 2;
+    
+    const starCount = Math.min(200, Math.floor((w * h) / 15000));
+    stars = [];
+    for (let i = 0; i < starCount; i++) {
+        stars.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: Math.random() * 1.2 + 0.3,
+            a: Math.random() * 0.5 + 0.2
+        });
+    }
+    particles = [];
+    waves = [];
+}
+
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+    constructor(angle, speed, color) {
+        this.x = cx;
+        this.y = cy;
+        this.angle = angle;
+        this.speed = speed;
+        this.life = 160 + Math.random() * 70;
+        this.maxLife = this.life;
+        this.radius = Math.random() * 1.8 + 0.7;
+        this.color = color;
+        this.curve = (Math.random() - 0.5) * 0.018;
+        this.history = [];
+    }
+    
+    update() {
+        this.history.push({ x: this.x, y: this.y });
+        if (this.history.length > PARTICLE_HISTORY_LEN) {
+            this.history.shift();
+        }
+        this.angle += this.curve;
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.speed *= 0.992;
+        this.life--;
+    }
+    
+    draw() {
+        const alpha = this.life / this.maxLife;
         
-        let width, height;
-        let particles = [];
-        let centralX, centralY;
-        let time = 0;
-
-        class Particle {
-            constructor(x, y, vx, vy) {
-                this.x = x;
-                this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.life = 180 + Math.random() * 120;
-                this.maxLife = this.life;
-                this.size = Math.random() * 3 + 1.5;
-                this.hue = Math.random() * 60 + 200; // 蓝紫色系
-            }
-            
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                
-                // 轻微向外扩散
-                const dx = this.x - centralX;
-                const dy = this.y - centralY;
-                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-                
-                this.vx += dx / dist * 0.015;
-                this.vy += dy / dist * 0.015;
-                
-                this.life--;
-                this.vx *= 0.985;
-                this.vy *= 0.985;
-            }
-            
-            draw() {
-                const alpha = this.life / this.maxLife;
-                ctx.save();
-                ctx.globalAlpha = alpha * 0.9;
-                
-                // 发光核心
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = `hsl(${this.hue}, 100%, 75%)`;
-                
-                ctx.fillStyle = `hsl(${this.hue}, 100%, 85%)`;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // 拖尾
-                ctx.shadowBlur = 25;
-                ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.4)`;
-                ctx.beginPath();
-                ctx.arc(this.x - this.vx*2, this.y - this.vy*2, this.size * 1.8, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.restore();
-            }
-        }
-
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-            centralX = width / 2;
-            centralY = height / 2;
-        }
-
-        function createCollision() {
-            const count = 35 + Math.random() * 25;
-            for (let i = 0; i < count; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = 2.5 + Math.random() * 4.5;
-                const p = new Particle(
-                    centralX + (Math.random() - 0.5) * 80,
-                    centralY + (Math.random() - 0.5) * 80,
-                    Math.cos(angle) * speed,
-                    Math.sin(angle) * speed
-                );
-                particles.push(p);
-            }
-        }
-
-        function animate() {
-            time++;
-            
-            // 淡化背景，制造拖尾感
-            ctx.fillStyle = 'rgba(5, 4, 15, 0.12)';
-            ctx.fillRect(0, 0, width, height);
-            
-            // 中心发光核心（呼吸效果）
-            const pulse = Math.sin(time * 0.05) * 8 + 35;
-            ctx.save();
-            ctx.shadowBlur = 60;
-            ctx.shadowColor = '#66ccff';
-            ctx.fillStyle = 'rgba(100, 200, 255, 0.25)';
+        for (let i = 0; i < this.history.length; i++) {
+            const p = this.history[i];
+            const trailAlpha = (i / this.history.length) * alpha * 0.28;
             ctx.beginPath();
-            ctx.arc(centralX, centralY, pulse, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${this.color}, ${trailAlpha})`;
+            const trailRad = this.radius * (i / this.history.length + 0.4);
+            ctx.arc(p.x, p.y, trailRad, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
-            
-            // 更新和绘制粒子
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.update();
-                p.draw();
-                
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-            
-            // 定期产生对撞散射
-            if (Math.random() < 0.12) {
+        }
+        
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${this.color}, ${alpha * 0.95})`;
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+class Wave {
+    constructor() {
+        this.r = 8;
+        this.alpha = 0.22;
+    }
+    update() {
+        this.r += 2.8;
+        this.alpha *= WAVE_DECAY;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(cx, cy, this.r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0,255,255,${this.alpha})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+    }
+}
+
+function drawDetector() {
+    const rings = [90, 170, 260, 380, 500];
+    ctx.save();
+    rings.forEach((r, i) => {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(0,255,255,${0.055 - i * 0.008})`;
+        ctx.lineWidth = 1;
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
+    });
+    for (let i = 0; i < 24; i++) {
+        const angle = (Math.PI * 2 / 24) * i;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(angle) * 70, cy + Math.sin(angle) * 70);
+        ctx.lineTo(cx + Math.cos(angle) * 540, cy + Math.sin(angle) * 540);
+        ctx.strokeStyle = 'rgba(0,255,255,.022)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawRotatingArcs() {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(time * 0.002);
+    const arcData = [
+        { r: 120, start: 0, end: 0.8, a: 0.18 },
+        { r: 210, start: 1.5, end: 2.3, a: 0.10 },
+        { r: 320, start: 3.2, end: 4.1, a: 0.07 },
+        { r: 430, start: 4.7, end: 5.4, a: 0.05 }
+    ];
+    arcData.forEach(arc => {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(0,255,255,${arc.a})`;
+        ctx.lineWidth = 1.8;
+        ctx.shadowBlur = 0; 
+        ctx.arc(0, 0, arc.r, arc.start, arc.end);
+        ctx.stroke();
+    });
+    ctx.restore();
+}
+
+function drawBeams() {
+    ctx.save();
+    const pulse = Math.sin(time * 0.03) * 0.5 + 0.5;
+    drawBeamLine(-300, cy, w + 300, cy, 0.10 + pulse * 0.05);
+    drawBeamLine(cx, -300, cx, h + 300, 0.05);
+    drawBeamLine(cx - 700, cy - 420, cx + 700, cy + 420, 0.03);
+    drawBeamLine(cx + 700, cy - 420, cx - 700, cy + 420, 0.03);
+    ctx.restore();
+}
+
+function drawBeamLine(x1, y1, x2, y2, a) {
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, 'rgba(0,255,255,0)');
+    grad.addColorStop(0.5, `rgba(0,255,255,${a})`);
+    grad.addColorStop(1, 'rgba(0,255,255,0)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+}
+
+function drawCore() {
+    const pulse = Math.sin(time * 0.04) * 16 + 58;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, pulse);
+    grad.addColorStop(0, 'rgba(180,255,255,0.35)');
+    grad.addColorStop(0.3, 'rgba(0,255,255,0.12)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, pulse, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function createCollision() {
+    if (particles.length > MAX_PARTICLES - 80) {
+        const removeCount = Math.floor(particles.length * 0.2);
+        particles.splice(0, removeCount);
+    }
+    
+    waves.push(new Wave());
+    
+    const jetCount = Math.floor(randomRange(COLLISION_JETS, COLLISION_JETS + 1.5));
+    for (let j = 0; j < jetCount; j++) {
+        const base = (Math.PI * 2 / jetCount) * j + Math.random() * 0.5;
+        for (let i = 0; i < PARTICLES_PER_JET; i++) {
+            const angle = base + (Math.random() - 0.5) * 0.38;
+            const speed = randomRange(1.8, 5.5);
+            const color = Math.random() > 0.6 ? '0,255,255' : '100,200,255';
+            particles.push(new Particle(angle, speed, color));
+        }
+    }
+}
+
+function drawStars() {
+    stars.forEach(s => {
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,255,255,${s.a * 0.35})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+function enforceParticleLimit() {
+    if (particles.length > MAX_PARTICLES) {
+        particles.sort((a, b) => a.life - b.life);
+        particles.length = MAX_PARTICLES;
+    }
+}
+
+function animate() {
+    time++;
+    ctx.fillStyle = 'rgba(2,3,10,0.14)';
+    ctx.fillRect(0, 0, w, h);
+    
+    drawStars();
+    drawDetector();
+    drawRotatingArcs();
+    drawBeams();
+    drawCore();
+    
+    for (let i = waves.length - 1; i >= 0; i--) {
+        waves[i].update();
+        waves[i].draw();
+        if (waves[i].alpha < 0.008 || waves[i].r > Math.max(w, h) * 1.2) {
+            waves.splice(i, 1);
+        }
+    }
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        if (particles[i].life <= 0 || 
+            particles[i].x < -200 || particles[i].x > w + 200 ||
+            particles[i].y < -200 || particles[i].y > h + 200) {
+            particles.splice(i, 1);
+        }
+    }
+    
+    enforceParticleLimit();
+    
+    if (Math.random() < AUTO_COLLISION_RATE && particles.length < MAX_PARTICLES * 0.7) {
+        createCollision();
+    }
+    
+    requestAnimationFrame(animate);
+}
+
+// =========================================
+// 核心修复：跨层级鼠标追踪
+// 解决 React 在上层遮挡导致 iframe 拿不到鼠标事件的问题
+// =========================================
+let targetCx = cx, targetCy = cy;
+
+function updateMouseTarget(e) {
+    targetCx = e.clientX;
+    targetCy = e.clientY;
+}
+
+// 1. 监听自身窗口（针对没有被 iframe 遮挡的正常情况）
+window.addEventListener('mousemove', updateMouseTarget);
+
+// 2. 向上穿透监听（针对被当作 iframe 嵌入到 React 底层的情况）
+try {
+    if (window.parent && window.parent !== window) {
+        window.parent.addEventListener('mousemove', updateMouseTarget);
+    }
+} catch (err) {
+    // 忽略由于跨域限制可能导致的报错
+}
+
+function smoothCenter() {
+    cx += (targetCx - cx) * 0.05;
+    cy += (targetCy - cy) * 0.05;
+    requestAnimationFrame(smoothCenter);
+}
+smoothCenter();
+
+// =========================================
+// 点击触发多重碰撞也加上跨层级支持
+// =========================================
+function triggerClickCollision() {
+    for (let i = 0; i < 4; i++) {  
+        setTimeout(() => {
+            if (particles.length < MAX_PARTICLES + 30) {
                 createCollision();
             }
-            
-            // 鼠标轻微影响（可选）
-            requestAnimationFrame(animate);
-        }
+        }, i * 100);
+    }
+}
+window.addEventListener('click', triggerClickCollision);
+try {
+    if (window.parent && window.parent !== window) {
+        window.parent.addEventListener('click', triggerClickCollision);
+    }
+} catch (err) {}
 
-        // 鼠标点击触发强烈对撞
-        window.addEventListener('click', (e) => {
-            centralX = e.clientX;
-            centralY = e.clientY;
-            for (let i = 0; i < 8; i++) {
-                setTimeout(() => createCollision(), i * 60);
-            }
-            // 3秒后回到屏幕中心
-            setTimeout(() => {
-                centralX = width / 2;
-                centralY = height / 2;
-            }, 3000);
-        });
+function initSeedCollisions() {
+    setTimeout(() => createCollision(), 100);
+    setTimeout(() => createCollision(), 400);
+    setTimeout(() => createCollision(), 800);
+}
+initSeedCollisions();
 
-        // 触摸支持
-        window.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            centralX = touch.clientX;
-            centralY = touch.clientY;
-            for (let i = 0; i < 6; i++) {
-                setTimeout(() => createCollision(), i * 50);
-            }
-        });
-
-        window.addEventListener('resize', resize);
-
-        // 初始化
-        resize();
-        // 初始几次对撞
-        for (let i = 0; i < 6; i++) {
-            setTimeout(() => createCollision(), i * 200);
-        }
-        animate();
-    </script>
-</body
+animate();
+</script>
+</body>
+</html>
