@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粒子对撞机 · 散射背景</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #05040f;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 40%, rgba(5,4,15,0.6) 100%);
+        }
+        .title {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(100, 200, 255, 0.8);
+            font-size: 18px;
+            letter-spacing: 6px;
+            z-index: 10;
+            text-shadow: 0 0 20px rgba(100, 200, 255, 0.6);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+    <div class="overlay"></div>
+    <div class="title">QUANTUM COLLIDER SCATTERING</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        let centralX, centralY;
+        let time = 0;
+
+        class Particle {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.life = 180 + Math.random() * 120;
+                this.maxLife = this.life;
+                this.size = Math.random() * 3 + 1.5;
+                this.hue = Math.random() * 60 + 200; // 蓝紫色系
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // 轻微向外扩散
+                const dx = this.x - centralX;
+                const dy = this.y - centralY;
+                const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+                
+                this.vx += dx / dist * 0.015;
+                this.vy += dy / dist * 0.015;
+                
+                this.life--;
+                this.vx *= 0.985;
+                this.vy *= 0.985;
+            }
+            
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha * 0.9;
+                
+                // 发光核心
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `hsl(${this.hue}, 100%, 75%)`;
+                
+                ctx.fillStyle = `hsl(${this.hue}, 100%, 85%)`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 拖尾
+                ctx.shadowBlur = 25;
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 70%, 0.4)`;
+                ctx.beginPath();
+                ctx.arc(this.x - this.vx*2, this.y - this.vy*2, this.size * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centralX = width / 2;
+            centralY = height / 2;
+        }
+
+        function createCollision() {
+            const count = 35 + Math.random() * 25;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2.5 + Math.random() * 4.5;
+                const p = new Particle(
+                    centralX + (Math.random() - 0.5) * 80,
+                    centralY + (Math.random() - 0.5) * 80,
+                    Math.cos(angle) * speed,
+                    Math.sin(angle) * speed
+                );
+                particles.push(p);
+            }
+        }
+
+        function animate() {
+            time++;
+            
+            // 淡化背景，制造拖尾感
+            ctx.fillStyle = 'rgba(5, 4, 15, 0.12)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // 中心发光核心（呼吸效果）
+            const pulse = Math.sin(time * 0.05) * 8 + 35;
+            ctx.save();
+            ctx.shadowBlur = 60;
+            ctx.shadowColor = '#66ccff';
+            ctx.fillStyle = 'rgba(100, 200, 255, 0.25)';
+            ctx.beginPath();
+            ctx.arc(centralX, centralY, pulse, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            
+            // 更新和绘制粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            // 定期产生对撞散射
+            if (Math.random() < 0.12) {
+                createCollision();
+            }
+            
+            // 鼠标轻微影响（可选）
+            requestAnimationFrame(animate);
+        }
+
+        // 鼠标点击触发强烈对撞
+        window.addEventListener('click', (e) => {
+            centralX = e.clientX;
+            centralY = e.clientY;
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => createCollision(), i * 60);
+            }
+            // 3秒后回到屏幕中心
+            setTimeout(() => {
+                centralX = width / 2;
+                centralY = height / 2;
+            }, 3000);
+        });
+
+        // 触摸支持
+        window.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            centralX = touch.clientX;
+            centralY = touch.clientY;
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => createCollision(), i * 50);
+            }
+        });
+
+        window.addEventListener('resize', resize);
+
+        // 初始化
+        resize();
+        // 初始几次对撞
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => createCollision(), i * 200);
+        }
+        animate();
+    </script>
+</body
