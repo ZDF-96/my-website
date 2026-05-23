@@ -1,6 +1,9 @@
  import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+// 【新增】引入 KaTeX 的核心样式表，让公式排版生效
+import 'katex/dist/katex.min.css'; 
+
 // 1. 引入你刚刚写好的 HTML 背景组件
 import HtmlBackground from "@/components/HtmlBackground"; 
 

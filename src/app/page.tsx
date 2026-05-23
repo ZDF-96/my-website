@@ -1,154 +1,510 @@
-import React from 'react';
+"use client";
 
-export default function Home() {
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+// 【注意】这里已经把 Github 换成了 GitBranch，绝对不会再报图标找不到的错了
+import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles } from 'lucide-react';
+
+// ==========================================
+// 数据配置
+// ==========================================
+const NAV_ITEMS = [
+  { id: 'home', label: 'Home', icon: Sparkles },
+  { id: 'essays', label: 'Essays', icon: FileText },
+  { id: 'notes', label: 'Notes', icon: Book },
+  { id: 'teaching', label: 'Teaching', icon: Users },
+  { id: 'slides', label: 'Slides', icon: Presentation },
+  { id: 'about', label: 'About', icon: Info },
+];
+
+const LABELS = ['理论物理', '粒子物理', '中医爱好者', '易经爱好者'];
+
+// ==========================================
+// 主页面组件
+// ==========================================
+export default function AcademicPortal() {
+  const [activeTab, setActiveTab] = useState('home');
+
   return (
-    <div className="min-h-screen w-full relative overflow-x-hidden font-sans bg-transparent text-white selection:bg-cyan-500/30">
+    <div className="flex h-screen w-full bg-[#030305] text-white overflow-hidden font-sans selection:bg-cyan-500/30">
+      {/* 🌌 全局背景：微弱动态渐变 */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-[#030305] to-[#030305]" />
+      <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
 
-      {/* 🌌 极简暗黑渐变遮罩，压暗底层动画，凸显文字 */}
-      <div className="fixed inset-0 z-[1] pointer-events-none bg-gradient-to-br from-black/80 via-black/40 to-black/90" />
-
-      {/* 🌟 核心内容容器 */}
-      <main className="relative z-[10] w-full max-w-7xl mx-auto px-6 py-12 md:py-24">
+      {/* ========================================== */}
+      {/* 左侧固定栏 (Sidebar) */}
+      {/* ========================================== */}
+      <aside className="relative z-20 w-72 h-full flex flex-col bg-white/[0.02] backdrop-blur-xl border-r border-white/5 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.5)] overflow-hidden">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-start">
+        {/* 🌟 动态粒子交互背景 */}
+        <QuantumParticles />
 
-          {/* ========================================== */}
-          {/* 左侧：文字信息区 (大留白、档案式排版) */}
-          {/* ========================================== */}
-          <div className="lg:col-span-7 flex flex-col space-y-10">
-            
-            {/* 1. 标题区 */}
-            <header className="space-y-5">
-              <div className="flex items-center gap-4 text-cyan-400 font-mono text-xs tracking-[0.4em] uppercase opacity-80">
-                <span className="w-8 h-[1px] bg-cyan-400" />
-                QUANTUM COLLIDER SYSTEM
-              </div>
-              
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-[0.15em] leading-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-cyan-200/50">
-                格物致理<br />
-                <span className="text-4xl md:text-5xl lg:text-6xl opacity-90">琢玉成器</span>
-              </h1>
-              
-              <p className="text-white/40 text-sm tracking-widest font-light">
-                TEACHING & RESEARCH DOSSIER // PERSONAL PROFILE
-              </p>
-            </header>
-
-            {/* 2. 基本信息区 */}
-            <section className="space-y-4 pt-4 max-w-xl">
-              {[
-                { zh: '姓名', en: 'NAME', val: '吴　涛' },
-                { zh: '籍贯', en: 'ORIGIN', val: '云南曲靖' },
-                { zh: '政治面貌', en: 'STATUS', val: '中共党员' },
-                { zh: '职业', en: 'OCCUPATION', val: '高中物理教师' },
-                { zh: '最高学历', en: 'EDUCATION', val: '华中师范大学 · 硕士' },
-              ].map((item, index) => (
-                <div 
-                  key={index} 
-                  className="group flex items-center border-b border-white/5 pb-2.5 hover:border-cyan-500/30 transition-all duration-300"
-                >
-                  <div className="w-24 sm:w-28 flex-shrink-0 flex items-center justify-between pr-4">
-                    <span className="text-white/40 text-sm tracking-[0.2em] font-light group-hover:text-cyan-400/80 transition-colors">
-                      {item.zh}
-                    </span>
-                    <span className="text-cyan-500/20 text-[10px] font-mono tracking-wider hidden sm:inline">
-                      //
-                    </span>
-                  </div>
-                  
-                  <div className="flex-grow border-b border-dashed border-white/10 mx-2 h-0 opacity-40 group-hover:border-cyan-500/20 group-hover:opacity-100 transition-all" />
-                  
-                  <div className="w-2/3 sm:w-72 flex-shrink-0 pl-2">
-                    <span className="text-cyan-100/90 text-sm sm:text-base tracking-[0.15em] font-normal group-hover:text-cyan-400 group-hover:drop-shadow-[0_0_8px_rgba(34,211,238,0.4)] transition-all duration-300">
-                      {item.val}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </section>
-
-            {/* 3. 详情与兴趣区 */}
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-6 border-t border-white/10">
-              <div className="space-y-5">
-                <h3 className="text-sm text-cyan-400 tracking-[0.2em] font-mono flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 bg-cyan-400 rotate-45 shadow-[0_0_8px_#22d3ee]" />
-                  研究兴趣
-                </h3>
-                <ul className="space-y-3 text-white/70 text-sm tracking-wider font-light leading-relaxed">
-                  <li className="flex items-start gap-3 group">
-                    <span className="text-cyan-500/50 mt-1 text-[10px] font-mono group-hover:text-cyan-400 transition-colors">01</span>
-                    <span className="group-hover:text-cyan-50 transition-colors">中医文化与哲学</span>
-                  </li>
-                  <li className="flex items-start gap-3 group">
-                    <span className="text-cyan-500/50 mt-1 text-[10px] font-mono group-hover:text-cyan-400 transition-colors">02</span>
-                    <span className="group-hover:text-cyan-50 transition-colors">易经与自然规律</span>
-                  </li>
-                  <li className="flex items-start gap-3 group">
-                    <span className="text-cyan-500/50 mt-1 text-[10px] font-mono group-hover:text-cyan-400 transition-colors">03</span>
-                    <span className="group-hover:text-cyan-50 transition-colors">物理教育与思维建构</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="space-y-5">
-                <h3 className="text-sm text-cyan-400 tracking-[0.2em] font-mono flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 bg-cyan-400 rotate-45 shadow-[0_0_8px_#22d3ee]" />
-                  系统说明
-                </h3>
-                <p className="text-white/60 text-sm tracking-wider font-light leading-loose text-justify">
-                  本站节点用于整理前沿教学资料、核心课件与科研笔记。致力于构建一个开放、严谨的物理教学与学术思想交流场域。
-                </p>
-              </div>
-            </section>
+        {/* 头像与基本信息 */}
+        <div className="flex flex-col items-center mt-8 space-y-4 relative z-10">
+          <div className="relative group cursor-pointer">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur opacity-25 group-hover:opacity-60 transition duration-700"></div>
+            <img 
+              src="/avatar.jpg" 
+              alt="吴涛" 
+              className="relative w-28 h-28 rounded-full object-cover border-2 border-white/10 group-hover:border-cyan-400/50 transition-colors duration-500"
+            />
           </div>
-
-          {/* ========================================== */}
-          {/* 右侧：图像区 */}
-          {/* ========================================== */}
-          <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-end lg:sticky lg:top-24 mt-12 lg:mt-0">
-            <div className="group relative w-full max-w-[380px] aspect-[3/4] p-1 cursor-pointer">
-              
-              {/* 四角瞄准标记 */}
-              <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-400/40 z-20 transition-all duration-500 group-hover:-translate-x-1 group-hover:-translate-y-1 group-hover:border-cyan-300 group-hover:shadow-[-4px_-4px_12px_rgba(34,211,238,0.2)]" />
-              <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cyan-400/40 z-20 transition-all duration-500 group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:border-cyan-300 group-hover:shadow-[4px_-4px_12px_rgba(34,211,238,0.2)]" />
-              <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cyan-400/40 z-20 transition-all duration-500 group-hover:-translate-x-1 group-hover:translate-y-1 group-hover:border-cyan-300 group-hover:shadow-[-4px_4px_12px_rgba(34,211,238,0.2)]" />
-              <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-400/40 z-20 transition-all duration-500 group-hover:translate-x-1 group-hover:translate-y-1 group-hover:border-cyan-300 group-hover:shadow-[4px_4px_12px_rgba(34,211,238,0.2)]" />
-
-              <div className="absolute inset-0 bg-cyan-500/5 blur-3xl z-0 transition-opacity duration-500 group-hover:bg-cyan-500/15" />
-
-              <div className="relative w-full h-full bg-[#050505] overflow-hidden z-10 border border-white/5 group-hover:border-cyan-400/20 transition-colors duration-500">
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(0,255,255,0.03)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none z-20 opacity-30 mix-blend-screen" />
-                <img
-                  src="/avatar.jpg"
-                  alt="吴涛老师头像"
-                  className="w-full h-full object-cover transition-transform duration-700 scale-105 group-hover:scale-100"
-                />
-                <div className="absolute bottom-0 left-0 w-full p-5 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-30">
-                  <div className="text-cyan-400/90 font-mono text-xs tracking-widest uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">ID: WU_TAO_01</div>
-                  <div className="text-white/30 text-[10px] font-mono mt-1.5 tracking-widest">AUTHORIZATION: LEVEL 5</div>
-                </div>
-              </div>
-            </div>
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-cyan-200">吴涛</h1>
+            <p className="text-sm font-mono text-cyan-500/70">WU TAO</p>
           </div>
-
+          <p className="text-xs text-white/40 text-center leading-relaxed px-2">
+            格物致理，琢玉成器
+          </p>
         </div>
 
-        {/* 底部区 */}
-        <footer className="mt-20 pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-xs text-white/40 tracking-[0.2em] font-mono">
-          <div className="font-light">
-            © {new Date().getFullYear()} 沾益区第三中学 // 物理教研
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 md:gap-8 font-light">
-            <span className="hover:text-cyan-400 transition-colors cursor-pointer flex items-center gap-2">
-              <span className="w-1 h-1 bg-white/20 rounded-full" /> QQ: 3300272081
-            </span>
-            <span className="hover:text-cyan-400 transition-colors cursor-pointer flex items-center gap-2">
-              <span className="w-1 h-1 bg-white/20 rounded-full" /> MAIL: pengyy168888@gmail.com
-            </span>
-          </div>
-        </footer>
+        {/* 动态状态栏 */}
+        <div className="mt-8 bg-black/40 border border-white/5 rounded-lg p-3 flex items-start gap-3 relative z-10">
+          <span className="relative flex h-2.5 w-2.5 mt-1 flex-shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+          </span>
+          <p className="text-[11px] text-white/60 font-mono leading-tight">
+            探索本源 ，清静无为
+          </p>
+        </div>
 
+        {/* 身份标签 */}
+        <div className="mt-8 space-y-3 relative z-10">
+          <h3 className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-mono mb-2">Research & Interests</h3>
+          <div className="flex flex-wrap gap-2">
+            {LABELS.map(label => (
+              <span key={label} className="px-2.5 py-1 text-[10px] rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 hover:border-cyan-400/40 transition-colors cursor-default backdrop-blur-sm">
+                {label}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-grow relative z-10" />
+
+        {/* 联系方式 */}
+        <div className="flex flex-col items-center gap-4 pb-4 text-white/40 relative z-10 w-full">
+          {/* 1. 明确展示的邮箱信息 */}
+          <a 
+            href="mailto:pengyy168888@gmail.com" 
+            className="flex items-center gap-2 hover:text-cyan-400 transition-colors group"
+          >
+            <Mail size={15} className="group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-mono tracking-wider">pengyy168888@gmail.com</span>
+          </a>
+          
+          {/* 2. 保留的代码分支等图标 (去掉了 arXiv) */}
+          <div className="flex items-center gap-5">
+            <a href="#" className="hover:text-cyan-400 transition-colors" title="代码仓库">
+              <GitBranch size={18} className="hover:scale-110 transition-transform" />
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      {/* ========================================== */}
+      {/* 右侧区域 (Navbar + Main Content) */}
+      {/* ========================================== */}
+      <main className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
+        
+        {/* 顶部导航栏 */}
+        <header className="absolute top-0 w-full z-30 h-16 bg-[#030305]/60 backdrop-blur-md border-b border-white/5 flex items-center px-8 justify-between">
+          <div className="flex items-center gap-2 text-cyan-500/50">
+            <Sparkles size={16} />
+            <span className="text-xs font-mono tracking-widest uppercase">Quantum Portal // 教研</span>
+          </div>
+          <nav className="flex items-center gap-1">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`relative px-4 py-2 text-sm transition-colors duration-300 flex items-center gap-2 rounded-md ${
+                    isActive ? 'text-cyan-300' : 'text-white/50 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <item.icon size={14} className={isActive ? 'opacity-100' : 'opacity-50'} />
+                  {item.label}
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-nav-indicator"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </header>
+
+        {/* 动态内容展示区 */}
+        <div className="flex-1 overflow-y-auto pt-16 scroll-smooth">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -20, filter: 'blur(4px)' }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="p-10 md:p-16 max-w-5xl mx-auto w-full min-h-full flex flex-col"
+            >
+              {activeTab === 'home' && <HomeContent />}
+              {activeTab === 'essays' && <EssaysContent />}
+              {activeTab === 'notes' && <NotesContent />}
+              {activeTab === 'teaching' && <TeachingContent />}
+              {activeTab === 'slides' && <SlidesContent />}
+              {activeTab === 'about' && <AboutContent />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
     </div>
+  );
+}
+
+// ==========================================
+// 分支页面组件
+// ==========================================
+
+function HomeContent() {
+  return (
+    <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 mt-10">
+      <div className="relative">
+        <div className="absolute -inset-10 bg-cyan-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-cyan-400 leading-tight">
+          If the universe is the answer, <br />
+          what is the question? <br />
+          <span className="italic font-light">Nature of Reality</span>
+        </h1>
+      </div>
+      <p className="text-lg text-white/40 tracking-widest font-mono">
+        PERSONAL ACADEMIC PORTAL OF WU TAO
+      </p>
+      <div className="pt-8">
+        <button className="group relative px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-400/50 rounded-full overflow-hidden transition-all duration-300">
+          <div className="absolute inset-0 bg-cyan-400/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+          <span className="relative flex items-center gap-2 text-sm text-cyan-50 tracking-wider">
+            Enter Database <ExternalLink size={14} />
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EssaysContent() {
+  const essays = [
+    { title: "光的干涉与相位：经典与量子的桥梁", date: "2026-05-22", tag: "Optics" },
+    { title: "为什么量子力学不像你想象的那样", date: "2026-04-15", tag: "Quantum" },
+    { title: "从路径积分到世界线：一种直觉视角的解读", date: "2026-03-02", tag: "QFT" },
+  ];
+  return (
+    <div className="space-y-8">
+      <h2 className="text-3xl font-bold text-white/90">随笔 Essays</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {essays.map((essay, i) => (
+          <div key={i} className="group p-6 bg-white/[0.02] border border-white/5 hover:border-cyan-500/30 rounded-xl cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.1)]">
+            <div className="w-full h-32 bg-black/40 rounded-lg mb-4 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            </div>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 px-2 py-0.5 rounded-full">{essay.tag}</span>
+              <span className="text-xs font-mono text-white/30">{essay.date}</span>
+            </div>
+            <h3 className="text-lg text-white/80 group-hover:text-cyan-50 transition-colors">{essay.title}</h3>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NotesContent() {
+  return (
+    <div className="space-y-8">
+      <h2 className="text-3xl font-bold text-white/90 border-b border-white/10 pb-4">科研与研读笔记 Notes</h2>
+      <div className="space-y-2 font-mono text-sm">
+        {['U(3) Chiral Perturbation Theory', 'η-η′ mixing 唯象分析', '黄帝内经素问研读', '本草纲目药性归纳'].map((note, i) => (
+          <div key={i} className="flex items-center gap-4 p-4 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/10 cursor-pointer transition-all">
+            <FileText size={16} className="text-cyan-500/50" />
+            <span className="text-white/70">{note}.md</span>
+            <span className="ml-auto text-white/20 text-xs">Updated recently</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TeachingContent() {
+  return (
+    <div className="space-y-8">
+      <h2 className="text-3xl font-bold text-white/90">高中物理教学 Teaching</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {['力学基础', '电磁学进阶', '波动与光学'].map((course, i) => (
+          <div key={i} className="aspect-square bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 flex flex-col justify-between hover:border-cyan-400/40 transition-colors group cursor-pointer">
+            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+               <Book size={18} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white/80">{course}</h3>
+              <p className="text-xs text-white/40 mt-2">核心考点与动画演示</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SlidesContent() {
+  return (
+    <div className="space-y-8">
+      <h2 className="text-3xl font-bold text-white/90 border-b border-white/10 pb-4">课件库 Slides</h2>
+      <p className="text-white/40">The presentation decks and PDF resources will be displayed here.</p>
+    </div>
+  );
+}
+
+function AboutContent() {
+  return (
+    <div className="space-y-6 max-w-2xl text-white/70 leading-relaxed">
+      <h2 className="text-3xl font-bold text-white/90 mb-8">关于我</h2>
+      <p>硕士毕业于华中师范大学粒子物理研究所，师从李新强教授。硕士研究课题聚焦于 U(3) 手征微扰论框架下 η′ → ππa 衰变过程的唯象研究。</p>
+      <p>现任教于云南省沾益区第三中学，致力于将前沿物理的严谨思维逻辑降维融入高中基础教育，构建理论与直觉相统一的物理课堂。同时，我也热衷于研读《黄帝内经》等经典，探索自然哲学中的普遍规律。</p>
+    </div>
+  );
+}
+
+// ==========================================
+// 动态粒子背景组件 (Quantum Collider Particles)
+// ==========================================
+function QuantumParticles() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    let w, h, cx, cy;
+    let targetCx, targetCy;
+    let particles = [];
+    let waves = [];
+    let time = 0;
+
+    // 参数调优
+    const MAX_PARTICLES = 400; // 侧边栏面积较小，400个粒子已足够密集且保证性能
+    const PARTICLE_HISTORY_LEN = 12; // 拖尾长度
+    const AUTO_COLLISION_RATE = 0.02; // 随机自动碰撞的概率
+
+    const setCanvasSize = () => {
+      w = canvas.parentElement.offsetWidth;
+      h = canvas.parentElement.offsetHeight;
+      canvas.width = w;
+      canvas.height = h;
+      cx = w / 2;
+      cy = h / 2;
+      targetCx = cx;
+      targetCy = cy;
+    };
+    setCanvasSize();
+    window.addEventListener('resize', setCanvasSize);
+
+    // 鼠标交互追踪
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      targetCx = e.clientX - rect.left;
+      targetCy = e.clientY - rect.top;
+    };
+    const handleMouseLeave = () => {
+      // 鼠标离开侧边栏时，发射源平滑回到中心
+      targetCx = w / 2;
+      targetCy = h / 2;
+    };
+    const handleClick = () => {
+      triggerClickCollision();
+    };
+
+    const parent = canvas.parentElement;
+    parent.addEventListener('mousemove', handleMouseMove);
+    parent.addEventListener('mouseleave', handleMouseLeave);
+    parent.addEventListener('click', handleClick);
+
+    function randomRange(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    // 粒子类（带拖尾）
+    class Particle {
+      constructor(angle, speed, color) {
+        this.x = cx;
+        this.y = cy;
+        this.angle = angle;
+        this.speed = speed;
+        this.life = 120 + Math.random() * 60;
+        this.maxLife = this.life;
+        this.radius = Math.random() * 1.5 + 0.5;
+        this.color = color;
+        this.curve = (Math.random() - 0.5) * 0.02;
+        this.history = [];
+      }
+      update() {
+        this.history.push({ x: this.x, y: this.y });
+        if (this.history.length > PARTICLE_HISTORY_LEN) {
+          this.history.shift();
+        }
+        this.angle += this.curve;
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.speed *= 0.99; // 略微减速阻力
+        this.life--;
+      }
+      draw() {
+        const alpha = Math.max(0, this.life / this.maxLife);
+        
+        // 绘制拖尾
+        for (let i = 0; i < this.history.length; i++) {
+          const p = this.history[i];
+          const trailAlpha = (i / this.history.length) * alpha * 0.3;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(${this.color}, ${trailAlpha})`;
+          const trailRad = this.radius * (i / this.history.length + 0.3);
+          ctx.arc(p.x, p.y, trailRad, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // 绘制粒子头部
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${this.color}, ${alpha})`;
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 碰撞震荡波类
+    class Wave {
+      constructor() {
+        this.r = 5;
+        this.alpha = 0.3;
+      }
+      update() {
+        this.r += 4;
+        this.alpha *= 0.95;
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(cx, cy, this.r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    // 生成一次粒子碰撞（喷流）
+    function createCollision() {
+      if (particles.length > MAX_PARTICLES - 50) {
+        particles.splice(0, Math.floor(particles.length * 0.2));
+      }
+      waves.push(new Wave());
+      
+      const jetCount = Math.floor(randomRange(2, 5));
+      for (let j = 0; j < jetCount; j++) {
+        const base = (Math.PI * 2 / jetCount) * j + Math.random() * 0.5;
+        const particlesPerJet = 25;
+        for (let i = 0; i < particlesPerJet; i++) {
+          const angle = base + (Math.random() - 0.5) * 0.4;
+          const speed = randomRange(1.5, 4.5);
+          const color = Math.random() > 0.5 ? '0, 255, 255' : '100, 200, 255';
+          particles.push(new Particle(angle, speed, color));
+        }
+      }
+    }
+
+    // 点击触发多重强碰撞
+    function triggerClickCollision() {
+      for (let i = 0; i < 3; i++) {
+        setTimeout(createCollision, i * 120);
+      }
+    }
+
+    // 初始化时先爆发几次
+    setTimeout(createCollision, 200);
+    setTimeout(createCollision, 500);
+
+    // 主动画循环
+    function animate() {
+      animationFrameId = requestAnimationFrame(animate);
+      
+      // 使用 clearRect 彻底清空画布，保持组件原本的毛玻璃透明度背景
+      ctx.clearRect(0, 0, w, h);
+
+      // 发射源平滑跟随鼠标
+      cx += (targetCx - cx) * 0.08;
+      cy += (targetCy - cy) * 0.08;
+      time++;
+
+      // 绘制微弱的对撞机中心磁场环
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
+      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 70, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // 更新和绘制震荡波
+      for (let i = waves.length - 1; i >= 0; i--) {
+        waves[i].update();
+        waves[i].draw();
+        if (waves[i].alpha < 0.01 || waves[i].r > Math.max(w, h)) {
+          waves.splice(i, 1);
+        }
+      }
+
+      // 更新和绘制粒子喷流
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+        // 移出边界或寿命终结则销毁
+        if (
+          particles[i].life <= 0 ||
+          particles[i].x < -50 || particles[i].x > w + 50 ||
+          particles[i].y < -50 || particles[i].y > h + 50
+        ) {
+          particles.splice(i, 1);
+        }
+      }
+
+      // 随机自动生成次级碰撞
+      if (Math.random() < AUTO_COLLISION_RATE && particles.length < MAX_PARTICLES * 0.8) {
+        createCollision();
+      }
+    }
+
+    animate();
+
+    return () => {
+      window.removeEventListener('resize', setCanvasSize);
+      parent.removeEventListener('mousemove', handleMouseMove);
+      parent.removeEventListener('mouseleave', handleMouseLeave);
+      parent.removeEventListener('click', handleClick);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      // 保持绝对定位并在最底层，且不阻挡点击事件
+      className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" 
+      style={{ opacity: 0.85, mixBlendMode: 'screen' }}
+    />
   );
 }
