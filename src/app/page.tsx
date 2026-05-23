@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// 【注意】这里已经把 Github 换成了 GitBranch，绝对不会再报图标找不到的错了
 import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles } from 'lucide-react';
 
 // ==========================================
@@ -283,19 +282,22 @@ function AboutContent() {
 // 动态粒子背景组件 (Quantum Collider Particles)
 // ==========================================
 function QuantumParticles() {
-  const canvasRef = useRef(null);
-
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
-    let animationFrameId;
+    if (!ctx) return; // 避免 null 报错
+    
+    let animationFrameId: number;
 
-    let w, h, cx, cy;
-    let targetCx, targetCy;
-    let particles = [];
-    let waves = [];
-    let time = 0;
+    let w: number, h: number, cx: number, cy: number;
+    let targetCx: number, targetCy: number;
+    let particles: any[] = [];
+    let waves: any[] = [];
+    let time: number = 0;
 
     // 参数调优
     const MAX_PARTICLES = 400; // 侧边栏面积较小，400个粒子已足够密集且保证性能
@@ -303,8 +305,10 @@ function QuantumParticles() {
     const AUTO_COLLISION_RATE = 0.02; // 随机自动碰撞的概率
 
     const setCanvasSize = () => {
-      w = canvas.parentElement.offsetWidth;
-      h = canvas.parentElement.offsetHeight;
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      w = parent.offsetWidth;
+      h = parent.offsetHeight;
       canvas.width = w;
       canvas.height = h;
       cx = w / 2;
@@ -316,32 +320,47 @@ function QuantumParticles() {
     window.addEventListener('resize', setCanvasSize);
 
     // 鼠标交互追踪
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
       targetCx = e.clientX - rect.left;
       targetCy = e.clientY - rect.top;
     };
+    
     const handleMouseLeave = () => {
       // 鼠标离开侧边栏时，发射源平滑回到中心
       targetCx = w / 2;
       targetCy = h / 2;
     };
+    
     const handleClick = () => {
       triggerClickCollision();
     };
 
     const parent = canvas.parentElement;
-    parent.addEventListener('mousemove', handleMouseMove);
-    parent.addEventListener('mouseleave', handleMouseLeave);
-    parent.addEventListener('click', handleClick);
+    if (parent) {
+      parent.addEventListener('mousemove', handleMouseMove);
+      parent.addEventListener('mouseleave', handleMouseLeave);
+      parent.addEventListener('click', handleClick);
+    }
 
-    function randomRange(min, max) {
+    function randomRange(min: number, max: number) {
       return min + Math.random() * (max - min);
     }
 
     // 粒子类（带拖尾）
     class Particle {
-      constructor(angle, speed, color) {
+      x: number;
+      y: number;
+      angle: number;
+      speed: number;
+      life: number;
+      maxLife: number;
+      radius: number;
+      color: string;
+      curve: number;
+      history: any[];
+
+      constructor(angle: number, speed: number, color: string) {
         this.x = cx;
         this.y = cy;
         this.angle = angle;
@@ -353,6 +372,7 @@ function QuantumParticles() {
         this.curve = (Math.random() - 0.5) * 0.02;
         this.history = [];
       }
+      
       update() {
         this.history.push({ x: this.x, y: this.y });
         if (this.history.length > PARTICLE_HISTORY_LEN) {
@@ -364,7 +384,9 @@ function QuantumParticles() {
         this.speed *= 0.99; // 略微减速阻力
         this.life--;
       }
+      
       draw() {
+        if (!ctx) return;
         const alpha = Math.max(0, this.life / this.maxLife);
         
         // 绘制拖尾
@@ -388,15 +410,21 @@ function QuantumParticles() {
 
     // 碰撞震荡波类
     class Wave {
+      r: number;
+      alpha: number;
+      
       constructor() {
         this.r = 5;
         this.alpha = 0.3;
       }
+      
       update() {
         this.r += 4;
         this.alpha *= 0.95;
       }
+      
       draw() {
+        if (!ctx) return;
         ctx.beginPath();
         ctx.arc(cx, cy, this.r, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha})`;
@@ -439,6 +467,7 @@ function QuantumParticles() {
     // 主动画循环
     function animate() {
       animationFrameId = requestAnimationFrame(animate);
+      if (!ctx) return;
       
       // 使用 clearRect 彻底清空画布，保持组件原本的毛玻璃透明度背景
       ctx.clearRect(0, 0, w, h);
@@ -492,9 +521,11 @@ function QuantumParticles() {
 
     return () => {
       window.removeEventListener('resize', setCanvasSize);
-      parent.removeEventListener('mousemove', handleMouseMove);
-      parent.removeEventListener('mouseleave', handleMouseLeave);
-      parent.removeEventListener('click', handleClick);
+      if (parent) {
+        parent.removeEventListener('mousemove', handleMouseMove);
+        parent.removeEventListener('mouseleave', handleMouseLeave);
+        parent.removeEventListener('click', handleClick);
+      }
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
