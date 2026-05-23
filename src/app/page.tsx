@@ -84,7 +84,6 @@ export default function AcademicPortal() {
 
         {/* 联系方式 */}
         <div className="flex flex-col items-center gap-4 pb-4 text-white/40 relative z-10 w-full">
-          {/* 1. 明确展示的邮箱信息 */}
           <a 
             href="mailto:pengyy168888@gmail.com" 
             className="flex items-center gap-2 hover:text-cyan-400 transition-colors group"
@@ -93,7 +92,6 @@ export default function AcademicPortal() {
             <span className="text-xs font-mono tracking-wider">pengyy168888@gmail.com</span>
           </a>
           
-          {/* 2. 保留的代码分支等图标 (去掉了 arXiv) */}
           <div className="flex items-center gap-5">
             <a href="#" className="hover:text-cyan-400 transition-colors" title="代码仓库">
               <GitBranch size={18} className="hover:scale-110 transition-transform" />
@@ -196,25 +194,28 @@ function HomeContent() {
 
 function EssaysContent() {
   const essays = [
-    { title: "光的干涉与相位：经典与量子的桥梁", date: "2026-05-22", tag: "Optics" },
-    { title: "为什么量子力学不像你想象的那样", date: "2026-04-15", tag: "Quantum" },
-    { title: "从路径积分到世界线：一种直觉视角的解读", date: "2026-03-02", tag: "QFT" },
+    { title: "杨氏双缝干涉", date: "2026-05-22", tag: "Optics", slug: "interference-of-light" },
+    { title: "为什么量子力学不像你想象的那样", date: "2026-04-15", tag: "Quantum", slug: "quantum-reality" },
+    { title: "从路径积分到世界线：一种直觉视角的解读", date: "2026-03-02", tag: "QFT", slug: "path-integral" },
   ];
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold text-white/90">随笔 Essays</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {essays.map((essay, i) => (
-          <div key={i} className="group p-6 bg-white/[0.02] border border-white/5 hover:border-cyan-500/30 rounded-xl cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.1)]">
-            <div className="w-full h-32 bg-black/40 rounded-lg mb-4 overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          /* 👇 这里换成了原生的 a 标签，强制刷新跳转，100% 成功 */
+          <a href={`/notes/${essay.slug}`} key={i} className="block">
+            <div className="group h-full p-6 bg-white/[0.02] border border-white/5 hover:border-cyan-500/30 rounded-xl cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.1)]">
+              <div className="w-full h-32 bg-black/40 rounded-lg mb-4 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 px-2 py-0.5 rounded-full">{essay.tag}</span>
+                <span className="text-xs font-mono text-white/30">{essay.date}</span>
+              </div>
+              <h3 className="text-lg text-white/80 group-hover:text-cyan-50 transition-colors">{essay.title}</h3>
             </div>
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 px-2 py-0.5 rounded-full">{essay.tag}</span>
-              <span className="text-xs font-mono text-white/30">{essay.date}</span>
-            </div>
-            <h3 className="text-lg text-white/80 group-hover:text-cyan-50 transition-colors">{essay.title}</h3>
-          </div>
+          </a>
         ))}
       </div>
     </div>
@@ -222,16 +223,23 @@ function EssaysContent() {
 }
 
 function NotesContent() {
+  const notes = [
+    { title: 'U(3) Chiral Perturbation Theory', slug: 'u3-chiral' },
+    { title: 'η-η′ mixing 唯象分析', slug: 'eta-mixing' },
+    { title: '黄帝内经素问研读', slug: 'huangdi-neijing' },
+    { title: '本草纲目药性归纳', slug: 'bencao-gangmu' }
+  ];
+
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold text-white/90 border-b border-white/10 pb-4">科研与研读笔记 Notes</h2>
       <div className="space-y-2 font-mono text-sm">
-        {['U(3) Chiral Perturbation Theory', 'η-η′ mixing 唯象分析', '黄帝内经素问研读', '本草纲目药性归纳'].map((note, i) => (
-          <div key={i} className="flex items-center gap-4 p-4 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/10 cursor-pointer transition-all">
+        {notes.map((note, i) => (
+          <a href={`/notes/${note.slug}`} key={i} className="flex items-center gap-4 p-4 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/10 cursor-pointer transition-all">
             <FileText size={16} className="text-cyan-500/50" />
-            <span className="text-white/70">{note}.md</span>
+            <span className="text-white/70">{note.title}.md</span>
             <span className="ml-auto text-white/20 text-xs">Updated recently</span>
-          </div>
+          </a>
         ))}
       </div>
     </div>
@@ -239,20 +247,28 @@ function NotesContent() {
 }
 
 function TeachingContent() {
+  const courses = [
+    { title: '力学基础', slug: 'mechanics' },
+    { title: '电磁学进阶', slug: 'electromagnetism' },
+    { title: '波动与光学', slug: 'optics' }
+  ];
+
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold text-white/90">高中物理教学 Teaching</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {['力学基础', '电磁学进阶', '波动与光学'].map((course, i) => (
-          <div key={i} className="aspect-square bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 flex flex-col justify-between hover:border-cyan-400/40 transition-colors group cursor-pointer">
-            <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-               <Book size={18} />
+        {courses.map((course, i) => (
+          <a href={`/notes/${course.slug}`} key={i} className="block">
+            <div className="h-full aspect-square bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 flex flex-col justify-between hover:border-cyan-400/40 transition-colors group cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
+                 <Book size={18} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white/80">{course.title}</h3>
+                <p className="text-xs text-white/40 mt-2">核心考点与动画演示</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-white/80">{course}</h3>
-              <p className="text-xs text-white/40 mt-2">核心考点与动画演示</p>
-            </div>
-          </div>
+          </a>
         ))}
       </div>
     </div>
@@ -289,20 +305,17 @@ function QuantumParticles() {
     if (!canvas) return;
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return; // 避免 null 报错
+    if (!ctx) return;
     
     let animationFrameId: number;
-
     let w: number, h: number, cx: number, cy: number;
     let targetCx: number, targetCy: number;
     let particles: any[] = [];
     let waves: any[] = [];
-    let time: number = 0;
 
-    // 参数调优
-    const MAX_PARTICLES = 400; // 侧边栏面积较小，400个粒子已足够密集且保证性能
-    const PARTICLE_HISTORY_LEN = 12; // 拖尾长度
-    const AUTO_COLLISION_RATE = 0.02; // 随机自动碰撞的概率
+    const MAX_PARTICLES = 400;
+    const PARTICLE_HISTORY_LEN = 12;
+    const AUTO_COLLISION_RATE = 0.02;
 
     const setCanvasSize = () => {
       const parent = canvas.parentElement;
@@ -319,7 +332,6 @@ function QuantumParticles() {
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    // 鼠标交互追踪
     const handleMouseMove = (e: any) => {
       const rect = canvas.getBoundingClientRect();
       targetCx = e.clientX - rect.left;
@@ -327,7 +339,6 @@ function QuantumParticles() {
     };
     
     const handleMouseLeave = () => {
-      // 鼠标离开侧边栏时，发射源平滑回到中心
       targetCx = w / 2;
       targetCy = h / 2;
     };
@@ -347,99 +358,43 @@ function QuantumParticles() {
       return min + Math.random() * (max - min);
     }
 
-    // 粒子类（带拖尾）
     class Particle {
-      x: number;
-      y: number;
-      angle: number;
-      speed: number;
-      life: number;
-      maxLife: number;
-      radius: number;
-      color: string;
-      curve: number;
-      history: any[];
-
+      x: number; y: number; angle: number; speed: number; life: number; maxLife: number; radius: number; color: string; curve: number; history: any[];
       constructor(angle: number, speed: number, color: string) {
-        this.x = cx;
-        this.y = cy;
-        this.angle = angle;
-        this.speed = speed;
-        this.life = 120 + Math.random() * 60;
-        this.maxLife = this.life;
-        this.radius = Math.random() * 1.5 + 0.5;
-        this.color = color;
-        this.curve = (Math.random() - 0.5) * 0.02;
-        this.history = [];
+        this.x = cx; this.y = cy; this.angle = angle; this.speed = speed; this.life = 120 + Math.random() * 60; this.maxLife = this.life; this.radius = Math.random() * 1.5 + 0.5; this.color = color; this.curve = (Math.random() - 0.5) * 0.02; this.history = [];
       }
-      
       update() {
         this.history.push({ x: this.x, y: this.y });
-        if (this.history.length > PARTICLE_HISTORY_LEN) {
-          this.history.shift();
-        }
-        this.angle += this.curve;
-        this.x += Math.cos(this.angle) * this.speed;
-        this.y += Math.sin(this.angle) * this.speed;
-        this.speed *= 0.99; // 略微减速阻力
-        this.life--;
+        if (this.history.length > PARTICLE_HISTORY_LEN) this.history.shift();
+        this.angle += this.curve; this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed; this.speed *= 0.99; this.life--;
       }
-      
       draw() {
         if (!ctx) return;
         const alpha = Math.max(0, this.life / this.maxLife);
-        
-        // 绘制拖尾
         for (let i = 0; i < this.history.length; i++) {
           const p = this.history[i];
           const trailAlpha = (i / this.history.length) * alpha * 0.3;
-          ctx.beginPath();
-          ctx.fillStyle = `rgba(${this.color}, ${trailAlpha})`;
+          ctx.beginPath(); ctx.fillStyle = `rgba(${this.color}, ${trailAlpha})`;
           const trailRad = this.radius * (i / this.history.length + 0.3);
-          ctx.arc(p.x, p.y, trailRad, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.arc(p.x, p.y, trailRad, 0, Math.PI * 2); ctx.fill();
         }
-        
-        // 绘制粒子头部
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(${this.color}, ${alpha})`;
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.fillStyle = `rgba(${this.color}, ${alpha})`; ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
       }
     }
 
-    // 碰撞震荡波类
     class Wave {
-      r: number;
-      alpha: number;
-      
-      constructor() {
-        this.r = 5;
-        this.alpha = 0.3;
-      }
-      
-      update() {
-        this.r += 4;
-        this.alpha *= 0.95;
-      }
-      
+      r: number; alpha: number;
+      constructor() { this.r = 5; this.alpha = 0.3; }
+      update() { this.r += 4; this.alpha *= 0.95; }
       draw() {
         if (!ctx) return;
-        ctx.beginPath();
-        ctx.arc(cx, cy, this.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, cy, this.r, 0, Math.PI * 2); ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha})`; ctx.lineWidth = 1; ctx.stroke();
       }
     }
 
-    // 生成一次粒子碰撞（喷流）
     function createCollision() {
-      if (particles.length > MAX_PARTICLES - 50) {
-        particles.splice(0, Math.floor(particles.length * 0.2));
-      }
+      if (particles.length > MAX_PARTICLES - 50) particles.splice(0, Math.floor(particles.length * 0.2));
       waves.push(new Wave());
-      
       const jetCount = Math.floor(randomRange(2, 5));
       for (let j = 0; j < jetCount; j++) {
         const base = (Math.PI * 2 / jetCount) * j + Math.random() * 0.5;
@@ -453,79 +408,39 @@ function QuantumParticles() {
       }
     }
 
-    // 点击触发多重强碰撞
     function triggerClickCollision() {
-      for (let i = 0; i < 3; i++) {
-        setTimeout(createCollision, i * 120);
-      }
+      for (let i = 0; i < 3; i++) setTimeout(createCollision, i * 120);
     }
 
-    // 初始化时先爆发几次
     setTimeout(createCollision, 200);
     setTimeout(createCollision, 500);
 
-    // 主动画循环
     function animate() {
       animationFrameId = requestAnimationFrame(animate);
       if (!ctx) return;
-      
-      // 使用 clearRect 彻底清空画布，保持组件原本的毛玻璃透明度背景
       ctx.clearRect(0, 0, w, h);
+      cx += (targetCx - cx) * 0.08; cy += (targetCy - cy) * 0.08;
+      
+      ctx.save(); ctx.beginPath(); ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)'; ctx.arc(cx, cy, 30, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
 
-      // 发射源平滑跟随鼠标
-      cx += (targetCx - cx) * 0.08;
-      cy += (targetCy - cy) * 0.08;
-      time++;
-
-      // 绘制微弱的对撞机中心磁场环
-      ctx.save();
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
-      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(cx, cy, 70, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // 更新和绘制震荡波
       for (let i = waves.length - 1; i >= 0; i--) {
-        waves[i].update();
-        waves[i].draw();
-        if (waves[i].alpha < 0.01 || waves[i].r > Math.max(w, h)) {
-          waves.splice(i, 1);
-        }
+        waves[i].update(); waves[i].draw();
+        if (waves[i].alpha < 0.01 || waves[i].r > Math.max(w, h)) waves.splice(i, 1);
       }
 
-      // 更新和绘制粒子喷流
       for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        particles[i].draw();
-        // 移出边界或寿命终结则销毁
-        if (
-          particles[i].life <= 0 ||
-          particles[i].x < -50 || particles[i].x > w + 50 ||
-          particles[i].y < -50 || particles[i].y > h + 50
-        ) {
-          particles.splice(i, 1);
-        }
+        particles[i].update(); particles[i].draw();
+        if (particles[i].life <= 0 || particles[i].x < -50 || particles[i].x > w + 50 || particles[i].y < -50 || particles[i].y > h + 50) particles.splice(i, 1);
       }
 
-      // 随机自动生成次级碰撞
-      if (Math.random() < AUTO_COLLISION_RATE && particles.length < MAX_PARTICLES * 0.8) {
-        createCollision();
-      }
+      if (Math.random() < AUTO_COLLISION_RATE && particles.length < MAX_PARTICLES * 0.8) createCollision();
     }
 
     animate();
 
     return () => {
       window.removeEventListener('resize', setCanvasSize);
-      if (parent) {
-        parent.removeEventListener('mousemove', handleMouseMove);
-        parent.removeEventListener('mouseleave', handleMouseLeave);
-        parent.removeEventListener('click', handleClick);
-      }
+      if (parent) { parent.removeEventListener('mousemove', handleMouseMove); parent.removeEventListener('mouseleave', handleMouseLeave); parent.removeEventListener('click', handleClick); }
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -533,7 +448,6 @@ function QuantumParticles() {
   return (
     <canvas 
       ref={canvasRef} 
-      // 保持绝对定位并在最底层，且不阻挡点击事件
       className="absolute top-0 left-0 w-full h-full pointer-events-none z-0" 
       style={{ opacity: 0.85, mixBlendMode: 'screen' }}
     />

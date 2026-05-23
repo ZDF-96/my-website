@@ -24,3 +24,37 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@layer components {
+  /* 这是为你量身定制的物理笔记排版样式 */
+  .physics-article {
+    @apply text-white/80 leading-relaxed text-[15px] md:text-base font-sans;
+  }
+  
+  .physics-article h2 {
+    @apply text-2xl font-bold text-cyan-50 mt-10 mb-4 border-b border-white/10 pb-2;
+  }
+  
+  .physics-article h3 {
+    @apply text-xl font-bold text-cyan-200 mt-8 mb-3;
+  }
+  
+  .physics-article p {
+    @apply mb-5;
+    text-indent: 2em; /* 魔法在这里：自动给所有段落加上首行缩进 */
+  }
+  
+  .physics-article blockquote {
+    @apply border-l-4 border-cyan-500 bg-cyan-900/20 px-4 py-3 my-6 rounded-r-lg;
+    text-indent: 0; /* 引用框里的文字不需要缩进 */
+  }
+
+  .physics-article blockquote p {
+    @apply mb-0;
+    text-indent: 0; 
+  }
+  
+  .physics-article img {
+    @apply rounded-lg my-8 mx-auto shadow-[0_0_15px_rgba(34,211,238,0.2)];
+  }
+}
