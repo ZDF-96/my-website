@@ -5,6 +5,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles } from 'lucide-react';
 
 // ==========================================
+// TypeScript 接口定义 (修复 any 报错的核心)
+// ==========================================
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface HomeContentProps {
+  onEnter: () => void;
+}
+
+// ==========================================
 // 数据配置
 // ==========================================
 const NAV_ITEMS = [
@@ -93,7 +105,7 @@ export default function AcademicPortal() {
           </a>
           
           <div className="flex items-center gap-5">
-            <a href="#" className="hover:text-cyan-400 transition-colors" title="代码仓库">
+            <a href="https://github.com/pengyy168888" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors" title="代码仓库">
               <GitBranch size={18} className="hover:scale-110 transition-transform" />
             </a>
           </div>
@@ -148,7 +160,7 @@ export default function AcademicPortal() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="p-10 md:p-16 max-w-5xl mx-auto w-full min-h-full flex flex-col"
             >
-              {activeTab === 'home' && <HomeContent />}
+              {activeTab === 'home' && <HomeContent onEnter={() => setActiveTab('notes')} />}
               {activeTab === 'essays' && <EssaysContent />}
               {activeTab === 'notes' && <NotesContent />}
               {activeTab === 'teaching' && <TeachingContent />}
@@ -166,7 +178,7 @@ export default function AcademicPortal() {
 // 分支页面组件
 // ==========================================
 
-function HomeContent() {
+function HomeContent({ onEnter }: HomeContentProps) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 mt-10">
       <div className="relative">
@@ -181,7 +193,10 @@ function HomeContent() {
         PERSONAL ACADEMIC PORTAL OF WU TAO
       </p>
       <div className="pt-8">
-        <button className="group relative px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-400/50 rounded-full overflow-hidden transition-all duration-300">
+        <button 
+          onClick={onEnter} 
+          className="group relative px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-400/50 rounded-full overflow-hidden transition-all duration-300"
+        >
           <div className="absolute inset-0 bg-cyan-400/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
           <span className="relative flex items-center gap-2 text-sm text-cyan-50 tracking-wider">
             Enter Database <ExternalLink size={14} />
@@ -203,7 +218,6 @@ function EssaysContent() {
       <h2 className="text-3xl font-bold text-white/90">随笔 Essays</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {essays.map((essay, i) => (
-          /* 👇 这里换成了原生的 a 标签，强制刷新跳转，100% 成功 */
           <a href={`/notes/${essay.slug}`} key={i} className="block">
             <div className="group h-full p-6 bg-white/[0.02] border border-white/5 hover:border-cyan-500/30 rounded-xl cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.1)]">
               <div className="w-full h-32 bg-black/40 rounded-lg mb-4 overflow-hidden relative">
@@ -248,9 +262,11 @@ function NotesContent() {
 
 function TeachingContent() {
   const courses = [
-    { title: '力学基础', slug: 'mechanics' },
-    { title: '电磁学进阶', slug: 'electromagnetism' },
-    { title: '波动与光学', slug: 'optics' }
+    { title: '力学基础', slug: 'mechanics', desc: '牛顿运动定律与经典时空' },
+    { title: '电磁学进阶', slug: 'electromagnetism', desc: '麦克斯韦方程组的奥秘' },
+    // 👇 新增的戴维南定理（slug 必须是 thevenin，对应 thevenin.md 文件）
+    { title: '戴维南定理', slug: 'dai-wei-nan-dingli', desc: '复杂电路的等效简化' },
+    { title: '波动与光学', slug: 'niudunhuan', desc: '等厚干涉：牛顿环模拟' }
   ];
 
   return (
@@ -258,6 +274,7 @@ function TeachingContent() {
       <h2 className="text-3xl font-bold text-white/90">高中物理教学 Teaching</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {courses.map((course, i) => (
+          /* 👇 这里的 <a> 标签会自动读取 course.slug 并实现跳转 👇 */
           <a href={`/notes/${course.slug}`} key={i} className="block">
             <div className="h-full aspect-square bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 flex flex-col justify-between hover:border-cyan-400/40 transition-colors group cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
@@ -265,7 +282,7 @@ function TeachingContent() {
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white/80">{course.title}</h3>
-                <p className="text-xs text-white/40 mt-2">核心考点与动画演示</p>
+                <p className="text-xs text-white/40 mt-2">{course.desc}</p>
               </div>
             </div>
           </a>
@@ -298,7 +315,8 @@ function AboutContent() {
 // 动态粒子背景组件 (Quantum Collider Particles)
 // ==========================================
 function QuantumParticles() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // 修复点：添加 HTMLCanvasElement 类型
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -307,11 +325,10 @@ function QuantumParticles() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
+    // 修复点：声明变量的具体类型
     let animationFrameId: number;
     let w: number, h: number, cx: number, cy: number;
     let targetCx: number, targetCy: number;
-    let particles: any[] = [];
-    let waves: any[] = [];
 
     const MAX_PARTICLES = 400;
     const PARTICLE_HISTORY_LEN = 12;
@@ -332,7 +349,8 @@ function QuantumParticles() {
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    const handleMouseMove = (e: any) => {
+    // 修复点：给事件参数 'e' 添加类型 (MouseEvent)
+    const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       targetCx = e.clientX - rect.left;
       targetCy = e.clientY - rect.top;
@@ -349,48 +367,98 @@ function QuantumParticles() {
 
     const parent = canvas.parentElement;
     if (parent) {
-      parent.addEventListener('mousemove', handleMouseMove);
+      // 在这里强制类型转换以适应 TS 检查
+      parent.addEventListener('mousemove', handleMouseMove as EventListener);
       parent.addEventListener('mouseleave', handleMouseLeave);
       parent.addEventListener('click', handleClick);
     }
 
-    function randomRange(min: number, max: number) {
+    // 修复点：给生成随机数函数参数指定类型
+    function randomRange(min: number, max: number): number {
       return min + Math.random() * (max - min);
     }
 
+    // 修复点：明确 class 的属性及其类型
     class Particle {
-      x: number; y: number; angle: number; speed: number; life: number; maxLife: number; radius: number; color: string; curve: number; history: any[];
+      x: number;
+      y: number;
+      angle: number;
+      speed: number;
+      life: number;
+      maxLife: number;
+      radius: number;
+      color: string;
+      curve: number;
+      history: Point[];
+
       constructor(angle: number, speed: number, color: string) {
-        this.x = cx; this.y = cy; this.angle = angle; this.speed = speed; this.life = 120 + Math.random() * 60; this.maxLife = this.life; this.radius = Math.random() * 1.5 + 0.5; this.color = color; this.curve = (Math.random() - 0.5) * 0.02; this.history = [];
+        this.x = cx; 
+        this.y = cy; 
+        this.angle = angle; 
+        this.speed = speed; 
+        this.life = 120 + Math.random() * 60; 
+        this.maxLife = this.life; 
+        this.radius = Math.random() * 1.5 + 0.5; 
+        this.color = color; 
+        this.curve = (Math.random() - 0.5) * 0.02; 
+        this.history = [];
       }
+
       update() {
         this.history.push({ x: this.x, y: this.y });
         if (this.history.length > PARTICLE_HISTORY_LEN) this.history.shift();
-        this.angle += this.curve; this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed; this.speed *= 0.99; this.life--;
+        this.angle += this.curve; 
+        this.x += Math.cos(this.angle) * this.speed; 
+        this.y += Math.sin(this.angle) * this.speed; 
+        this.speed *= 0.99; 
+        this.life--;
       }
+
       draw() {
         if (!ctx) return;
         const alpha = Math.max(0, this.life / this.maxLife);
         for (let i = 0; i < this.history.length; i++) {
           const p = this.history[i];
           const trailAlpha = (i / this.history.length) * alpha * 0.3;
-          ctx.beginPath(); ctx.fillStyle = `rgba(${this.color}, ${trailAlpha})`;
+          ctx.beginPath(); 
+          ctx.fillStyle = `rgba(${this.color}, ${trailAlpha})`;
           const trailRad = this.radius * (i / this.history.length + 0.3);
-          ctx.arc(p.x, p.y, trailRad, 0, Math.PI * 2); ctx.fill();
+          ctx.arc(p.x, p.y, trailRad, 0, Math.PI * 2); 
+          ctx.fill();
         }
-        ctx.beginPath(); ctx.fillStyle = `rgba(${this.color}, ${alpha})`; ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); 
+        ctx.fillStyle = `rgba(${this.color}, ${alpha})`; 
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); 
+        ctx.fill();
       }
     }
 
+    // 修复点：明确 Wave class 的属性及其类型
     class Wave {
-      r: number; alpha: number;
-      constructor() { this.r = 5; this.alpha = 0.3; }
-      update() { this.r += 4; this.alpha *= 0.95; }
+      r: number;
+      alpha: number;
+
+      constructor() { 
+        this.r = 5; 
+        this.alpha = 0.3; 
+      }
+      update() { 
+        this.r += 4; 
+        this.alpha *= 0.95; 
+      }
       draw() {
         if (!ctx) return;
-        ctx.beginPath(); ctx.arc(cx, cy, this.r, 0, Math.PI * 2); ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha})`; ctx.lineWidth = 1; ctx.stroke();
+        ctx.beginPath(); 
+        ctx.arc(cx, cy, this.r, 0, Math.PI * 2); 
+        ctx.strokeStyle = `rgba(0, 255, 255, ${this.alpha})`; 
+        ctx.lineWidth = 1; 
+        ctx.stroke();
       }
     }
+
+    // 修复点：定义数组内容的类型，避免 never[] 报错
+    let particles: Particle[] = [];
+    let waves: Wave[] = [];
 
     function createCollision() {
       if (particles.length > MAX_PARTICLES - 50) particles.splice(0, Math.floor(particles.length * 0.2));
@@ -419,17 +487,28 @@ function QuantumParticles() {
       animationFrameId = requestAnimationFrame(animate);
       if (!ctx) return;
       ctx.clearRect(0, 0, w, h);
-      cx += (targetCx - cx) * 0.08; cy += (targetCy - cy) * 0.08;
+      cx += (targetCx - cx) * 0.08; 
+      cy += (targetCy - cy) * 0.08;
       
-      ctx.save(); ctx.beginPath(); ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)'; ctx.arc(cx, cy, 30, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, 70, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      ctx.save(); 
+      ctx.beginPath(); 
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)'; 
+      ctx.arc(cx, cy, 30, 0, Math.PI * 2); 
+      ctx.stroke(); 
+      ctx.beginPath(); 
+      ctx.arc(cx, cy, 70, 0, Math.PI * 2); 
+      ctx.stroke(); 
+      ctx.restore();
 
       for (let i = waves.length - 1; i >= 0; i--) {
-        waves[i].update(); waves[i].draw();
+        waves[i].update(); 
+        waves[i].draw();
         if (waves[i].alpha < 0.01 || waves[i].r > Math.max(w, h)) waves.splice(i, 1);
       }
 
       for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update(); particles[i].draw();
+        particles[i].update(); 
+        particles[i].draw();
         if (particles[i].life <= 0 || particles[i].x < -50 || particles[i].x > w + 50 || particles[i].y < -50 || particles[i].y > h + 50) particles.splice(i, 1);
       }
 
@@ -440,7 +519,11 @@ function QuantumParticles() {
 
     return () => {
       window.removeEventListener('resize', setCanvasSize);
-      if (parent) { parent.removeEventListener('mousemove', handleMouseMove); parent.removeEventListener('mouseleave', handleMouseLeave); parent.removeEventListener('click', handleClick); }
+      if (parent) { 
+        parent.removeEventListener('mousemove', handleMouseMove as EventListener); 
+        parent.removeEventListener('mouseleave', handleMouseLeave); 
+        parent.removeEventListener('click', handleClick); 
+      }
       cancelAnimationFrame(animationFrameId);
     };
   }, []);

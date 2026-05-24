@@ -6,8 +6,9 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-// 引入你的交互模拟器
+// 引入你的交互模拟器 (确保路径正确)
 import InterferenceSimulator from '@/components/physics-dong-hua/InterferenceSimulator';
+import NewtonRingsSimulator from '@/components/physics-dong-hua/niu-dun-huan-donghua';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -50,7 +51,7 @@ export default async function NotePage({ params }) {
           <article className="bg-black/40 backdrop-blur-xl border border-white/10 p-8 md:p-14 rounded-3xl shadow-2xl">
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
-              {data.title}
+              {data.title || '未命名笔记'}
             </h1>
             
             <p className="text-cyan-300/60 font-mono text-sm mb-10 pb-6 border-b border-white/10">
@@ -75,8 +76,10 @@ export default async function NotePage({ params }) {
               </ReactMarkdown>
             </div>
 
+            {/* 🔬 智能物理实验室闸口：根据 slug 自动加载对应的模拟器 */}
             <div className="mt-16 border-t border-white/10 pt-10 pb-10">
-               <InterferenceSimulator />
+               {slug === 'guang-de-gan-she' && <InterferenceSimulator />}
+               {slug === 'niudunhuan' && <NewtonRingsSimulator />}
             </div>
 
           </article>
@@ -89,7 +92,8 @@ export default async function NotePage({ params }) {
       <div className="relative min-h-screen bg-[#030305] flex items-center justify-center text-white font-sans">
         <div className="relative z-10 text-center bg-black/40 backdrop-blur-xl border border-white/10 p-12 rounded-3xl">
           <h1 className="text-2xl font-bold mb-4">找不到这篇笔记 😢</h1>
-          <a href="/" className="px-6 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full">
+          <p className="text-gray-400 mb-6 text-sm">未能找到对应的 Markdown 文件</p>
+          <a href="/" className="px-6 py-2 bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-full transition-colors hover:bg-cyan-500/40">
             返回主页
           </a>
         </div>
