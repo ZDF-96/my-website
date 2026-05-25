@@ -6,12 +6,18 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-// 引入你的交互模拟器 (确保路径正确)
+// 🚀 【完美回归】因为文件夹路径拼写已经修复，且组件自带 'use client'
+// 我们直接使用最标准的纯净引入，摒弃报错的 dynamic 写法！
 import InterferenceSimulator from '@/components/physics-dong-hua/InterferenceSimulator';
 import NewtonRingsSimulator from '@/components/physics-dong-hua/niu-dun-huan-donghua';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
+
+  // 🛠️ 后台调试打印
+  console.log("-----------------------------------------");
+  console.log("📊 当前实验室检测到访问的网址 Slug 为:", slug);
+  console.log("-----------------------------------------");
 
   try {
     const filePath = path.join(process.cwd(), 'ke-jian-notes', `${slug}.md`);
@@ -27,10 +33,13 @@ export default async function NotePage({ params }) {
       }
     }
 
+    // 容错处理：确保匹配时不受 URL 编码干扰
+    const currentSlug = decodeURIComponent(slug).trim();
+
     return (
       <div className="relative min-h-screen bg-[#030305] text-white font-sans">
         
-        {/* 🌌 动态背景：调用你的 beijing.html */}
+        {/* 🌌 动态背景 */}
         <iframe 
           src="/beijing.html" 
           className="fixed inset-0 w-full h-full border-none z-0 pointer-events-none opacity-80"
@@ -47,7 +56,7 @@ export default async function NotePage({ params }) {
             &larr; 返回主页
           </a>
           
-          {/* 📝 文章面板：半透明磨砂质感 */}
+          {/* 📝 文章面板 */}
           <article className="bg-black/40 backdrop-blur-xl border border-white/10 p-8 md:p-14 rounded-3xl shadow-2xl">
             
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
@@ -58,7 +67,7 @@ export default async function NotePage({ params }) {
               发布日期: {displayDate}
             </p>
             
-            {/* 🎨 免安装排版魔法：利用原生 CSS 美化内容 */}
+            {/* 🎨 Markdown 渲染 */}
             <div className="
               text-[#E5E7EB] leading-loose text-lg tracking-wide
               [&>p]:mb-6 [&>p]:indent-8
@@ -76,10 +85,13 @@ export default async function NotePage({ params }) {
               </ReactMarkdown>
             </div>
 
-            {/* 🔬 智能物理实验室闸口：根据 slug 自动加载对应的模拟器 */}
+            {/* 🔬 智能物理实验室闸口：对齐英文路径名 */}
             <div className="mt-16 border-t border-white/10 pt-10 pb-10">
-               {slug === 'guang-de-gan-she' && <InterferenceSimulator />}
-               {slug === 'niudunhuan' && <NewtonRingsSimulator />}
+               {/* 完美保留之前的杨氏双缝干涉 */}
+               {currentSlug === 'interference-of-light' && <InterferenceSimulator />}
+               
+               {/* ✅ 这里已经修复：调用必须用大写的 NewtonRingsSimulator，并兼容了你的命名 */}
+               {(currentSlug === 'niudunhuan' || currentSlug === 'niu-dun-huan-donghua') && <NewtonRingsSimulator />}
             </div>
 
           </article>

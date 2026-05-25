@@ -210,8 +210,8 @@ function HomeContent({ onEnter }: HomeContentProps) {
 function EssaysContent() {
   const essays = [
     { title: "杨氏双缝干涉", date: "2026-05-22", tag: "Optics", slug: "interference-of-light" },
-    { title: "为什么量子力学不像你想象的那样", date: "2026-04-15", tag: "Quantum", slug: "quantum-reality" },
-    { title: "从路径积分到世界线：一种直觉视角的解读", date: "2026-03-02", tag: "QFT", slug: "path-integral" },
+    { title: "暂时没想好写什么", date: "2026-04-15", tag: "Quantum", slug: "quantum-reality" },
+    { title: "暂时没想好写什么", date: "2026-03-02", tag: "QFT", slug: "path-integral" },
   ];
   return (
     <div className="space-y-8">
@@ -262,8 +262,8 @@ function NotesContent() {
 
 function TeachingContent() {
   const courses = [
-    { title: '力学基础', slug: 'mechanics', desc: '牛顿运动定律与经典时空' },
-    { title: '电磁学进阶', slug: 'electromagnetism', desc: '麦克斯韦方程组的奥秘' },
+    { title: '暂时没想好写什么', slug: 'mechanics', desc: '暂时没想好写什么1' },
+    { title: '暂时没想好写什么', slug: 'electromagnetism', desc: '暂时没想好写什么1' },
     // 👇 新增的戴维南定理（slug 必须是 thevenin，对应 thevenin.md 文件）
     { title: '戴维南定理', slug: 'dai-wei-nan-dingli', desc: '复杂电路的等效简化' },
     { title: '波动与光学', slug: 'niudunhuan', desc: '等厚干涉：牛顿环模拟' }
