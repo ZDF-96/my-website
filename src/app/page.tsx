@@ -2,10 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles } from 'lucide-react';
+import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles, ArrowRight, Orbit, BookOpen, Download } from 'lucide-react';
 
 // ==========================================
-// TypeScript 接口定义 (修复 any 报错的核心)
+// TypeScript 接口定义
 // ==========================================
 interface Point {
   x: number;
@@ -38,9 +38,9 @@ export default function AcademicPortal() {
 
   return (
     <div className="flex h-screen w-full bg-[#030305] text-white overflow-hidden font-sans selection:bg-cyan-500/30">
-      {/* 🌌 全局背景：微弱动态渐变 */}
-      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-[#030305] to-[#030305]" />
-      <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+      {/* 🌌 全局背景：保留极弱的噪点质感 */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/10 via-[#030305] to-[#030305]" />
+      <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay pointer-events-none"></div>
 
       {/* ========================================== */}
       {/* 左侧固定栏 (Sidebar) */}
@@ -56,12 +56,12 @@ export default function AcademicPortal() {
             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full blur opacity-25 group-hover:opacity-60 transition duration-700"></div>
             <img 
               src="/avatar.jpg" 
-              alt="吴涛" 
+              alt="吴 涛" 
               className="relative w-28 h-28 rounded-full object-cover border-2 border-white/10 group-hover:border-cyan-400/50 transition-colors duration-500"
             />
           </div>
           <div className="text-center space-y-1">
-            <h1 className="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-cyan-200">吴涛</h1>
+            <h1 className="text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white to-cyan-200">吴 涛</h1>
             <p className="text-sm font-mono text-cyan-500/70">WU TAO</p>
           </div>
           <p className="text-xs text-white/40 text-center leading-relaxed px-2">
@@ -117,8 +117,16 @@ export default function AcademicPortal() {
       {/* ========================================== */}
       <main className="relative z-10 flex-1 flex flex-col h-full overflow-hidden">
         
+        {/* 🌌 嵌入自定义 HTML 动态背景 */}
+        <iframe 
+          src="/contentbj.html" 
+          className="absolute inset-0 w-full h-full border-none z-0 pointer-events-none opacity-60" 
+          title="Custom Background"
+          aria-hidden="true"
+        />
+
         {/* 顶部导航栏 */}
-        <header className="absolute top-0 w-full z-30 h-16 bg-[#030305]/60 backdrop-blur-md border-b border-white/5 flex items-center px-8 justify-between">
+        <header className="absolute top-0 w-full z-30 h-16 bg-[#030305]/40 backdrop-blur-md border-b border-white/5 flex items-center px-8 justify-between">
           <div className="flex items-center gap-2 text-cyan-500/50">
             <Sparkles size={16} />
             <span className="text-xs font-mono tracking-widest uppercase">Quantum Portal // 教研</span>
@@ -150,7 +158,7 @@ export default function AcademicPortal() {
         </header>
 
         {/* 动态内容展示区 */}
-        <div className="flex-1 overflow-y-auto pt-16 scroll-smooth">
+        <div className="relative z-10 flex-1 overflow-y-auto pt-16 scroll-smooth">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -180,28 +188,53 @@ export default function AcademicPortal() {
 
 function HomeContent({ onEnter }: HomeContentProps) {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 text-center space-y-8 mt-10">
-      <div className="relative">
-        <div className="absolute -inset-10 bg-cyan-500/20 blur-[100px] rounded-full pointer-events-none"></div>
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-cyan-400 leading-tight">
-          If the universe is the answer, <br />
-          what is the question? <br />
-          <span className="italic font-light">Nature of Reality</span>
-        </h1>
-      </div>
-      <p className="text-lg text-white/40 tracking-widest font-mono">
-        PERSONAL ACADEMIC PORTAL OF WU TAO
-      </p>
-      <div className="pt-8">
-        <button 
-          onClick={onEnter} 
-          className="group relative px-8 py-3 bg-white/5 border border-white/10 hover:border-cyan-400/50 rounded-full overflow-hidden transition-all duration-300"
-        >
-          <div className="absolute inset-0 bg-cyan-400/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-          <span className="relative flex items-center gap-2 text-sm text-cyan-50 tracking-wider">
-            Enter Database <ExternalLink size={14} />
-          </span>
-        </button>
+    <div className="flex flex-col items-center justify-center flex-1 h-full w-full relative selection:bg-cyan-500/20">
+      {/* 🌌 背景柔和微光 */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-600/5 blur-[120px] rounded-full pointer-events-none" />
+
+      {/* 🌟 核心排版区 */}
+      <div className="relative z-10 flex flex-col items-center space-y-10 w-full max-w-3xl mt-[-5vh]">
+        
+        {/* 顶部极简装饰 */}
+        <div className="flex items-center gap-4 text-cyan-500/40">
+          <div className="h-[1px] w-16 bg-gradient-to-r from-transparent to-cyan-500/40" />
+          <Orbit size={18} className="animate-[spin_20s_linear_infinite] opacity-50" />
+          <div className="h-[1px] w-16 bg-gradient-to-l from-transparent to-cyan-500/40" />
+        </div>
+
+        {/* 核心英文名言 (杂志级错落排版) */}
+        <div className="text-center space-y-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-wide text-white/80 leading-[1.3]">
+            If the universe is the <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-300">answer</span>, <br />
+            what is the <span className="italic font-serif text-white/50 lowercase">question?</span>
+          </h1>
+          <p className="text-xs md:text-sm text-cyan-400/50 font-mono tracking-[0.4em] uppercase">
+            Exploring the Nature of Reality
+          </p>
+        </div>
+
+        {/* 中文哲学意境 (庄子《知北游》) */}
+        <div className="relative py-4 px-10 border border-white/5 bg-white/[0.01] rounded-2xl backdrop-blur-sm group hover:border-cyan-500/20 transition-colors duration-700">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent rounded-2xl" />
+          <p className="relative text-lg tracking-[0.6em] text-white/50 font-light ml-2 group-hover:text-cyan-100/80 transition-colors duration-700">
+            判天地之美 · 析万物之理
+          </p>
+        </div>
+
+        {/* 极简高级按钮 */}
+        <div className="pt-8">
+          <button 
+            onClick={onEnter} 
+            className="group relative flex items-center gap-4 px-8 py-3.5 bg-transparent border border-cyan-500/20 hover:border-cyan-400/60 rounded-full overflow-hidden transition-all duration-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)]"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <span className="relative text-xs text-cyan-50 tracking-[0.2em] uppercase font-mono">
+              Initialize Sequence
+            </span>
+            <ArrowRight size={15} className="relative text-cyan-400 group-hover:translate-x-1.5 transition-transform duration-300" />
+          </button>
+        </div>
+
       </div>
     </div>
   );
@@ -216,18 +249,28 @@ function EssaysContent() {
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold text-white/90">随笔 Essays</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {essays.map((essay, i) => (
           <a href={`/notes/${essay.slug}`} key={i} className="block">
-            <div className="group h-full p-6 bg-white/[0.02] border border-white/5 hover:border-cyan-500/30 rounded-xl cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.1)]">
-              <div className="w-full h-32 bg-black/40 rounded-lg mb-4 overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            {/* ✨ 优化后的卡片设计：更紧凑、背景悬浮光晕、去掉大黑块 */}
+            <div className="group relative p-6 bg-gradient-to-br from-white/[0.03] to-transparent border border-white/10 hover:border-cyan-400/50 rounded-2xl cursor-pointer transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(34,211,238,0.15)] backdrop-blur-md overflow-hidden flex flex-col justify-between min-h-[160px]">
+              {/* 悬浮微光 */}
+              <div className="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full group-hover:bg-cyan-400/20 transition-all duration-700"></div>
+              
+              <div>
+                <div className="flex justify-between items-start mb-4 relative z-10">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500/10 text-cyan-400 group-hover:scale-110 transition-transform duration-500">
+                    <FileText size={14} />
+                  </span>
+                  <span className="text-[10px] font-mono text-white/40 bg-black/30 border border-white/5 px-2 py-1 rounded-md">{essay.date}</span>
+                </div>
+                <h3 className="text-lg font-medium text-white/80 group-hover:text-cyan-50 transition-colors leading-snug relative z-10">{essay.title}</h3>
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 px-2 py-0.5 rounded-full">{essay.tag}</span>
-                <span className="text-xs font-mono text-white/30">{essay.date}</span>
+              
+              <div className="mt-6 flex items-center justify-between relative z-10">
+                <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 px-2.5 py-1 rounded-full">{essay.tag}</span>
+                <ArrowRight size={14} className="text-white/20 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-300" />
               </div>
-              <h3 className="text-lg text-white/80 group-hover:text-cyan-50 transition-colors">{essay.title}</h3>
             </div>
           </a>
         ))}
@@ -249,7 +292,7 @@ function NotesContent() {
       <h2 className="text-3xl font-bold text-white/90 border-b border-white/10 pb-4">科研与研读笔记 Notes</h2>
       <div className="space-y-2 font-mono text-sm">
         {notes.map((note, i) => (
-          <a href={`/notes/${note.slug}`} key={i} className="flex items-center gap-4 p-4 hover:bg-white/5 rounded-lg border border-transparent hover:border-white/10 cursor-pointer transition-all">
+          <a href={`/notes/${note.slug}`} key={i} className="flex items-center gap-4 p-4 bg-white/[0.01] hover:bg-white/5 rounded-lg border border-transparent hover:border-white/10 cursor-pointer transition-all backdrop-blur-sm">
             <FileText size={16} className="text-cyan-500/50" />
             <span className="text-white/70">{note.title}.md</span>
             <span className="ml-auto text-white/20 text-xs">Updated recently</span>
@@ -264,7 +307,6 @@ function TeachingContent() {
   const courses = [
     { title: '暂时没想好写什么', slug: 'mechanics', desc: '暂时没想好写什么1' },
     { title: '暂时没想好写什么', slug: 'electromagnetism', desc: '暂时没想好写什么1' },
-    // 👇 新增的戴维南定理（slug 必须是 thevenin，对应 thevenin.md 文件）
     { title: '戴维南定理', slug: 'dai-wei-nan-dingli', desc: '复杂电路的等效简化' },
     { title: '波动与光学', slug: 'niudunhuan', desc: '等厚干涉：牛顿环模拟' }
   ];
@@ -272,18 +314,34 @@ function TeachingContent() {
   return (
     <div className="space-y-8">
       <h2 className="text-3xl font-bold text-white/90">高中物理教学 Teaching</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {courses.map((course, i) => (
-          /* 👇 这里的 <a> 标签会自动读取 course.slug 并实现跳转 👇 */
           <a href={`/notes/${course.slug}`} key={i} className="block">
-            <div className="h-full aspect-square bg-gradient-to-br from-white/5 to-transparent border border-white/10 rounded-2xl p-6 flex flex-col justify-between hover:border-cyan-400/40 transition-colors group cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform">
-                 <Book size={18} />
+            {/* ✨ 优化后的卡片设计：去掉强制正方形、增强层次感、增加贯穿引导线 */}
+            <div className="relative bg-gradient-to-b from-white/[0.03] to-transparent border border-white/10 hover:border-cyan-400/50 rounded-2xl p-6 flex flex-col transition-all duration-500 group cursor-pointer hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(34,211,238,0.2)] overflow-hidden min-h-[180px]">
+              
+              {/* 顶部悬浮亮线 */}
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+              <div className="flex items-center gap-4 mb-5">
+                <div className="w-12 h-12 rounded-xl bg-cyan-900/30 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 group-hover:scale-110 transition-all duration-500 shadow-inner">
+                   <Book size={20} />
+                </div>
+                {/* 分割引导线 */}
+                <div className="h-[1px] flex-1 bg-gradient-to-r from-white/10 to-transparent"></div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-white/80">{course.title}</h3>
-                <p className="text-xs text-white/40 mt-2">{course.desc}</p>
+              
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white/90 group-hover:text-cyan-50 transition-colors tracking-wide">{course.title}</h3>
+                <p className="text-sm text-white/40 mt-2 leading-relaxed">{course.desc}</p>
               </div>
+
+              {/* 底部交互指引 */}
+              <div className="mt-6 flex items-center text-[11px] font-mono text-cyan-500/50 group-hover:text-cyan-400 transition-colors">
+                <span>START MODULE</span>
+                <span className="ml-2 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-300">→</span>
+              </div>
+
             </div>
           </a>
         ))}
@@ -293,17 +351,142 @@ function TeachingContent() {
 }
 
 function SlidesContent() {
+  // 核心状态：记录当前查看的是 'books' 还是 'slides'
+  const [activeMode, setActiveMode] = React.useState<'books' | 'slides'>('books');
+  const [groupedData, setGroupedData] = React.useState<Record<string, any[]>>({});
+  const [loading, setLoading] = React.useState(true);
+
+  // 当切换模式时，自动向对应的后端 API 发送请求
+  React.useEffect(() => {
+    setLoading(true);
+    setGroupedData({}); // 清空旧数据展现重新扫描的效果
+    
+    fetch(`/api/${activeMode}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const groups: Record<string, any[]> = {};
+          data.forEach(item => {
+            const cat = (item.category.toLowerCase() === 'books' || item.category.toLowerCase() === 'slides')
+                ? '默认归档' 
+                : item.category;
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(item);
+          });
+          setGroupedData(groups);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [activeMode]);
+
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-bold text-white/90 border-b border-white/10 pb-4">课件库 Slides</h2>
-      <p className="text-white/40">The presentation decks and PDF resources will be displayed here.</p>
+      {/* 头部标题与双子菜单切换器 */}
+      <div className="border-b border-white/10 pb-6">
+        <h2 className="text-3xl font-bold text-white/90 mb-6">数字资源库 Digital Resources</h2>
+        
+        {/* 丝滑的科幻切换面板 */}
+        <div className="flex items-center gap-8">
+          <button
+            onClick={() => setActiveMode('books')}
+            className={`relative pb-2 text-[15px] font-medium transition-colors duration-300 ${
+              activeMode === 'books' ? 'text-cyan-400' : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            📚 典藏书库 (Books)
+            {activeMode === 'books' && (
+              <motion.div layoutId="resource-subnav" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveMode('slides')}
+            className={`relative pb-2 text-[15px] font-medium transition-colors duration-300 ${
+              activeMode === 'slides' ? 'text-cyan-400' : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            📽️ 教学课件 (Slides)
+            {activeMode === 'slides' && (
+              <motion.div layoutId="resource-subnav" className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* 动态加载动画 */}
+      {loading ? (
+         <div className="flex flex-col items-center justify-center h-40 text-cyan-400/50 font-mono text-sm gap-3">
+           <Orbit size={24} className="animate-spin text-cyan-400/70" />
+           <span className="animate-pulse tracking-[0.2em] uppercase">调取数据矩阵中 Accessing Matrix...</span>
+         </div>
+      ) : Object.keys(groupedData).length === 0 ? (
+         <div className="text-center py-20 text-white/20 font-mono text-sm border border-dashed border-white/5 rounded-2xl backdrop-blur-sm">
+           未探测到相关物理文件 No files detected in this sector.
+         </div>
+      ) : (
+        <div className="space-y-10">
+          {Object.entries(groupedData).map(([category, itemsList]) => (
+            <div key={category} className="space-y-5">
+              
+              {/* 分类小标题 */}
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-4 bg-cyan-500/50 rounded-full" />
+                <h3 className="text-lg font-medium text-cyan-50 tracking-wide">{category}</h3>
+                <span className="text-xs font-mono text-cyan-500/40 ml-2">[{itemsList.length} items]</span>
+                <div className="flex-1 h-[1px] bg-gradient-to-r from-white/10 to-transparent ml-4" />
+              </div>
+
+              {/* 资源卡片网格 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {itemsList.map((item, i) => (
+                  <a href={encodeURI(item.link)} target="_blank" rel="noopener noreferrer" key={i} className="block group">
+                    <div className="flex items-center gap-4 p-4 bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 hover:border-cyan-400/30 rounded-2xl transition-all duration-500 hover:shadow-[0_0_30px_rgba(34,211,238,0.05)] backdrop-blur-sm">
+                      
+                      {/* ✅ 升级点：智能动态识别图标 */}
+                      <div className="w-10 h-12 flex-shrink-0 bg-black/40 border border-white/10 rounded flex items-center justify-center text-cyan-500/50 group-hover:text-cyan-400 group-hover:border-cyan-400/30 transition-colors shadow-inner">
+                        {item.link.match(/\.docx?$/i)
+                          ? <FileText size={18} className="group-hover:scale-110 transition-transform duration-500" />
+                          : item.link.match(/\.pptx?$/i)
+                          ? <Presentation size={18} className="group-hover:scale-110 transition-transform duration-500" />
+                          : <BookOpen size={18} className="group-hover:scale-110 transition-transform duration-500" />
+                        }
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-[15px] font-medium text-white/80 group-hover:text-cyan-50 transition-colors truncate">
+                          {item.title}
+                        </h4>
+                        <div className="mt-1">
+                          {/* 自动识别是 PDF 还是 PPT 还是 WORD */}
+                          <span className="text-[10px] text-white/20 font-mono uppercase">
+                            {item.link.match(/\.docx?$/i) ? 'WORD DOC' : item.link.match(/\.pptx?$/i) ? 'PPT DECK' : 'PDF DOC'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-full bg-white/[0.02] group-hover:bg-cyan-500/10 text-white/20 group-hover:text-cyan-400 transition-all duration-300">
+                        <Download size={14} />
+                      </div>
+
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 function AboutContent() {
   return (
-    <div className="space-y-6 max-w-2xl text-white/70 leading-relaxed">
+    <div className="space-y-6 max-w-2xl text-white/70 leading-relaxed bg-white/[0.01] p-8 rounded-2xl border border-white/5 backdrop-blur-sm">
       <h2 className="text-3xl font-bold text-white/90 mb-8">关于我</h2>
       <p>硕士毕业于华中师范大学粒子物理研究所，师从李新强教授。硕士研究课题聚焦于 U(3) 手征微扰论框架下 η′ → ππa 衰变过程的唯象研究。</p>
       <p>现任教于云南省沾益区第三中学，致力于将前沿物理的严谨思维逻辑降维融入高中基础教育，构建理论与直觉相统一的物理课堂。同时，我也热衷于研读《黄帝内经》等经典，探索自然哲学中的普遍规律。</p>
@@ -315,7 +498,6 @@ function AboutContent() {
 // 动态粒子背景组件 (Quantum Collider Particles)
 // ==========================================
 function QuantumParticles() {
-  // 修复点：添加 HTMLCanvasElement 类型
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
   useEffect(() => {
@@ -325,7 +507,6 @@ function QuantumParticles() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // 修复点：声明变量的具体类型
     let animationFrameId: number;
     let w: number, h: number, cx: number, cy: number;
     let targetCx: number, targetCy: number;
@@ -349,7 +530,6 @@ function QuantumParticles() {
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    // 修复点：给事件参数 'e' 添加类型 (MouseEvent)
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       targetCx = e.clientX - rect.left;
@@ -367,18 +547,15 @@ function QuantumParticles() {
 
     const parent = canvas.parentElement;
     if (parent) {
-      // 在这里强制类型转换以适应 TS 检查
       parent.addEventListener('mousemove', handleMouseMove as EventListener);
       parent.addEventListener('mouseleave', handleMouseLeave);
       parent.addEventListener('click', handleClick);
     }
 
-    // 修复点：给生成随机数函数参数指定类型
     function randomRange(min: number, max: number): number {
       return min + Math.random() * (max - min);
     }
 
-    // 修复点：明确 class 的属性及其类型
     class Particle {
       x: number;
       y: number;
@@ -433,7 +610,6 @@ function QuantumParticles() {
       }
     }
 
-    // 修复点：明确 Wave class 的属性及其类型
     class Wave {
       r: number;
       alpha: number;
@@ -456,7 +632,6 @@ function QuantumParticles() {
       }
     }
 
-    // 修复点：定义数组内容的类型，避免 never[] 报错
     let particles: Particle[] = [];
     let waves: Wave[] = [];
 

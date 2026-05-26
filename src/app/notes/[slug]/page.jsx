@@ -41,7 +41,7 @@ export default async function NotePage({ params }) {
         
         {/* 🌌 动态背景 */}
         <iframe 
-          src="/beijing.html" 
+          src="/cdcard.html" 
           className="fixed inset-0 w-full h-full border-none z-0 pointer-events-none opacity-80"
           title="Background Animation"
         />

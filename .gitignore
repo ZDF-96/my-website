@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# 屏蔽大体积的数字文库和课件，防止卡死 Git
+/public/books/
+/public/slides/
