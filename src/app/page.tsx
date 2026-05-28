@@ -305,7 +305,7 @@ function NotesContent() {
 
 function TeachingContent() {
   const courses = [
-    { title: '暂时没想好写什么', slug: 'mechanics', desc: '暂时没想好写什么1' },
+    { title: '简谐运动', slug: 'jian-xie-yun-dong', desc: '简谐运动；简谐波' },
     { title: '暂时没想好写什么', slug: 'electromagnetism', desc: '暂时没想好写什么1' },
     { title: '戴维南定理', slug: 'dai-wei-nan-dingli', desc: '复杂电路的等效简化' },
     { title: '波动与光学', slug: 'niudunhuan', desc: '等厚干涉：牛顿环模拟' }

@@ -6,13 +6,16 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-// 引入我们刚刚封装的终极背景组件！(注意确认路径是否正确)
+// 引入背景组件
 import QuantumBackground from '@/components/QuantumBackground';
 
+// 引入各个物理动画组件
 import InterferenceSimulator from '@/components/physics-dong-hua/InterferenceSimulator';
 import NewtonRingsSimulator from '@/components/physics-dong-hua/niu-dun-huan-donghua';
-// 引入戴维南动画
 import TheveninSimulator from '@/components/physics-dong-hua/TheveninSimulator';
+
+// ✅ 关键点 1：明确从 jian-xie-bo.jsx 中引入动画组件！
+import DopplerSimulation from '@/components/physics-dong-hua/jian-xie-bo';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -36,7 +39,7 @@ export default async function NotePage({ params }) {
     return (
       <div className="relative min-h-screen bg-[#030305] text-white font-sans">
         
-        {/* 🌟 放置原生 React 背景组件，彻底告别 iframe！ */}
+        {/* 🌟 放置原生 React 背景组件 */}
         <QuantumBackground />
 
         <main className="relative z-10 max-w-4xl mx-auto px-6 py-12 md:py-20">
@@ -76,6 +79,9 @@ export default async function NotePage({ params }) {
                {currentSlug === 'interference-of-light' && <InterferenceSimulator />}
                {(currentSlug === 'niudunhuan' || currentSlug === 'niu-dun-huan-donghua') && <NewtonRingsSimulator />}
                {currentSlug === 'dai-wei-nan-dingli' && <TheveninSimulator />}
+               
+               {/* ✅ 关键点 2：当访问 jian-xie-yun-dong.md 时，渲染这个动画！ */}
+               {currentSlug === 'jian-xie-yun-dong' && <DopplerSimulation />}
             </div>
 
           </article>
