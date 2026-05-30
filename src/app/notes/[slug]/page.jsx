@@ -13,6 +13,7 @@ import QuantumBackground from '@/components/QuantumBackground';
 import InterferenceSimulator from '@/components/physics-dong-hua/InterferenceSimulator';
 import NewtonRingsSimulator from '@/components/physics-dong-hua/niu-dun-huan-donghua';
 import TheveninSimulator from '@/components/physics-dong-hua/TheveninSimulator';
+import FresnelDiffractionSim from '@/components/physics-dong-hua/guang-de-yan-she';
 
 // ✅ 关键点 1：明确从 jian-xie-bo.jsx 中引入动画组件！
 import DopplerSimulation from '@/components/physics-dong-hua/jian-xie-bo';
@@ -82,6 +83,7 @@ export default async function NotePage({ params }) {
                
                {/* ✅ 关键点 2：当访问 jian-xie-yun-dong.md 时，渲染这个动画！ */}
                {currentSlug === 'jian-xie-yun-dong' && <DopplerSimulation />}
+               {currentSlug === 'guang-de-yan-she' && <FresnelDiffractionSim />}
             </div>
 
           </article>
