@@ -28,7 +28,7 @@ $$
 
 实际上，相邻两个半波带的面积和倾斜因子变化极其缓慢，其振幅大小相差微小，合振幅的叠加关系可以参看下面的矢量图。
 
-![半波带法中的振幅矢量图](/picture/guang-de-yan-sheguang-de-yan-she1.jpg)
+![半波带法中的振幅矢量图](/picture/guang-de-yan-she/guang-de-yan-she1.jpg)
 
 最后，我们可以通过级数近似来计算合振幅：
 
