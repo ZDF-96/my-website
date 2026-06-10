@@ -2,8 +2,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { besselj } from 'bessel'; 
 
-const POINTS = 600; 
-const R_MAX = 4.0; // ✅ 将视场半径扩大到 4.0 mm，以便完整显示 3mm 的圆孔
+// ✅ 极致采样配置
+const POINTS = 1000; // 1D 曲线上有 1000 个采样点，曲线极其顺滑
+const R_MAX = 4.0; // 视场 4.0mm
+const CANVAS_RESOLUTION = 1600; // ✅ 物理像素分辨率 1600x1600 (4x SSAA 极清画质)
 
 const FresnelDiffractionLab = () => {
   const [mode, setMode] = useState('aperture'); 
@@ -28,8 +30,9 @@ const FresnelDiffractionLab = () => {
     for (let i = 0; i < POINTS; i++) {
       const rho = (i / (POINTS - 1)) * R_MAX;
       let reInt = 0, imInt = 0;
-      // ✅ 提高积分步数，应对大半径带来的高频相位震荡
-      const steps = 500; 
+      
+      // ✅ 提高积分步数到 1000，完美应对高菲涅耳数下的剧烈震荡
+      const steps = 1000; 
       const dr = a / steps;
       for (let j = 0; j < steps; j++) {
         const r = (j + 0.5) * dr;
@@ -86,8 +89,16 @@ const FresnelDiffractionLab = () => {
         const rRatio = rPix / (width2D / 2);
 
         if (rRatio <= 1.0) {
-          const index1D = Math.floor(rRatio * (POINTS - 1));
-          const val = Math.pow(intensityProfile[index1D] || 0, 0.85); 
+          // 精确的双线性插值寻址
+          const indexFloat = rRatio * (POINTS - 1);
+          const i1 = Math.floor(indexFloat);
+          const i2 = Math.min(i1 + 1, POINTS - 1);
+          const weight = indexFloat - i1;
+          
+          const rawVal = intensityProfile[i1] * (1 - weight) + intensityProfile[i2] * weight;
+          
+          // ✅ Gamma = 0.9，稍微提亮暗部，让干涉条纹更明显
+          const val = Math.pow(rawVal, 0.9); 
 
           let r = 0, g = 0, b = 0;
           if (wavelength < 550) { b = 255 * val; g = 200 * val; r = 0; }
@@ -111,9 +122,10 @@ const FresnelDiffractionLab = () => {
     if (rGeoPix < width2D / 2) {
       ctx2D.beginPath();
       ctx2D.arc(cx, cy, rGeoPix, 0, 2 * Math.PI);
-      ctx2D.strokeStyle = 'rgba(255, 255, 255, 0.6)'; 
-      ctx2D.setLineDash([12, 12]); 
-      ctx2D.lineWidth = 3; 
+      ctx2D.strokeStyle = 'rgba(255, 255, 255, 0.5)'; 
+      // 虚线间距调大，适应高分辨率
+      ctx2D.setLineDash([20, 20]); 
+      ctx2D.lineWidth = 4; 
       ctx2D.stroke();
       ctx2D.setLineDash([]);
     }
@@ -128,7 +140,7 @@ const FresnelDiffractionLab = () => {
         ctx1D.beginPath();
         ctx1D.moveTo(r1DX, 0);
         ctx1D.lineTo(r1DX, ch);
-        ctx1D.strokeStyle = 'rgba(103, 232, 249, 0.8)'; 
+        ctx1D.strokeStyle = 'rgba(103, 232, 249, 0.6)'; 
         ctx1D.setLineDash([8, 8]);
         ctx1D.lineWidth = 2;
         ctx1D.stroke();
@@ -142,6 +154,9 @@ const FresnelDiffractionLab = () => {
     ctx1D.beginPath();
     ctx1D.strokeStyle = '#f43f5e'; 
     ctx1D.lineWidth = 4; 
+    // 平滑处理曲线连接点
+    ctx1D.lineJoin = 'round';
+    ctx1D.lineCap = 'round';
 
     const plotMaxY = mode === 'aperture' ? 1.0 : Math.max(1.5, ...intensityProfile);
     let gradient = ctx1D.createLinearGradient(0, ch, 0, 0);
@@ -210,13 +225,11 @@ const FresnelDiffractionLab = () => {
                 {mode === 'aperture' ? '圆孔半径 a' : '圆屏半径 a'}
               </label>
               <div className="flex items-center gap-1 bg-black/40 border border-gray-700 rounded-md px-2 py-1">
-                {/* ✅ 解锁输入框最大值为 4.0 */}
                 <input type="number" min="0.01" max="4.0" step="0.01" value={radius} onChange={(e) => setRadius(Math.max(0.01, Math.min(4.0, Number(e.target.value))))}
                   className="w-12 text-right bg-transparent text-sm text-cyan-400 font-mono focus:outline-none" />
                 <span className="text-xs text-gray-500">mm</span>
               </div>
             </div>
-            {/* ✅ 解锁滑动条最大值为 4.0 */}
             <input type="range" min="0.1" max="4.0" step="0.01" value={radius} onChange={(e) => setRadius(Number(e.target.value))}
               className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-cyan-400" />
           </div>
@@ -268,7 +281,8 @@ const FresnelDiffractionLab = () => {
         <div className="relative p-1 rounded-2xl bg-gradient-to-b from-gray-700 to-gray-900 shadow-2xl">
             <div className="absolute inset-0 rounded-2xl ring-1 ring-white/10 ring-inset"></div>
             <div className="bg-[#050505] p-2 rounded-xl">
-                <canvas ref={canvas2DRef} width={800} height={800} className="rounded-lg max-w-full h-auto aspect-square" style={{ maxWidth: '420px' }} />
+                {/* ✅ 1600x1600 终极超采样抗锯齿 */}
+                <canvas ref={canvas2DRef} width={CANVAS_RESOLUTION} height={CANVAS_RESOLUTION} className="rounded-lg max-w-full h-auto aspect-square" style={{ maxWidth: '420px' }} />
             </div>
             
             <div className="absolute top-5 left-5 px-2 py-1 bg-black/60 backdrop-blur-sm border border-white/10 rounded text-[10px] text-gray-300 font-mono uppercase tracking-widest pointer-events-none">
