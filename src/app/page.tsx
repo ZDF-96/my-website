@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles, ArrowRight, Orbit, BookOpen, Download } from 'lucide-react';
+import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, ExternalLink, Sparkles, ArrowRight, Orbit, BookOpen, Download,Bot } from 'lucide-react';
 
 // ==========================================
 // TypeScript 接口定义
@@ -24,6 +24,8 @@ const NAV_ITEMS = [
   { id: 'essays', label: 'Essays', icon: FileText },
   { id: 'notes', label: 'Notes', icon: Book },
   { id: 'teaching', label: 'Teaching', icon: Users },
+  // 🌟 下面这一行是新增的 AI 答疑入口
+  { id: 'chat', label: 'AI 答疑', icon: Bot, isLink: true, href: '/chat' },
   { id: 'slides', label: 'Slides', icon: Presentation },
   { id: 'about', label: 'About', icon: Info },
 ];
@@ -133,6 +135,24 @@ export default function AcademicPortal() {
           </div>
           <nav className="flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
+              // 🌟 1. 如果是外链（比如咱们的 AI 答疑页面）
+              if (item.isLink) {
+                return (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    // 给 AI 答疑加了一点特殊的发光特效，让它更醒目
+                    className="relative px-4 py-2 text-sm transition-all duration-300 flex items-center gap-2 rounded-md text-cyan-300 hover:text-white hover:bg-cyan-500/20 font-bold hover:shadow-[0_0_15px_rgba(34,211,238,0.4)]"
+                  >
+                    <item.icon size={14} className="opacity-100" />
+                    {item.label}
+                  </a>
+                );
+              }
+
+              // 🌟 2. 网站内部其他普通的 Tab 切换
               const isActive = activeTab === item.id;
               return (
                 <button

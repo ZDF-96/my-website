@@ -10,17 +10,20 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",
+    "@google/genai": "^2.8.0",
     "bessel": "^1.0.2",
     "framer-motion": "^12.40.0",
     "gray-matter": "^4.0.3",
     "katex": "^0.17.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "openai": "^6.42.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "undici": "^8.4.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
