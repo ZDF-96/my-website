@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, Bot } from 'lucide-react';
@@ -44,7 +44,7 @@ export default function ChatPage() {
       
       {/* 🌌 1. 注入全站统一的自定义 HTML 动态背景（像素级同步讲义视觉） */}
       <iframe 
-        src="/contentbj.html" 
+        src="/beijing.html" 
         className="absolute inset-0 w-full h-full border-none z-0 pointer-events-none opacity-60" 
         title="Custom Background"
         aria-hidden="true"
@@ -62,7 +62,7 @@ export default function ChatPage() {
       {/* 💬 3. 聊天内容主体容器 */}
       <div className="relative z-10 flex-1 max-w-4xl w-full mx-auto p-6 flex flex-col overflow-hidden pt-10">
         
-        {/* ✨ 完美还原第一段代码的极简返回按钮：靠左、无框、纯文字 ✨ */}
+        {/* ✨ 完美还原极简返回按钮：靠左、无框、纯文字 ✨ */}
         <Link 
           href="/" 
           className="inline-flex items-center gap-2 text-cyan-500 hover:text-cyan-300 mb-8 font-mono text-sm transition-colors self-start"
