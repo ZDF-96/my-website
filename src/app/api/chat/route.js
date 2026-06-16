@@ -29,6 +29,6 @@ export async function POST(request) {
     
   } catch (error) {
     console.error("DeepSeek 接口报错:", error);
-    return Response.json({ error: '<p>AI 思考中遇到了网络乱流，请重新发送。</p>' }, { status: 500 });
+    return Response.json({ error: '<p>AI 没钱了，充值后可继续使用！</p>' }, { status: 500 });
   }
 }

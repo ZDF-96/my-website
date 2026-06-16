@@ -18,6 +18,7 @@ import FresnelDiffractionSim from '@/components/physics-dong-hua/guang-de-yan-sh
 // ✅ 关键点 1：明确从 jian-xie-bo.jsx 中引入动画组件！
 import DopplerSimulation from '@/components/physics-dong-hua/jian-xie-bo';
 import PolarizationLab from '@/components/physics-dong-hua/guang-de-pian-zhen';
+import MaxwellEquationSimulation from '@/components/physics-dong-hua/maxwell-equation';
 export default async function NotePage({ params }) {
   const { slug } = await params;
 
@@ -85,6 +86,7 @@ export default async function NotePage({ params }) {
                {currentSlug === 'jian-xie-yun-dong' && <DopplerSimulation />}
                {currentSlug === 'guang-de-yan-she' && <FresnelDiffractionSim />}
                {currentSlug === 'guang-de-pian-zhen' && <PolarizationLab />}
+               {currentSlug.toLowerCase() === 'maxwell-equation' && <MaxwellEquationSimulation />}
             </div>
 
           </article>
