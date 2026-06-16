@@ -330,7 +330,7 @@ function TeachingContent() {
     { title: '戴维南定理', slug: 'dai-wei-nan-dingli', desc: '复杂电路的等效简化' },
     { title: '波动与光学', slug: 'niudunhuan', desc: '等厚干涉：牛顿环模拟' },
     { title: '光的偏振', slug: 'guang-de-pian-zhen', desc: '光的偏振：线偏振光，圆偏振光...' },
-     { title: '麦克斯韦方程组', slug: 'MaxWell-Equation', desc: 'MaxWell-Equation' },
+     { title: '麦克斯韦方程组', slug: 'maxwell-equation', desc: 'maxwell-equation' },
     { title: '暂时没想好', slug: 'nothing', desc: '暂时没想好' }
   ];
 
