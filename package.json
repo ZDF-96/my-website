@@ -11,6 +11,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",
     "@google/genai": "^2.8.0",
+    "@upstash/redis": "^1.38.0",
+    "@vercel/kv": "^3.0.0",
     "bessel": "^1.0.2",
     "framer-motion": "^12.40.0",
     "gray-matter": "^4.0.3",
