@@ -12,9 +12,9 @@ export default function LoginPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [paySuccess, setPaySuccess] = useState(false);
   
-  // 爱发电自动化专属状态
-  const [orderId, setOrderId] = useState(null);
-  const [payStatus, setPayStatus] = useState('idle'); // idle, waiting, success
+  // 订单验证专属状态
+  const [payStatus, setPayStatus] = useState('idle'); 
+  const [afdianOrderNo, setAfdianOrderNo] = useState(''); 
   
   const [hasUsedFree, setHasUsedFree] = useState(false);
   const router = useRouter();
@@ -33,6 +33,7 @@ export default function LoginPage() {
     e.preventDefault();
     setIsVerifying(true);
     setTimeout(() => {
+      // 站长专属密码
       if (password === '472926') { 
         grantAccess(30); 
       } else {
@@ -44,51 +45,46 @@ export default function LoginPage() {
     }, 800);
   };
 
-  // 2. 发起爱发电赞助并跳转
+  // 2. 发起跳转
   const handleInitiateAfdian = (e) => {
     e.preventDefault();
-    
-    // 生成一个带时间戳的唯一订单号，传给爱发电
-    const newOrderId = 'AFD_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6).toUpperCase();
-    setOrderId(newOrderId);
-    setPayStatus('waiting'); 
-
-    // 👇 把这里的 YOUR_USER_ID 换成你的爱发电开发者 ID (比如 'a1b2c3d4e5f6')
-    const afdianUserId = '474fbf8e6a5e11f19e7052540025c377'; 
-    const afdianUrl = `https://afdian.net/order/create?user_id=${afdianUserId}&custom_order_id=${newOrderId}`;
-
-    // 在新窗口打开爱发电
-    window.open(afdianUrl, '_blank');
+    const myHomePage = 'https://ifdian.net/a/wutaophys'; 
+    window.open(myHomePage, '_blank');
+    setPayStatus('input'); // 点击后立刻切换到输入订单号的状态
   };
 
-  // 3. 核心：高能轮询监听数据库状态
-  useEffect(() => {
-    let interval;
-    if (mode === 'pay' && orderId && payStatus === 'waiting') {
-      interval = setInterval(async () => {
-        try {
-          // 向你的后端发起真实查询
-          const res = await fetch(`/api/pay/check?orderId=${orderId}`);
-          const data = await res.json();
-          
-          if (data.paid) {
-            clearInterval(interval);
-            setPayStatus('success');
-            setPaySuccess(true);
-            // 收到钱，延迟 1.5 秒后给用户发放 30 天超级通行证并跳入主页！
-            setTimeout(() => {
-              grantAccess(30); 
-            }, 1500);
-          }
-        } catch (err) {
-          console.error("对账链路异常:", err);
-        }
-      }, 3000); // 每 3 秒自动去问一次数据库
-    }
-    return () => clearInterval(interval);
-  }, [orderId, mode, payStatus]);
+  // 3. 去后端验证订单号
+  const handleVerifyOrder = async () => {
+    if (!afdianOrderNo.trim()) return;
+    setPayStatus('verifying');
 
-  // 4. 免费体验逻辑
+    try {
+      const res = await fetch(`/api/afdian/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ out_trade_no: afdianOrderNo.trim() })
+      });
+      
+      const data = await res.json();
+      
+      // 如果后端查单成功
+      if (res.ok && data.success) {
+        setPayStatus('success');
+        setPaySuccess(true);
+        setTimeout(() => {
+          grantAccess(30); // 授权30天
+        }, 1500);
+      } else {
+        alert(data.message || "未找到该订单或未支付，请检查订单号是否填写正确！");
+        setPayStatus('input'); 
+      }
+    } catch (err) {
+      console.error("验证链路异常:", err);
+      alert("网络通信异常，请检查后端 API 是否正确创建。");
+      setPayStatus('input');
+    }
+  };
+
   const handleFreeAccess = () => {
     if (hasUsedFree) return;
     setIsVerifying(true);
@@ -135,7 +131,7 @@ export default function LoginPage() {
             管理员
           </button>
           <button onClick={() => { setMode('pay'); setError(false); }} className={`py-2 rounded-lg text-xs font-medium transition-all duration-300 ${mode === 'pay' ? 'bg-purple-500/20 text-purple-300 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
-            赞助解锁
+            订单解锁
           </button>
           <button onClick={() => { setMode('free'); setError(false); }} className={`py-2 rounded-lg text-xs font-medium transition-all duration-300 ${mode === 'free' ? 'bg-white/10 text-cyan-300 shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
             新客免费
@@ -145,7 +141,6 @@ export default function LoginPage() {
         <div className="min-h-[220px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
             
-            {/* 模式一：密码登录 */}
             {mode === 'password' && (
               <motion.form key="pwd" initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }} onSubmit={handleLogin} className="space-y-6 w-full">
                 <div className="relative group">
@@ -156,7 +151,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="输入管理员密码..."
+                    placeholder="输入站长专属密码..."
                     disabled={isVerifying}
                     className={`w-full bg-black/40 border ${error ? 'border-red-500/50 focus:border-red-500' : 'border-white/10 focus:border-cyan-500/50'} rounded-xl pl-12 pr-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all duration-300 font-mono tracking-widest`}
                   />
@@ -173,43 +168,65 @@ export default function LoginPage() {
               </motion.form>
             )}
 
-            {/* 模式二：爱发电赞助全自动放行 */}
             {mode === 'pay' && (
               <motion.div key="pay" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col items-center space-y-6 w-full">
-                
                 <div className="text-center space-y-2">
                   <h3 className="text-lg font-bold text-white tracking-widest">赞助创作者</h3>
                   <p className="text-xs text-gray-400 leading-relaxed max-w-[280px] mx-auto">
-                    网站由个人独立维护。赞助（5元）即可获取本站 <span className="text-purple-400 font-bold">30天全功能通行证</span>，您的支持是物理宇宙运转的能量。
+                    赞助即可获取本站 <span className="text-purple-400 font-bold">30天全功能通行证</span>。
                   </p>
                 </div>
 
-                <div className="w-full h-14">
+                <div className="w-full">
                   {payStatus === 'idle' && (
-                    <button onClick={handleInitiateAfdian} className="w-full h-full flex items-center justify-center gap-2 px-6 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-300 font-medium transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
-                      <Zap className="w-4 h-4 text-purple-400" /> <span>前往「爱发电」赞助并解锁</span>
+                    <button onClick={handleInitiateAfdian} className="w-full py-4 flex items-center justify-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-xl text-purple-300 font-medium transition-all duration-300 shadow-[0_0_15px_rgba(168,85,247,0.15)]">
+                      <Zap className="w-4 h-4 text-purple-400" /> <span>前往「爱发电」赞助并获取订单号</span>
                     </button>
                   )}
 
-                  {payStatus === 'waiting' && (
-                    <button disabled className="w-full h-full flex flex-col items-center justify-center bg-cyan-500/5 border border-cyan-500/20 rounded-xl text-cyan-400/80 font-mono text-xs shadow-inner shadow-cyan-500/10">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> <span>正在监听付款对账链路...</span>
+                  {(payStatus === 'input' || payStatus === 'verifying') && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 w-full">
+                      <div className="text-xs text-center text-cyan-400/80 mb-1">
+                        付款后，将收到的<span className="text-white font-bold mx-1">发电订单号</span>填入：
                       </div>
-                      <span className="text-[9px] text-gray-500/80 tracking-wide">请在新页面完成支付，切勿关闭本窗口</span>
-                    </button>
+                      <input
+                        type="text"
+                        value={afdianOrderNo}
+                        onChange={(e) => setAfdianOrderNo(e.target.value)}
+                        placeholder="在此粘贴订单号..."
+                        disabled={payStatus === 'verifying'}
+                        className="w-full bg-black/40 border border-white/10 focus:border-purple-500/50 rounded-xl px-4 py-4 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-purple-500/50 transition-all duration-300 font-mono text-sm text-center tracking-wider"
+                      />
+                      <button
+                        onClick={handleVerifyOrder}
+                        disabled={payStatus === 'verifying' || !afdianOrderNo}
+                        className="w-full py-4 flex items-center justify-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 rounded-xl text-purple-300 font-medium transition-all duration-300 disabled:opacity-40"
+                      >
+                        {payStatus === 'verifying' ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>验证订单并激活</span>}
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          setPayStatus('idle');
+                          setAfdianOrderNo('');
+                        }}
+                        disabled={payStatus === 'verifying'}
+                        className="w-full py-2 flex items-center justify-center text-gray-500 hover:text-gray-300 text-xs transition-colors duration-300 disabled:opacity-40"
+                      >
+                        未完成付款？点击返回上一步
+                      </button>
+                    </motion.div>
                   )}
 
                   {payStatus === 'success' && (
-                    <button disabled className="w-full h-full flex items-center justify-center gap-2 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 font-medium shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-                      <CheckCircle className="w-5 h-5" /> <span>赞助收到，空间节点已跃迁</span>
+                    <button disabled className="w-full py-4 flex items-center justify-center gap-2 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 font-medium shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                      <CheckCircle className="w-5 h-5" /> <span>验证成功，空间节点已跃迁</span>
                     </button>
                   )}
                 </div>
               </motion.div>
             )}
 
-            {/* 模式三：新客免费 */}
             {mode === 'free' && (
               <motion.div key="free" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col items-center space-y-6 w-full text-center">
                 {hasUsedFree ? (
@@ -228,10 +245,10 @@ export default function LoginPage() {
                   <>
                     <div className="space-y-2">
                       <h3 className="text-lg font-bold text-white tracking-widest">初次链路探测</h3>
-                      <p className="text-xs text-cyan-400/70">欢迎来到物理宇宙。系统将为您提供单次（24小时）体验通行证。</p>
+                      <p className="text-xs text-cyan-400/70">欢迎来到物理宇宙。系统将为您提供单次体验通行证。</p>
                     </div>
                     <button onClick={handleFreeAccess} disabled={isVerifying || paySuccess} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border border-cyan-500/30 rounded-xl text-cyan-300 font-medium transition-all duration-300 disabled:opacity-50">
-                      {isVerifying ? <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> 通行证下发中...</span> : paySuccess ? <span className="text-green-400 flex items-center gap-2"><CheckCircle className="w-5 h-5" /> 授权通过，正在跃迁</span> : <span>激活新客免费通行证</span>}
+                      {isVerifying ? <span className="flex items-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> 下发中...</span> : paySuccess ? <span className="text-green-400 flex items-center gap-2"><CheckCircle className="w-5 h-5" /> 正在跃迁</span> : <span>激活新客免费</span>}
                     </button>
                   </>
                 )}
