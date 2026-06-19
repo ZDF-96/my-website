@@ -25,8 +25,10 @@ export async function POST(request) {
     const signString = `${token}params${params}ts${ts}user_id${user_id}`;
     const sign = crypto.createHash('md5').update(signString).digest('hex');
 
+    
     console.log("👉 3. 准备向爱发电发送请求...");
-    const afdianRes = await fetch('https://afdian.net/api/open/query-order', {
+    // ✅ 改成新的备用域名：
+const afdianRes = await fetch('https://ifdian.net/api/open/query-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
