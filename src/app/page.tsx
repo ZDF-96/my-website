@@ -243,7 +243,7 @@ function HomeContent({ onEnter }: HomeContentProps) {
 function EssaysContent() {
   const essays = [
     { title: "杨氏双缝干涉", date: "2026-05-22", tag: "Optics", slug: "interference-of-light" },
-    { title: "暂时没想好写什么", date: "2026-04-15", tag: "Quantum", slug: "quantum-reality" },
+    { title: "一道热力学平衡题目仿真", date: "2026-06-20", tag: ["热力学", "物理习题", "动画仿真"], slug: "sui-bi1" },
     { title: "暂时没想好写什么", date: "2026-03-02", tag: "QFT", slug: "path-integral" },
   ];
   return (

@@ -19,6 +19,7 @@ import FresnelDiffractionSim from '@/components/physics-dong-hua/guang-de-yan-sh
 import DopplerSimulation from '@/components/physics-dong-hua/jian-xie-bo';
 import PolarizationLab from '@/components/physics-dong-hua/guang-de-pian-zhen';
 import MaxwellEquationSimulation from '@/components/physics-dong-hua/maxwell-equation';
+import SuiBi1Animation from'@/components/physics-dong-hua/sui-bi1';
 export default async function NotePage({ params }) {
   const { slug } = await params;
 
@@ -87,6 +88,7 @@ export default async function NotePage({ params }) {
                {currentSlug === 'guang-de-yan-she' && <FresnelDiffractionSim />}
                {currentSlug === 'guang-de-pian-zhen' && <PolarizationLab />}
                {currentSlug.toLowerCase() === 'maxwell-equation' && <MaxwellEquationSimulation />}
+               {currentSlug === 'sui-bi1' && <SuiBi1Animation/>}
             </div>
 
           </article>
