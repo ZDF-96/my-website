@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+ import type { Metadata, Viewport } from "next"; // ⚡️ 注意这里引入了 Viewport
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -7,9 +7,15 @@ import 'katex/dist/katex.min.css';
 
 // 引入背景组件
 import HtmlBackground from "@/components/HtmlBackground"; 
-// ⚠️ 已经删除了 AiZhuShou 的 import
 
 const inter = Inter({ subsets: ["latin"] });
+
+// 🌟 新增：这是手机端自适应的灵魂指令！强制浏览器按照设备真实宽度 1:1 渲染，完美适配移动端
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1, // 防止用户双击屏幕意外放大导致排版乱掉
+};
 
 export const metadata: Metadata = {
   title: "我的物理空间",
@@ -29,12 +35,8 @@ export default function RootLayout({
         
         {/* 2. 网站主体容器 */}
         <div className="relative z-0">
-          
-          {/* ⚠️ 已经删除了全局挂载的 <AiZhuShou /> */}
-
           {/* 页面的具体内容（首页、讲义、以及咱们新建的 /chat 页面） */}
           {children}
-          
         </div>
       </body>
     </html>
