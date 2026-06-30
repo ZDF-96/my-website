@@ -245,6 +245,7 @@ function EssaysContent() {
     { title: "杨氏双缝干涉", date: "2026-05-22", tag: "Optics", slug: "interference-of-light" },
     { title: "一道热力学平衡题目仿真", date: "2026-06-20", tag: ["热力学", "物理习题", "动画仿真"], slug: "sui-bi1" },
     { title: "暂时没想好写什么", date: "2026-03-02", tag: "QFT", slug: "path-integral" },
+    { title: "暂时没想好写什么", date: "2026-03-02", tag: "QFT", slug: "path-integral" }
   ];
   return (
     <div className="space-y-6 md:space-y-8">
@@ -309,7 +310,8 @@ function TeachingContent() {
     { title: '波动与光学', slug: 'niudunhuan', desc: '等厚干涉：牛顿环模拟' },
     { title: '光的偏振', slug: 'guang-de-pian-zhen', desc: '光的偏振：线偏振光，圆偏振光...' },
     { title: '麦克斯韦方程组', slug: 'maxwell-equation', desc: 'maxwell-equation' },
-    { title: '暂时没想好', slug: 'nothing', desc: '暂时没想好' }
+    { title: '测量电源内阻误差分析', slug: 'ce-dian-zu', desc: '内接法、外接法' },
+     { title: '暂时没想好', slug: '暂时没想好', desc: '暂时没想好' },
   ];
 
   return (

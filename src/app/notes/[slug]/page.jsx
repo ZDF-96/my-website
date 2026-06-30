@@ -20,6 +20,8 @@ import DopplerSimulation from '@/components/physics-dong-hua/jian-xie-bo';
 import PolarizationLab from '@/components/physics-dong-hua/guang-de-pian-zhen';
 import MaxwellEquationSimulation from '@/components/physics-dong-hua/maxwell-equation';
 import SuiBi1Animation from'@/components/physics-dong-hua/sui-bi1';
+import  CeDianZu from'@/components/physics-dong-hua/ce-dian-zu';
+
 export default async function NotePage({ params }) {
   const { slug } = await params;
 
@@ -89,6 +91,7 @@ export default async function NotePage({ params }) {
                {currentSlug === 'guang-de-pian-zhen' && <PolarizationLab />}
                {currentSlug.toLowerCase() === 'maxwell-equation' && <MaxwellEquationSimulation />}
                {currentSlug === 'sui-bi1' && <SuiBi1Animation/>}
+               {currentSlug === 'ce-dian-zu' && <CeDianZu/>}
             </div>
 
           </article>
