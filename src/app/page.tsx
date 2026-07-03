@@ -311,8 +311,9 @@ function TeachingContent() {
     { title: '光的偏振', slug: 'guang-de-pian-zhen', desc: '光的偏振：线偏振光，圆偏振光...' },
     { title: '麦克斯韦方程组', slug: 'maxwell-equation', desc: 'maxwell-equation' },
     { title: '测量电源内阻误差分析', slug: 'ce-dian-zu', desc: '内接法、外接法' },
-     { title: '暂时没想好', slug: '暂时没想好', desc: '暂时没想好' },
-  ];
+     { title: '电介质的电磁性质及介质中的麦克斯韦方程组', slug: 'jie-zhi', desc: '介质中的麦克斯韦方程组' },
+  { title: '欢迎投稿', slug: '待续', desc: '待续' },
+    ];
 
   return (
     <div className="space-y-6 md:space-y-8">
