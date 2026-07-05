@@ -82,7 +82,7 @@ export default function LoginPage() {
       // 💰 【付费用户暗号修改处】 💰
       // 当你觉得旧暗号泄露太多，需要更换新暗号时，修改下面双引号里的内容：
       // (注意：改完这里后，一定要记得去爱发电后台，把【自动回复】里的文字也同步改掉！)
-      const currentVipPassword = "PHYSICS-VIP-6688"; 
+      const currentVipPassword = "PHYSICS-VIP-1682"; 
       // ⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️
       
       if (inputValue === currentVipPassword) {
