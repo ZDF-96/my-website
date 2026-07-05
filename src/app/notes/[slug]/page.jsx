@@ -22,6 +22,7 @@ import MaxwellEquationSimulation from '@/components/physics-dong-hua/maxwell-equ
 import SuiBi1Animation from'@/components/physics-dong-hua/sui-bi1';
 import  CeDianZu from'@/components/physics-dong-hua/ce-dian-zu';
 import DielectricPolarizationSim from '@/components/physics-dong-hua/jie-zhi';
+import  BaoShouLiSimulation from '@/components/physics-dong-hua/bao-shou-li';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -94,6 +95,7 @@ export default async function NotePage({ params }) {
                {currentSlug === 'sui-bi1' && <SuiBi1Animation/>}
                {currentSlug === 'ce-dian-zu' && <CeDianZu/>}
                 {currentSlug === 'jie-zhi' && <DielectricPolarizationSim/>}
+                {currentSlug === 'bao-shou-li' && <BaoShouLiSimulation/>}
             </div>
 
           </article>
