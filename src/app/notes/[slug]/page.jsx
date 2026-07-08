@@ -24,7 +24,7 @@ import  CeDianZu from'@/components/physics-dong-hua/ce-dian-zu';
 import DielectricPolarizationSim from '@/components/physics-dong-hua/jie-zhi';
 import  BaoShouLiSimulation from '@/components/physics-dong-hua/bao-shou-li';
 import  CentripetalAccelerationSimulation from '@/components/physics-dong-hua/xiang-xin-a';
-
+import  TianTiYunDongSimulation from '@/components/physics-dong-hua/tian-ti-yun-dong';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -99,6 +99,7 @@ export default async function NotePage({ params }) {
                 {currentSlug === 'jie-zhi' && <DielectricPolarizationSim/>}
                 {currentSlug === 'bao-shou-li' && <BaoShouLiSimulation/>}
                 {currentSlug === 'xiang-xin-a' && <CentripetalAccelerationSimulation/>}
+                {currentSlug === 'tian-ti-yun-dong' && <TianTiYunDongSimulation/>}
                 
             </div>
 
