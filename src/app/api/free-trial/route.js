@@ -6,37 +6,39 @@ const redis = Redis.fromEnv();
 
 export async function POST(request) {
   try {
-    // 1. 从 Vercel 服务器头部硬核抓取访客的真实物理 IP
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const realIp = forwardedFor ? forwardedFor.split(',')[0].trim() : 'unknown-ip';
+    // 1. 优先使用 Next.js/Vercel 自带的原生 IP 属性，如果没有再降级抓取请求头
+    const ip = request.ip || 
+               request.headers.get('x-real-ip') || 
+               request.headers.get('x-forwarded-for')?.split(',')[0].trim();
 
-    // 防止本地开发时抓不到 IP 报错
-    if (realIp === 'unknown-ip') {
-        console.log("未检测到有效 IP，可能是本地环境");
+    // 🚨 防御：如果用尽所有方法都没抓到 IP（异常或非法请求），直接拒绝，避免污染数据库
+    if (!ip) {
+      console.log("未检测到有效 IP，拒绝发放免费额度");
+      return NextResponse.json({ success: false, message: '网络环境异常，无法验证设备' }, { status: 400 });
     }
 
     // 定义这个 IP 在数据库里的专属名字
-    const ipKey = `free_trial_${realIp}`;
+    const ipKey = `free_trial_${ip}`;
 
     // 2. 去 Upstash 数据库查底：这个 IP 领过免费额度吗？
     const hasUsed = await redis.get(ipKey);
 
-    // 🚨 如果查到了（不是 null），说明白嫖过了，直接击毙！
+    // 如果查到了（不是 null），说明白嫖过了，直接拦截！
     if (hasUsed) {
-      console.log(`拦截重复白嫖 IP: ${realIp}`);
+      console.log(`拦截重复白嫖 IP: ${ip}`);
       return NextResponse.json({ success: false, message: '该物理节点已耗尽配额' });
     }
 
-    // 3. 如果没用过，把这个 IP 永久刻在数据库里！
-    // (如果你想让用户半年后能再领一次，可以加上 { ex: 15552000 })
-    await redis.set(ipKey, 'true');
-    console.log(`新客 IP 绑定成功: ${realIp}`);
+    // 3. 如果没用过，把这个 IP 刻在数据库里，并设置 365 天后过期自动销毁（保护数据库容量）
+    // 86400秒 * 365天 = 31536000
+    await redis.set(ipKey, 'true', { ex: 31536000 });
+    console.log(`新客 IP 绑定成功: ${ip}`);
 
     // 放行！给前端发成功信号
     return NextResponse.json({ success: true, message: '验证通过' });
 
   } catch (error) {
     console.error("Redis 数据库异常或环境变量未配置:", error);
-    return NextResponse.json({ success: false, message: '服务器异常' }, { status: 500 });
+    return NextResponse.json({ success: false, message: '服务器开小差了，请稍后再试' }, { status: 500 });
   }
 }

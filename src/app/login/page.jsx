@@ -14,26 +14,28 @@ export default function LoginPage() {
   const [paySuccess, setPaySuccess] = useState(false);
   const [hasUsedFree, setHasUsedFree] = useState(false);
   
-  // ✅ 已修复：删除了重复声明的 router，保留唯一实例
   const router = useRouter();
 
-  // 🌟 页面加载时自动检测，如果是“过期”才来到这个页面的，就弹窗提醒！
+  // 🌟 页面加载时自动检测
   useEffect(() => {
+    // 1. 检测 VIP 过期弹窗
     const expireTime = localStorage.getItem('physics_vip_expire');
-    // 如果本地存了过期时间，并且当前时间已经超过了那个时间
     if (expireTime && Date.now() > parseInt(expireTime)) {
       alert("⏳ 您的 30 天专属通行证已到期！\n\n感谢您过去一个月的支持，请重新验证最新暗号或再次赞助以恢复访问权限。");
-      // 提醒完就清除记录，防止每次刷新页面都无限弹窗
       localStorage.removeItem('physics_vip_expire'); 
+    }
+
+    // 👇 核心修复 1：检测本地是否已经领过免费体验（即使刷新页面，状态也不会重置）
+    const usedFree = localStorage.getItem('has_used_free');
+    if (usedFree === 'true') {
+      setHasUsedFree(true);
     }
   }, []);
 
   const grantAccess = (days) => {
-    // 1. 设置负责物理拦截的 Cookie（浏览器自动控制寿命）
     const maxAge = days * 86400; 
     document.cookie = `physics_auth=granted; path=/; max-age=${maxAge}`;
     
-    // 2. 🌟 在本地浏览器备忘录里，悄悄记下具体的“过期时间戳”
     const expireTimestamp = Date.now() + days * 86400 * 1000;
     localStorage.setItem('physics_vip_expire', expireTimestamp);
 
@@ -54,15 +56,11 @@ export default function LoginPage() {
     setError(false);
 
     setTimeout(() => {
-      // ⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
-      // 👑 【站长后台密码修改处】 👑
-      // 想要修改你的管理员密码，就改下面双引号里的数字
       const adminPassword = "472926"; 
-      // ⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️
       
       if (inputValue === adminPassword) {
         setPaySuccess(true);
-        setTimeout(() => grantAccess(3650), 800); // 站长直给 10 年
+        setTimeout(() => grantAccess(3650), 800); 
       } else {
         setError(true);
         setErrorMsg("最高权限指令错误，拒绝访问");
@@ -71,23 +69,18 @@ export default function LoginPage() {
     }, 500);
   };
 
-  // 💎 模块二：付费用户登录 (极简固定暗号)
+  // 💎 模块二：付费用户登录
   const handlePaidLogin = (e) => {
     e.preventDefault();
     setIsVerifying(true);
     setError(false);
 
     setTimeout(() => {
-      // ⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
-      // 💰 【付费用户暗号修改处】 💰
-      // 当你觉得旧暗号泄露太多，需要更换新暗号时，修改下面双引号里的内容：
-      // (注意：改完这里后，一定要记得去爱发电后台，把【自动回复】里的文字也同步改掉！)
       const currentVipPassword = "PHYSICS-VIP-1682"; 
-      // ⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️
       
       if (inputValue === currentVipPassword) {
         setPaySuccess(true);
-        setTimeout(() => grantAccess(30), 800); // 付费用户给 30 天
+        setTimeout(() => grantAccess(30), 800); 
       } else {
         setError(true);
         setErrorMsg("密钥不正确或已失效，请检查");
@@ -96,7 +89,7 @@ export default function LoginPage() {
     }, 500);
   };
 
-  // 🎁 模块三：新客免费体验 (调用 Vercel KV / Upstash)
+  // 🎁 模块三：新客免费体验 (已接入防刷逻辑)
   const handleFreeAccess = async () => {
     if (hasUsedFree) return;
     setIsVerifying(true);
@@ -105,12 +98,19 @@ export default function LoginPage() {
     try {
       const res = await fetch('/api/free-trial', { method: 'POST' });
       const data = await res.json();
+      
       if (data.success) {
         setPaySuccess(true);
-        setTimeout(() => grantAccess(1), 1000); // 免费体验给 1 天
+        // 👇 核心修复 2：后端放行后，在前端浏览器打上永久烙印
+        localStorage.setItem('has_used_free', 'true');
+        setHasUsedFree(true);
+        setTimeout(() => grantAccess(1), 1000); 
       } else {
         setIsVerifying(false);
+        // 👇 核心修复 3：如果后端查到底子拒绝了，前端也立刻死锁并记录
         setHasUsedFree(true); 
+        localStorage.setItem('has_used_free', 'true');
+        alert(data.message || "该网络节点已耗尽体验配额");
       }
     } catch (err) {
       setIsVerifying(false);
@@ -222,7 +222,7 @@ export default function LoginPage() {
             {mode === 'free' && (
               <motion.div key="free" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }} className="flex flex-col items-center space-y-6 w-full text-center mt-4">
                 {hasUsedFree ? (
-                   <div className="space-y-2 text-red-400 flex flex-col items-center"><UserX className="w-6 h-6 mb-2"/>IP 体验额度已耗尽</div>
+                   <div className="space-y-2 text-red-400 flex flex-col items-center"><UserX className="w-6 h-6 mb-2"/>体验额度已耗尽，请赞助解锁</div>
                 ) : (
                   <button onClick={handleFreeAccess} disabled={isVerifying} className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl text-cyan-300 font-medium hover:brightness-110 transition-all duration-300">
                     {isVerifying ? <Loader2 className="animate-spin w-5 h-5"/> : <span>绑定当前 IP 激活单日体验</span>}
