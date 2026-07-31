@@ -1,14 +1,19 @@
 'use client'
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react'
 
 /* ==========================================
-   共享内核：高帧率渲染引擎与教科书级图元
+   全局数学常数与共享内核
    ========================================== */
+const PI2 = Math.PI * 2
+const HALF_PI = Math.PI / 2
+
 const useAnimationFrame = (callback) => {
   const requestRef = useRef()
   const previousTimeRef = useRef()
   const savedCallback = useRef(callback)
+  
   useEffect(() => { savedCallback.current = callback }, [callback])
+  
   useEffect(() => {
     const animate = (time) => {
       if (previousTimeRef.current !== undefined) {
@@ -88,14 +93,14 @@ const drawVector = (ctx, x, y, dx, dy, color, label = '', bgLabel = false, offse
   ctx.restore()
 }
 
-// 氛围感星空生成器
+// 氛围感星空生成器 (优化为预先计算相位)
 const createStars = (count, width, height) => {
   return Array.from({ length: count }).map(() => ({
     x: (Math.random() - 0.5) * width * 1.5,
     y: (Math.random() - 0.5) * height * 1.5,
     r: Math.random() * 1.2 + 0.3,
     alpha: Math.random() * 0.8 + 0.2,
-    phase: Math.random() * Math.PI * 2
+    phase: Math.random() * PI2
   }))
 }
 
@@ -106,10 +111,10 @@ const drawDetailedEarth = (ctx, radius, rotation) => {
   halo.addColorStop(0, 'rgba(56, 189, 248, 0.6)')
   halo.addColorStop(0.4, 'rgba(56, 189, 248, 0.15)')
   halo.addColorStop(1, 'transparent')
-  ctx.beginPath(); ctx.arc(0, 0, radius * 1.4, 0, Math.PI * 2); ctx.fillStyle = halo; ctx.fill()
+  ctx.beginPath(); ctx.arc(0, 0, radius * 1.4, 0, PI2); ctx.fillStyle = halo; ctx.fill()
 
   ctx.save()
-  ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.clip()
+  ctx.beginPath(); ctx.arc(0, 0, radius, 0, PI2); ctx.clip()
   
   const oceanGrad = ctx.createRadialGradient(-radius*0.3, -radius*0.3, 0, 0, 0, radius)
   oceanGrad.addColorStop(0, '#1e3a8a'); oceanGrad.addColorStop(1, '#020617')
@@ -119,16 +124,16 @@ const drawDetailedEarth = (ctx, radius, rotation) => {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
     ctx.lineWidth = 1
     for(let i = -4; i <= 4; i++) {
-      ctx.beginPath(); ctx.ellipse(0, 0, radius, radius * Math.sqrt(1 - (i/4)**2), 0, 0, Math.PI*2); ctx.stroke()
-      ctx.beginPath(); ctx.ellipse(0, 0, radius * Math.sqrt(1 - (i/4)**2), radius, 0, 0, Math.PI*2); ctx.stroke()
+      ctx.beginPath(); ctx.ellipse(0, 0, radius, radius * Math.sqrt(1 - (i/4)**2), 0, 0, PI2); ctx.stroke()
+      ctx.beginPath(); ctx.ellipse(0, 0, radius * Math.sqrt(1 - (i/4)**2), radius, 0, 0, PI2); ctx.stroke()
     }
   }
   
   ctx.rotate(rotation)
   ctx.fillStyle = 'rgba(21, 128, 61, 0.7)'
   ctx.beginPath()
-  ctx.ellipse(radius * 0.2, -radius * 0.3, radius * 0.7, radius * 0.4, Math.PI / 6, 0, Math.PI * 2)
-  ctx.ellipse(-radius * 0.4, radius * 0.4, radius * 0.4, radius * 0.5, -Math.PI / 8, 0, Math.PI * 2)
+  ctx.ellipse(radius * 0.2, -radius * 0.3, radius * 0.7, radius * 0.4, Math.PI / 6, 0, PI2)
+  ctx.ellipse(-radius * 0.4, radius * 0.4, radius * 0.4, radius * 0.5, -Math.PI / 8, 0, PI2)
   ctx.fill()
   ctx.rotate(-rotation)
 
@@ -137,18 +142,20 @@ const drawDetailedEarth = (ctx, radius, rotation) => {
   ctx.fillStyle = shadow; ctx.fillRect(-radius, -radius, radius * 2, radius * 2)
   ctx.restore()
 
-  ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2)
+  ctx.beginPath(); ctx.arc(0, 0, radius, 0, PI2)
   ctx.strokeStyle = 'rgba(125, 211, 252, 0.5)'; ctx.lineWidth = Math.max(0.5, radius * 0.02); ctx.stroke()
 }
 
-const GlassPanel = ({ children, className = "" }) => (
+// 隔离 UI 渲染以提升性能
+const GlassPanel = memo(({ children, className = "" }) => (
   <div className={`bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl ${className}`}>
     {children}
   </div>
-)
+))
+GlassPanel.displayName = 'GlassPanel'
 
 /* ==========================================
-   模块 1：牛顿大炮（完美修复了轨迹脱离 Bug）
+   模块 1：牛顿大炮（零分配 RK4 引擎优化版）
    ========================================== */
 const NewtonCannon = () => {
   const canvasRef = useRef(null)
@@ -162,7 +169,7 @@ const NewtonCannon = () => {
   
   const MU_E = 3.986e5, MU_S = 1.327e11
   const R_E = 6371, D_AU = 1.496e8, V_E = 29.78
-  const W_E = V_E / D_AU, W_ROT = (2 * Math.PI) / 86400
+  const W_E = V_E / D_AU, W_ROT = PI2 / 86400
 
   const [telemetry, setTelemetry] = useState({ r_e: 0, r_s: 0, v_e: 0, v_s: 0, E_e: 0, E_s: 0, stateInfo: '' })
   const lastUiUpdate = useRef(0)
@@ -192,12 +199,9 @@ const NewtonCannon = () => {
 
   const resetSim = useCallback(() => {
     const init_Sx = 0, init_Sy = -D_AU - R_E, init_Svx = V_E + v0, init_Svy = 0
-    simRef.current.t = 0
-    simRef.current.x = init_Sx
-    simRef.current.y = init_Sy
-    simRef.current.vx = init_Svx
-    simRef.current.vy = init_Svy
-    simRef.current.pathEarth = [{ x: 0, y: -R_E }] // 初始化写入第一个原点
+    simRef.current.t = 0; simRef.current.x = init_Sx; simRef.current.y = init_Sy
+    simRef.current.vx = init_Svx; simRef.current.vy = init_Svy
+    simRef.current.pathEarth = [{ x: 0, y: -R_E }] 
     simRef.current.pathSun = [{ x: init_Sx, y: init_Sy }]
     simRef.current.crashed = false
     
@@ -209,13 +213,16 @@ const NewtonCannon = () => {
   }, [v0])
   useEffect(() => { resetSim() }, [v0, resetSim])
 
-  const getDeriv = (x, y, vx, vy, t) => {
+  // 标量输出缓存，避免对象分配 GC 停顿
+  const outDeriv = { ax: 0, ay: 0, re: 0 } 
+  const computeAccel = (x, y, t) => {
     const Ex = D_AU * Math.sin(W_E * t), Ey = -D_AU * Math.cos(W_E * t)
     const re_x = x - Ex, re_y = y - Ey, re = Math.sqrt(re_x * re_x + re_y * re_y)
     const rs = Math.sqrt(x * x + y * y)
-    const ax = -MU_S * x / (rs * rs * rs) - MU_E * re_x / (re * re * re)
-    const ay = -MU_S * y / (rs * rs * rs) - MU_E * re_y / (re * re * re)
-    return { vx, vy, ax, ay, re }
+    const r3s = rs * rs * rs, r3e = re * re * re
+    outDeriv.ax = -MU_S * x / r3s - MU_E * re_x / r3e
+    outDeriv.ay = -MU_S * y / r3s - MU_E * re_y / r3e
+    outDeriv.re = re
   }
 
   useAnimationFrame((dt, absoluteTime) => {
@@ -233,30 +240,39 @@ const NewtonCannon = () => {
       let safeDt = r_e_current < R_E * 3 ? 0.5 : r_e_current < R_E * 50 ? 10 : r_e_current < 1e6 ? 500 : 5000
       let steps = Math.min(600, Math.ceil(effectiveDt / safeDt))
       const subDt = effectiveDt / steps
+      const halfSubDt = subDt * 0.5
       
       for (let i = 0; i < steps; i++) {
-        const d1 = getDeriv(x, y, vx, vy, t)
-        if (d1.re < R_E * 0.99) { crashed = true; break }
-        const s2x = x + 0.5 * subDt * d1.vx, s2y = y + 0.5 * subDt * d1.vy
-        const d2 = getDeriv(s2x, s2y, vx + 0.5 * subDt * d1.ax, vy + 0.5 * subDt * d1.ay, t + 0.5 * subDt)
-        const s3x = x + 0.5 * subDt * d2.vx, s3y = y + 0.5 * subDt * d2.vy
-        const d3 = getDeriv(s3x, s3y, vx + 0.5 * subDt * d2.ax, vy + 0.5 * subDt * d2.ay, t + 0.5 * subDt)
-        const s4x = x + subDt * d3.vx, s4y = y + subDt * d3.vy
-        const d4 = getDeriv(s4x, s4y, vx + subDt * d3.ax, vy + subDt * d3.ay, t + subDt)
+        // Zero-allocation RK4 Integration
+        computeAccel(x, y, t)
+        if (outDeriv.re < R_E * 0.99) { crashed = true; break }
+        const ax1 = outDeriv.ax, ay1 = outDeriv.ay, vx1 = vx, vy1 = vy
         
-        x += (subDt / 6) * (d1.vx + 2 * d2.vx + 2 * d3.vx + d4.vx)
-        y += (subDt / 6) * (d1.vy + 2 * d2.vy + 2 * d3.vy + d4.vy)
-        vx += (subDt / 6) * (d1.ax + 2 * d2.ax + 2 * d3.ax + d4.ax)
-        vy += (subDt / 6) * (d1.ay + 2 * d2.ay + 2 * d3.ay + d4.ay)
+        computeAccel(x + halfSubDt * vx1, y + halfSubDt * vy1, t + halfSubDt)
+        const ax2 = outDeriv.ax, ay2 = outDeriv.ay
+        const vx2 = vx + halfSubDt * ax1, vy2 = vy + halfSubDt * ay1
+        
+        computeAccel(x + halfSubDt * vx2, y + halfSubDt * vy2, t + halfSubDt)
+        const ax3 = outDeriv.ax, ay3 = outDeriv.ay
+        const vx3 = vx + halfSubDt * ax2, vy3 = vy + halfSubDt * ay2
+        
+        computeAccel(x + subDt * vx3, y + subDt * vy3, t + subDt)
+        const ax4 = outDeriv.ax, ay4 = outDeriv.ay
+        const vx4 = vx + subDt * ax3, vy4 = vy + subDt * ay3
+        
+        x += (subDt / 6) * (vx1 + 2 * vx2 + 2 * vx3 + vx4)
+        y += (subDt / 6) * (vy1 + 2 * vy2 + 2 * vy3 + vy4)
+        vx += (subDt / 6) * (ax1 + 2 * ax2 + 2 * ax3 + ax4)
+        vy += (subDt / 6) * (ay1 + 2 * ay2 + 2 * ay3 + ay4)
         t += subDt
         
         if (i % Math.max(1, Math.floor(steps / 10)) === 0) {
-          if (d1.re < R_E * 5000) {
-            // 【核心修复点】：内部轨迹写入时使用的 t 与最终渲染严格同步
+          if (outDeriv.re < R_E * 5000) {
             pathEarth.push({ x: x - D_AU * Math.sin(W_E * t), y: y + D_AU * Math.cos(W_E * t) })
-            if (pathEarth.length > 3000) pathEarth.shift()
+            if (pathEarth.length > 3000) pathEarth.splice(0, pathEarth.length - 3000)
           }
-          pathSun.push({ x, y }); if (pathSun.length > 3600) pathSun.shift()
+          pathSun.push({ x, y }); 
+          if (pathSun.length > 3600) pathSun.splice(0, pathSun.length - 3600)
         }
       }
       simRef.current.t = t; simRef.current.x = x; simRef.current.y = y; 
@@ -269,10 +285,7 @@ const NewtonCannon = () => {
       }
     }
     
-    // 【核心修复点】：无论是否 paused，渲染坐标基准强制使用最新的系统时间 t
     const Ex = D_AU * Math.sin(W_E * t), Ey = -D_AU * Math.cos(W_E * t)
-    
-    // 自适应追踪无极缩放逻辑
     const minCanvasHalf = Math.min(width, height) * 0.35 
     const r_e_current = Math.sqrt((x - Ex) ** 2 + (y - Ey) ** 2)
     const r_s_current = Math.sqrt(x * x + y * y)
@@ -280,10 +293,8 @@ const NewtonCannon = () => {
     const initScaleE = minCanvasHalf / (R_E * 3) 
     const initScaleS = minCanvasHalf / (D_AU * 1.5) 
     
-    simRef.current.initialScaleE = initScaleE
-    simRef.current.initialScaleS = initScaleS
-    if (!simRef.current.scaleE) simRef.current.scaleE = initScaleE
-    if (!simRef.current.scaleS) simRef.current.scaleS = initScaleS
+    if (!simRef.current.scaleE) simRef.current.scaleE = simRef.current.initialScaleE = initScaleE
+    if (!simRef.current.scaleS) simRef.current.scaleS = simRef.current.initialScaleS = initScaleS
     
     const targetScaleE = Math.min(initScaleE, minCanvasHalf / (r_e_current * 1.2))
     const targetScaleS = Math.min(initScaleS, minCanvasHalf / (r_s_current * 1.2))
@@ -291,31 +302,28 @@ const NewtonCannon = () => {
     simRef.current.scaleE += (targetScaleE - simRef.current.scaleE) * 0.05
     simRef.current.scaleS += (targetScaleS - simRef.current.scaleS) * 0.05
     
-    const scaleE = simRef.current.scaleE
-    const scaleS = simRef.current.scaleS
+    const { scaleE, scaleS } = simRef.current
 
-    // ---------- 开始渲染画布 ----------
     ctx.clearRect(0, 0, width, height)
     ctx.fillStyle = '#020617'; ctx.fillRect(0, 0, width, height)
     ctx.save(); ctx.translate(width / 2, height / 2)
     
     if (starsRef.current) {
       ctx.fillStyle = '#ffffff'
-      starsRef.current.forEach(star => {
+      for (let i = 0; i < starsRef.current.length; i++) {
+        const star = starsRef.current[i]
         ctx.globalAlpha = star.alpha + Math.sin(absoluteTime * 0.002 + star.phase) * 0.2
-        ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2); ctx.fill()
-      })
+        ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, PI2); ctx.fill()
+      }
       ctx.globalAlpha = 1
     }
     
     if (viewMode === 'EARTH') {
       const earthRenderRadius = Math.max(3, R_E * scaleE) 
-      
       drawDetailedEarth(ctx, earthRenderRadius, W_ROT * t)
       
-      // 【修复阴影方位】：改用 Math.atan2(Ey, Ex) 让阴影始终背向太阳
       ctx.save(); ctx.rotate(Math.atan2(Ey, Ex))
-      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.beginPath(); ctx.arc(0, 0, earthRenderRadius + 2, -Math.PI / 2, Math.PI / 2); ctx.fill()
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.beginPath(); ctx.arc(0, 0, earthRenderRadius + 2, -HALF_PI, HALF_PI); ctx.fill()
       ctx.restore()
 
       if (earthRenderRadius > 20) {
@@ -326,7 +334,7 @@ const NewtonCannon = () => {
         ctx.lineTo(-1, -earthRenderRadius - 20); ctx.lineTo(-3, -earthRenderRadius - 10)
         ctx.fill()
         ctx.fillStyle = '#ef4444'; ctx.shadowBlur = 10; ctx.shadowColor = '#ef4444'
-        ctx.beginPath(); ctx.arc(0, -earthRenderRadius - 20, 2, 0, Math.PI * 2); ctx.fill()
+        ctx.beginPath(); ctx.arc(0, -earthRenderRadius - 20, 2, 0, PI2); ctx.fill()
         ctx.shadowBlur = 0
       }
       
@@ -338,7 +346,7 @@ const NewtonCannon = () => {
       
       if (!crashed) {
         const px = (x - Ex) * scaleE, py = (y - Ey) * scaleE
-        ctx.beginPath(); ctx.arc(px, py, 6, 0, Math.PI * 2)
+        ctx.beginPath(); ctx.arc(px, py, 6, 0, PI2)
         ctx.fillStyle = '#ffffff'; ctx.shadowBlur = 15; ctx.shadowColor = '#38bdf8'; ctx.fill(); ctx.shadowBlur = 0
         if (!isRunning && t === 0) {
           drawVector(ctx, px, py, v0 * 8, 0, '#facc15', 'v₀', true)
@@ -369,15 +377,15 @@ const NewtonCannon = () => {
       ctx.globalCompositeOperation = 'screen'
       const sunGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, sunGlowRadius)
       sunGlow.addColorStop(0, 'rgba(254, 240, 138, 0.9)'); sunGlow.addColorStop(1, 'transparent')
-      ctx.beginPath(); ctx.arc(0, 0, sunGlowRadius, 0, Math.PI * 2); ctx.fillStyle = sunGlow; ctx.fill()
+      ctx.beginPath(); ctx.arc(0, 0, sunGlowRadius, 0, PI2); ctx.fillStyle = sunGlow; ctx.fill()
       ctx.globalCompositeOperation = 'source-over'
-      ctx.beginPath(); ctx.arc(0, 0, sunCoreRadius, 0, Math.PI * 2); ctx.fillStyle = '#f59e0b'; ctx.fill()
+      ctx.beginPath(); ctx.arc(0, 0, sunCoreRadius, 0, PI2); ctx.fillStyle = '#f59e0b'; ctx.fill()
       
-      ctx.beginPath(); ctx.arc(0, 0, D_AU * scaleS, 0, Math.PI * 2)
+      ctx.beginPath(); ctx.arc(0, 0, D_AU * scaleS, 0, PI2)
       ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.setLineDash([4, 6]); ctx.stroke(); ctx.setLineDash([])
       
       const earthRadiusS = Math.max(2, 8 * (scaleS / initScaleS))
-      ctx.beginPath(); ctx.arc(Ex * scaleS, Ey * scaleS, earthRadiusS, 0, Math.PI * 2); ctx.fillStyle = '#3b82f6'; ctx.fill()
+      ctx.beginPath(); ctx.arc(Ex * scaleS, Ey * scaleS, earthRadiusS, 0, PI2); ctx.fillStyle = '#3b82f6'; ctx.fill()
       
       if (pathSun.length > 1) {
         ctx.beginPath(); ctx.moveTo(pathSun[0].x * scaleS, pathSun[0].y * scaleS)
@@ -385,7 +393,7 @@ const NewtonCannon = () => {
         ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.5; ctx.stroke()
       }
       if (!crashed) {
-        ctx.beginPath(); ctx.arc(x * scaleS, y * scaleS, 4, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill()
+        ctx.beginPath(); ctx.arc(x * scaleS, y * scaleS, 4, 0, PI2); ctx.fillStyle = '#ffffff'; ctx.fill()
       }
       
       ctx.restore()
@@ -464,7 +472,7 @@ const NewtonCannon = () => {
 }
 
 /* ==========================================
-   模块 2：开普勒面积定律 (保持解析学无误差版本不变)
+   模块 2：开普勒面积定律
    ========================================== */
 const KeplerArea = () => {
   const canvasRef = useRef(null)
@@ -509,7 +517,7 @@ const KeplerArea = () => {
     
     const A_SEMI = getA_SEMI(width, height)
     const n = Math.sqrt(MU / (A_SEMI * A_SEMI * A_SEMI))
-    const period = 2 * Math.PI / n
+    const period = PI2 / n
     const sweepTime = period / 8 
     
     if (isRunning) {
@@ -518,7 +526,7 @@ const KeplerArea = () => {
       simRef.current.sectorTimer += effDt
       
       const { timer, sectorTimer } = simRef.current
-      const M = (n * timer) % (2 * Math.PI)
+      const M = (n * timer) % PI2
       const E = solveKepler(M, eTarget)
       
       const b = A_SEMI * Math.sqrt(1 - eTarget * eTarget)
@@ -534,7 +542,7 @@ const KeplerArea = () => {
       
       simRef.current.sectorPoints.push({ x, y })
       simRef.current.trail.push({ x, y })
-      if (simRef.current.trail.length > 150) simRef.current.trail.shift()
+      if (simRef.current.trail.length > 150) simRef.current.trail.splice(0, simRef.current.trail.length - 150)
       
       if (sectorTimer >= sweepTime) {
         const exactArea = 0.5 * h_angular * sweepTime
@@ -567,10 +575,11 @@ const KeplerArea = () => {
     
     if (starsRef.current) {
       ctx.fillStyle = '#ffffff'
-      starsRef.current.forEach(star => {
+      for (let i = 0; i < starsRef.current.length; i++) {
+        const star = starsRef.current[i]
         ctx.globalAlpha = star.alpha + Math.sin(absoluteTime * 0.001 + star.phase) * 0.15
-        ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2); ctx.fill()
-      })
+        ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, PI2); ctx.fill()
+      }
       ctx.globalAlpha = 1
     }
 
@@ -580,7 +589,7 @@ const KeplerArea = () => {
     const b = A_SEMI * Math.sqrt(1 - eTarget * eTarget)
     
     ctx.beginPath()
-    for (let E_ref = 0; E_ref <= Math.PI * 2; E_ref += 0.02) {
+    for (let E_ref = 0; E_ref <= PI2; E_ref += 0.02) {
       const ex = A_SEMI * (Math.cos(E_ref) - eTarget), ey = b * Math.sin(E_ref)
       if (E_ref === 0) ctx.moveTo(ex, ey); else ctx.lineTo(ex, ey)
     }
@@ -619,18 +628,18 @@ const KeplerArea = () => {
       ctx.stroke(); ctx.shadowBlur = 0
     }
     
-    ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(0, 0, 18, 0, PI2)
     ctx.fillStyle = '#f59e0b'; ctx.shadowBlur = 25; ctx.shadowColor = 'rgba(245, 158, 11, 0.6)'; ctx.fill(); ctx.shadowBlur = 0
-    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, PI2); ctx.fill()
     ctx.fillStyle = '#fff'; ctx.font = 'italic bold 15px "Times New Roman"'; ctx.textAlign='left'; ctx.fillText('F₁ (Sun)', 20, 30)
     
     const f2_x = -2 * A_SEMI * eTarget
-    ctx.beginPath(); ctx.arc(f2_x, 0, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(148, 163, 184, 0.8)'; ctx.fill()
+    ctx.beginPath(); ctx.arc(f2_x, 0, 4, 0, PI2); ctx.fillStyle = 'rgba(148, 163, 184, 0.8)'; ctx.fill()
     ctx.fillText('F₂', f2_x + 8, 5)
     
     const rp = A_SEMI * (1 - eTarget), ra = A_SEMI * (1 + eTarget)
-    ctx.fillStyle = '#f87171'; ctx.font = 'bold 12px "Microsoft YaHei"'; ctx.fillText('近日点', rp + 15, -15); ctx.beginPath(); ctx.arc(rp, 0, 4, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = '#60a5fa'; ctx.fillText('远日点', -ra - 55, -15); ctx.beginPath(); ctx.arc(-ra, 0, 4, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#f87171'; ctx.font = 'bold 12px "Microsoft YaHei"'; ctx.fillText('近日点', rp + 15, -15); ctx.beginPath(); ctx.arc(rp, 0, 4, 0, PI2); ctx.fill()
+    ctx.fillStyle = '#60a5fa'; ctx.fillText('远日点', -ra - 55, -15); ctx.beginPath(); ctx.arc(-ra, 0, 4, 0, PI2); ctx.fill()
     
     if (showVectors) {
       drawVector(ctx, 0, 0, x, y, 'rgba(255,255,255,0.3)', 'r', true, 20)
@@ -647,7 +656,7 @@ const KeplerArea = () => {
       ctx.strokeStyle = trailGrad; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.stroke()
     }
     
-    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, PI2)
     ctx.fillStyle = '#e0f2fe'; ctx.fill()
     ctx.shadowBlur = 15; ctx.shadowColor = '#38bdf8'; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.stroke(); ctx.shadowBlur = 0
     
@@ -702,7 +711,7 @@ const KeplerArea = () => {
 }
 
 /* ==========================================
-   模块 3：双星系统动力学 (保持不变)
+   模块 3：双星系统动力学
    ========================================== */
 const BinaryStar = () => {
   const canvasRef = useRef(null)
@@ -718,7 +727,7 @@ const BinaryStar = () => {
   const initSim = useCallback(() => {
     const totalMass = m1 + m2, L = 350
     const r1 = (L * m2) / totalMass, r2 = (L * m1) / totalMass
-    const omega = Math.sqrt(G * totalMass / Math.pow(L, 3))
+    const omega = Math.sqrt(G * totalMass / (L * L * L))
     const v1 = omega * r1, v2 = omega * r2
     simRef.current = {
       bodies: [
@@ -755,26 +764,27 @@ const BinaryStar = () => {
     
     if (starsRef.current) {
       ctx.fillStyle = '#ffffff'
-      starsRef.current.forEach(star => {
+      for (let i = 0; i < starsRef.current.length; i++) {
+        const star = starsRef.current[i]
         ctx.globalAlpha = star.alpha + Math.sin(absoluteTime * 0.001 + star.phase) * 0.2
-        ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2); ctx.fill()
-      })
+        ctx.beginPath(); ctx.arc(star.x, star.y, star.r, 0, PI2); ctx.fill()
+      }
       ctx.globalAlpha = 1
     }
 
     const gravityWell = ctx.createRadialGradient(0, 0, 0, 0, 0, 450)
     gravityWell.addColorStop(0, 'rgba(0, 0, 0, 0.9)'); gravityWell.addColorStop(0.6, 'rgba(15, 23, 42, 0.4)'); gravityWell.addColorStop(1, 'transparent')
-    ctx.beginPath(); ctx.ellipse(0, 0, 500, 450, 0, 0, Math.PI*2); ctx.fillStyle = gravityWell; ctx.fill()
+    ctx.beginPath(); ctx.ellipse(0, 0, 500, 450, 0, 0, PI2); ctx.fillStyle = gravityWell; ctx.fill()
     
-    ctx.beginPath(); ctx.arc(0, 0, r1, 0, Math.PI*2)
+    ctx.beginPath(); ctx.arc(0, 0, r1, 0, PI2)
     ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; ctx.lineWidth = 2.5; ctx.setLineDash([8, 8]); ctx.stroke()
-    ctx.beginPath(); ctx.arc(0, 0, r2, 0, Math.PI*2)
+    ctx.beginPath(); ctx.arc(0, 0, r2, 0, PI2)
     ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.setLineDash([])
     
     ctx.strokeStyle = 'rgba(250, 204, 21, 0.6)'; ctx.lineWidth = 1.5
     ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 15); ctx.stroke()
     ctx.beginPath(); ctx.moveTo(-15, 0); ctx.lineTo(15, 0); ctx.stroke()
-    ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.stroke()
+    ctx.beginPath(); ctx.arc(0, 0, 8, 0, PI2); ctx.stroke()
     
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-50, -80); ctx.lineTo(-160, -80)
     ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)'; ctx.lineWidth = 1.5; ctx.stroke()
@@ -785,16 +795,17 @@ const BinaryStar = () => {
     ctx.beginPath(); ctx.moveTo(bodies[0].x, bodies[0].y); ctx.lineTo(bodies[1].x, bodies[1].y)
     ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2; ctx.stroke()
     
-    bodies.forEach((body, idx) => {
-      ctx.beginPath(); ctx.arc(body.x, body.y, 15 + body.mass / 5, 0, Math.PI * 2)
+    for (let idx = 0; idx < bodies.length; idx++) {
+      const body = bodies[idx]
+      ctx.beginPath(); ctx.arc(body.x, body.y, 15 + body.mass / 5, 0, PI2)
       ctx.fillStyle = body.color; ctx.shadowBlur = 30; ctx.shadowColor = body.color; ctx.fill(); ctx.shadowBlur = 0
-      ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(body.x, body.y, (15 + body.mass / 5) * 0.4, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(body.x, body.y, (15 + body.mass / 5) * 0.4, 0, PI2); ctx.fill()
 
       drawVector(ctx, body.x, body.y, body.vx * 30, body.vy * 30, '#10b981', `v${idx+1}`, true)
       const forceVecLen = Math.min(120, forceMag * 20)
       const angleToCenter = Math.atan2(-body.y, -body.x)
       drawVector(ctx, body.x, body.y, Math.cos(angleToCenter) * forceVecLen, Math.sin(angleToCenter) * forceVecLen, '#facc15', `F引`, true, 25)
-    })
+    }
     ctx.restore()
   })
 
@@ -851,7 +862,7 @@ const BinaryStar = () => {
 }
 
 /* ==========================================
-   模块 4：三大轨道动力学辨析 (保持不变)
+   模块 4：三大轨道动力学辨析
    ========================================== */
 const SatelliteComparison = () => {
   const canvasRef = useRef(null)
@@ -875,7 +886,7 @@ const SatelliteComparison = () => {
       ctx.beginPath(); ctx.moveTo(-6, 4 + i*4); ctx.lineTo(6, 4 + i*4); ctx.stroke()
     }
     ctx.fillStyle = color; ctx.fillRect(-10, -5, 20, 10); ctx.strokeRect(-10, -5, 20, 10)
-    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, PI2); ctx.fill()
     ctx.restore()
   }
 
@@ -904,18 +915,18 @@ const SatelliteComparison = () => {
     ctx.save(); ctx.translate(width / 2, height / 2)
     
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)'; ctx.lineWidth = 1
-    for(let r = 50; r < 800; r += 50) { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke() }
+    for(let r = 50; r < 800; r += 50) { ctx.beginPath(); ctx.arc(0, 0, r, 0, PI2); ctx.stroke() }
     
-    ctx.beginPath(); ctx.arc(0, 0, R_near, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(0, 0, R_near, 0, PI2)
     ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.stroke()
-    ctx.beginPath(); ctx.arc(0, 0, R_sync, 0, Math.PI * 2)
+    ctx.beginPath(); ctx.arc(0, 0, R_sync, 0, PI2)
     ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)'; ctx.stroke(); ctx.setLineDash([])
     
     drawDetailedEarth(ctx, R_earth, angleEarth)
     
     ctx.save(); ctx.rotate(angleEarth)
     const eqX = R_earth, eqY = 0
-    ctx.beginPath(); ctx.arc(eqX, eqY, 6, 0, Math.PI * 2); ctx.fillStyle = '#ef4444'; ctx.shadowBlur = 10; ctx.shadowColor='#ef4444'; ctx.fill(); ctx.shadowBlur = 0
+    ctx.beginPath(); ctx.arc(eqX, eqY, 6, 0, PI2); ctx.fillStyle = '#ef4444'; ctx.shadowBlur = 10; ctx.shadowColor='#ef4444'; ctx.fill(); ctx.shadowBlur = 0
     ctx.fillStyle = 'rgba(2, 6, 23, 0.85)'; ctx.beginPath(); ctx.roundRect(eqX - 25, eqY - 12, 20, 20, 4); ctx.fill()
     ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)'; ctx.stroke()
     ctx.fillStyle = '#fff'; ctx.font = 'bold 15px "Times New Roman"'; ctx.fillText('A', eqX - 20, eqY + 3)
@@ -1029,10 +1040,10 @@ export default function TianTiYunDongSimulation() {
     { name: '双星系统杠杆定律', component: <BinaryStar /> },
     { name: '三大轨道动力学辨析', component: <SatelliteComparison /> },
   ]
+  
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto bg-[#020617] min-h-screen rounded-2xl shadow-2xl font-sans text-slate-100 selection:bg-blue-600/50 overflow-hidden">
       <div className="relative mb-10 pb-6 border-b border-slate-800/80">
-        {/* 光晕背景 */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-40 bg-gradient-to-r from-blue-600/30 via-sky-500/20 to-emerald-400/20 blur-[120px] rounded-full pointer-events-none" />
         
         <h1 className="relative text-3xl md:text-5xl font-black text-center tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-300 to-emerald-300">
