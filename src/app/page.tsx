@@ -316,6 +316,7 @@ function TeachingContent() {
     { title: '向心加速度的由来', slug: 'xiang-xin-a', desc: '向心加速度' },
     { title: '万有引力定律与天体运动', slug: 'tian-ti-yun-dong', desc: '天体运动' },
      { title: '配速法求解磁场中极值问题', slug: 'pei-su-fa', desc: '配速法' },
+     { title: '单缝的夫琅禾费衍射原理与实验观测', slug: 'dan-feng-yan-she', desc: '单缝衍射' },
     { title: '欢迎投稿', slug: '待续', desc: '待续' },
     ];
 

@@ -26,6 +26,8 @@ import  BaoShouLiSimulation from '@/components/physics-dong-hua/bao-shou-li';
 import  CentripetalAccelerationSimulation from '@/components/physics-dong-hua/xiang-xin-a';
 import  TianTiYunDongSimulation from '@/components/physics-dong-hua/tian-ti-yun-dong';
 import  PeiSuFaSimulation from '@/components/physics-dong-hua/pei-su-fa';
+import  SingleSlitDiffractionSim from '@/components/physics-dong-hua/dan-feng-yan-she';
+
 
 
 export default async function NotePage({ params }) {
@@ -103,6 +105,7 @@ export default async function NotePage({ params }) {
                 {currentSlug === 'xiang-xin-a' && <CentripetalAccelerationSimulation/>}
                 {currentSlug === 'tian-ti-yun-dong' && <TianTiYunDongSimulation/>}
                 {currentSlug === 'pei-su-fa' && <PeiSuFaSimulation/>}
+                {currentSlug === 'dan-feng-yan-she' && <SingleSlitDiffractionSim/>}
                 
             </div>
 
