@@ -27,7 +27,7 @@ import  CentripetalAccelerationSimulation from '@/components/physics-dong-hua/xi
 import  TianTiYunDongSimulation from '@/components/physics-dong-hua/tian-ti-yun-dong';
 import  PeiSuFaSimulation from '@/components/physics-dong-hua/pei-su-fa';
 import  SingleSlitDiffractionSim from '@/components/physics-dong-hua/dan-feng-yan-she';
-
+import ParticleMagneticLab from '@/components/physics-dong-hua/dai-dian-li-zi-fang-zhen';
 
 
 export default async function NotePage({ params }) {
@@ -106,6 +106,7 @@ export default async function NotePage({ params }) {
                 {currentSlug === 'tian-ti-yun-dong' && <TianTiYunDongSimulation/>}
                 {currentSlug === 'pei-su-fa' && <PeiSuFaSimulation/>}
                 {currentSlug === 'dan-feng-yan-she' && <SingleSlitDiffractionSim/>}
+                {slug === 'dai-dian-li-zi-fang-zhen' && <ParticleMagneticLab />}
                 
             </div>
 

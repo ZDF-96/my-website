@@ -1,25 +1,26 @@
- import type { Metadata, Viewport } from "next"; // ⚡️ 注意这里引入了 Viewport
+ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-// 引入 KaTeX 的核心样式表，让公式排版生效
-import 'katex/dist/katex.min.css'; 
+// 引入 KaTeX 核心样式表，确保数学公式正确渲染
+import "katex/dist/katex.min.css"; 
 
-// 引入背景组件
+// 引入全局背景组件
 import HtmlBackground from "@/components/HtmlBackground"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
-// 🌟 新增：这是手机端自适应的灵魂指令！强制浏览器按照设备真实宽度 1:1 渲染，完美适配移动端
+// 配置视口参数，确保移动端 1:1 渲染与完美适配
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  maximumScale: 1, // 防止用户双击屏幕意外放大导致排版乱掉
+  maximumScale: 1, // 限制最大缩放比例，防止用户双击屏幕意外破坏排版
 };
 
+// 配置站点全局元数据
 export const metadata: Metadata = {
   title: "我的物理空间",
-  description: "个人主页与教学课件",
+  description: "个人主页与物理教学课件",
 };
 
 export default function RootLayout({
@@ -30,12 +31,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className={`${inter.className} text-gray-100 min-h-screen`}>
-        {/* 1. 全局 HTML 背景 */}
+        {/* 1. 全局背景层 */}
         <HtmlBackground /> 
-        
-        {/* 2. 网站主体容器 */}
+
+        {/* 2. 网站主体内容容器（涵盖首页、讲义及 AI 问答等子页面） */}
         <div className="relative z-0">
-          {/* 页面的具体内容（首页、讲义、以及咱们新建的 /chat 页面） */}
           {children}
         </div>
       </body>
