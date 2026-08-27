@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,11 +56,13 @@ export default function LoginPage() {
     setError(false);
 
     setTimeout(() => {
-      const adminPassword = "472926"; 
+      // 👇 修改为新密码 369458
+      const adminPassword = "369458"; 
       
       if (inputValue === adminPassword) {
         setPaySuccess(true);
-        setTimeout(() => grantAccess(3650), 800); 
+        // 👇 管理员发放 365 天（一年）超长通行证
+        setTimeout(() => grantAccess(365), 800); 
       } else {
         setError(true);
         setErrorMsg("最高权限指令错误，拒绝访问");
