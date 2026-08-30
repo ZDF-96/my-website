@@ -6,29 +6,29 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-// 引入背景组件
+// 🌟 引入背景组件
 import QuantumBackground from '@/components/QuantumBackground';
 
-// 引入各个物理动画组件
+// 🚀 纯净静态引入所有物理动画组件 (不使用 dynamic，避免路径迷失)
 import InterferenceSimulator from '@/components/physics-dong-hua/InterferenceSimulator';
 import NewtonRingsSimulator from '@/components/physics-dong-hua/niu-dun-huan-donghua';
 import TheveninSimulator from '@/components/physics-dong-hua/TheveninSimulator';
 import FresnelDiffractionSim from '@/components/physics-dong-hua/guang-de-yan-she';
-
-// ✅ 关键点 1：明确从 jian-xie-bo.jsx 中引入动画组件！
 import DopplerSimulation from '@/components/physics-dong-hua/jian-xie-bo';
 import PolarizationLab from '@/components/physics-dong-hua/guang-de-pian-zhen';
 import MaxwellEquationSimulation from '@/components/physics-dong-hua/maxwell-equation';
-import SuiBi1Animation from'@/components/physics-dong-hua/sui-bi1';
-import  CeDianZu from'@/components/physics-dong-hua/ce-dian-zu';
+import SuiBi1Animation from '@/components/physics-dong-hua/sui-bi1';
+import CeDianZu from '@/components/physics-dong-hua/ce-dian-zu';
 import DielectricPolarizationSim from '@/components/physics-dong-hua/jie-zhi';
-import  BaoShouLiSimulation from '@/components/physics-dong-hua/bao-shou-li';
-import  CentripetalAccelerationSimulation from '@/components/physics-dong-hua/xiang-xin-a';
-import  TianTiYunDongSimulation from '@/components/physics-dong-hua/tian-ti-yun-dong';
-import  PeiSuFaSimulation from '@/components/physics-dong-hua/pei-su-fa';
-import  SingleSlitDiffractionSim from '@/components/physics-dong-hua/dan-feng-yan-she';
+import BaoShouLiSimulation from '@/components/physics-dong-hua/bao-shou-li';
+import CentripetalAccelerationSimulation from '@/components/physics-dong-hua/xiang-xin-a';
+import TianTiYunDongSimulation from '@/components/physics-dong-hua/tian-ti-yun-dong';
+import PeiSuFaSimulation from '@/components/physics-dong-hua/pei-su-fa';
+import SingleSlitDiffractionSim from '@/components/physics-dong-hua/dan-feng-yan-she';
 import ParticleMagneticLab from '@/components/physics-dong-hua/dai-dian-li-zi-fang-zhen';
-
+import TapeTimerSimulator from '@/components/physics-dong-hua/zhi-dai-fa-ce-a';
+// 👇 核心修复：直接使用常规 import 引入光电门组件
+import PhotogateSimulator from '@/components/physics-dong-hua/guang-dian-men-fang-zhen';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -47,12 +47,13 @@ export default async function NotePage({ params }) {
       }
     }
 
+    // 容错处理：确保匹配时不受 URL 编码干扰，完美适配中文 Markdown 文件名
     const currentSlug = decodeURIComponent(slug).trim();
 
     return (
       <div className="relative min-h-screen bg-[#030305] text-white font-sans">
         
-        {/* 🌟 放置原生 React 背景组件 */}
+        {/* 🌟 原生 React 背景组件 */}
         <QuantumBackground />
 
         <main className="relative z-10 max-w-4xl mx-auto px-6 py-12 md:py-20">
@@ -88,26 +89,26 @@ export default async function NotePage({ params }) {
               </ReactMarkdown>
             </div>
 
+            {/* 🔬 智能物理实验室闸口 */}
             <div className="mt-16 border-t border-white/10 pt-10 pb-10">
                {currentSlug === 'interference-of-light' && <InterferenceSimulator />}
                {(currentSlug === 'niudunhuan' || currentSlug === 'niu-dun-huan-donghua') && <NewtonRingsSimulator />}
                {currentSlug === 'dai-wei-nan-dingli' && <TheveninSimulator />}
-               
-               {/* ✅ 关键点 2：当访问 jian-xie-yun-dong.md 时，渲染这个动画！ */}
                {currentSlug === 'jian-xie-yun-dong' && <DopplerSimulation />}
                {currentSlug === 'guang-de-yan-she' && <FresnelDiffractionSim />}
                {currentSlug === 'guang-de-pian-zhen' && <PolarizationLab />}
                {currentSlug.toLowerCase() === 'maxwell-equation' && <MaxwellEquationSimulation />}
                {currentSlug === 'sui-bi1' && <SuiBi1Animation/>}
                {currentSlug === 'ce-dian-zu' && <CeDianZu/>}
-                {currentSlug === 'jie-zhi' && <DielectricPolarizationSim/>}
-                {currentSlug === 'bao-shou-li' && <BaoShouLiSimulation/>}
-                {currentSlug === 'xiang-xin-a' && <CentripetalAccelerationSimulation/>}
-                {currentSlug === 'tian-ti-yun-dong' && <TianTiYunDongSimulation/>}
-                {currentSlug === 'pei-su-fa' && <PeiSuFaSimulation/>}
-                {currentSlug === 'dan-feng-yan-she' && <SingleSlitDiffractionSim/>}
-                {slug === 'dai-dian-li-zi-fang-zhen' && <ParticleMagneticLab />}
-                
+               {currentSlug === 'jie-zhi' && <DielectricPolarizationSim/>}
+               {currentSlug === 'bao-shou-li' && <BaoShouLiSimulation/>}
+               {currentSlug === 'xiang-xin-a' && <CentripetalAccelerationSimulation/>}
+               {currentSlug === 'tian-ti-yun-dong' && <TianTiYunDongSimulation/>}
+               {currentSlug === 'pei-su-fa' && <PeiSuFaSimulation/>}
+               {currentSlug === 'dan-feng-yan-she' && <SingleSlitDiffractionSim/>}
+               {currentSlug === 'dai-dian-li-zi-fang-zhen' && <ParticleMagneticLab />}
+              {currentSlug === 'guang-dian-men-ce-su-du' && <PhotogateSimulator />}
+              {currentSlug === 'zhi-dai-fa-ce-a' && <TapeTimerSimulator />}
             </div>
 
           </article>

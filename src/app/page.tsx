@@ -358,6 +358,8 @@ function TeachingContent() {
     { title: '万有引力定律与天体运动', slug: 'tian-ti-yun-dong', desc: '天体运动学规律' },
     { title: '单缝夫琅禾费衍射', slug: 'dan-feng-yan-she', desc: '原理与实验观测' },
     { title: '带电粒子在磁场中的运动仿真', slug: 'dai-dian-li-zi-fang-zhen', desc: '带电粒子在磁场中的偏转' },
+    { title: '光电门测量小车瞬时速度', slug: 'guang-dian-men-ce-su-du', desc: '光电门测瞬时速度' },
+     { title: '纸带法测小车加速度', slug: 'zhi-dai-fa-ce-a', desc: '逐差法' }
   ];
 
   return (
