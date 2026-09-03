@@ -29,6 +29,8 @@ import ParticleMagneticLab from '@/components/physics-dong-hua/dai-dian-li-zi-fa
 import TapeTimerSimulator from '@/components/physics-dong-hua/zhi-dai-fa-ce-a';
 // 👇 核心修复：直接使用常规 import 引入光电门组件
 import PhotogateSimulator from '@/components/physics-dong-hua/guang-dian-men-fang-zhen';
+// 在现有的引入下方添加这一行：
+import DianCiGanYing from '@/components/physics-dong-hua/dian-ci-gan-ying';
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -109,6 +111,7 @@ export default async function NotePage({ params }) {
                {currentSlug === 'dai-dian-li-zi-fang-zhen' && <ParticleMagneticLab />}
               {currentSlug === 'guang-dian-men-ce-su-du' && <PhotogateSimulator />}
               {currentSlug === 'zhi-dai-fa-ce-a' && <TapeTimerSimulator />}
+              {currentSlug === 'dian-ci-gan-ying' && <DianCiGanYing />}
             </div>
 
           </article>
