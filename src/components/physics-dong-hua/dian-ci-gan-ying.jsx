@@ -6,11 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
  * ============================================================================
  * 法拉第电磁感应实验室 PRO (Ultimate Edition)
  * Faraday Electromagnetic Induction Laboratory
- *
- * 核心升级：
- * 1. 物理引擎升级：引入真实的电磁阻尼反馈（楞次定律的力学体现，靠近/离开时拖拽会有"滞重感"）。
- * 2. 视觉特效重构：次世代 Dark HUD 风格，霓虹流光线圈、全息发光箭头磁感线、CRT 示波器发光图线。
- * 3. 动态交互增强：高帧率弹簧阻尼表盘、平滑的高阶导数计算、自适应高分屏渲染。
  * ============================================================================
  */
 
@@ -178,7 +173,6 @@ export default function FaradayLawSimulation() {
       ctx.restore();
     };
 
-    // 带有全息箭头的动态磁感线
     const drawAnimatedMagneticField = (x, y) => {
       ctx.save();
       const state = physics.current;
@@ -189,16 +183,14 @@ export default function FaradayLawSimulation() {
       ctx.setLineDash([15, 10]);
       ctx.lineDashOffset = -state.fieldFlowOffset; 
 
-      // 绘制科幻风格双层指示箭头
       const drawHUDChevron = (cx, cy, angle, rgbColor) => {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(angle);
-        ctx.setLineDash([]); // 箭头不能是虚线
+        ctx.setLineDash([]); 
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        // 主箭头 (高亮)
         ctx.beginPath();
         ctx.moveTo(-6, -6);
         ctx.lineTo(2, 0);
@@ -209,7 +201,6 @@ export default function FaradayLawSimulation() {
         ctx.shadowBlur = 10;
         ctx.stroke();
 
-        // 尾部副箭头 (拖尾全息感)
         ctx.beginPath();
         ctx.moveTo(-13, -6);
         ctx.lineTo(-5, 0);
@@ -227,11 +218,10 @@ export default function FaradayLawSimulation() {
       spreads.forEach((spread) => {
         [-1, 1].forEach((dir) => {
           const grad = ctx.createLinearGradient(x, y, x + 200, y + dir*spread);
-          grad.addColorStop(0, `rgba(239,68,68,${alpha})`); // 红色 N极
-          grad.addColorStop(1, `rgba(59,130,246,${alpha/2})`); // 蓝色 S极
+          grad.addColorStop(0, `rgba(239,68,68,${alpha})`);
+          grad.addColorStop(1, `rgba(59,130,246,${alpha/2})`);
           ctx.strokeStyle = grad;
 
-          // 贝塞尔曲线磁感线
           ctx.beginPath();
           ctx.moveTo(x + 75, y);
           ctx.bezierCurveTo(
@@ -241,23 +231,16 @@ export default function FaradayLawSimulation() {
           );
           ctx.stroke();
 
-          // 在弧顶处添加方向箭头
-          // 磁感线从右(N)回到左(S)，在弧顶方向完全向左，角度为 Math.PI
           const apexX = x; 
           const apexY = y + dir * spread * 0.9;
-          // 颜色呈现过渡态的紫红色
           drawHUDChevron(apexX, apexY, Math.PI, '217, 70, 239'); 
         });
       });
 
-      // 轴向磁感线及箭头 (N极发出, S极吸入)
-      
-      // 右侧 N极 (指出，向右)
       ctx.strokeStyle = `rgba(239,68,68,${alpha})`;
       ctx.beginPath(); ctx.moveTo(x + 76, y); ctx.lineTo(x + 300, y); ctx.stroke();
       drawHUDChevron(x + 180, y, 0, '239, 68, 68'); 
 
-      // 左侧 S极 (指入，从左侧无穷远向右进入S极)
       ctx.strokeStyle = `rgba(59,130,246,${alpha})`;
       ctx.beginPath(); ctx.moveTo(x - 76, y); ctx.lineTo(x - 300, y); ctx.stroke();
       drawHUDChevron(x - 180, y, 0, '59, 130, 246'); 
@@ -404,13 +387,13 @@ export default function FaradayLawSimulation() {
         ctx.beginPath(); ctx.arc(x + 20, y + 25, 4, 0, Math.PI*2); ctx.fill();
         
         ctx.shadowColor = 'transparent';
-        ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
         ctx.fillText(title, x + 32, y + 25);
         ctx.restore();
       };
 
-      drawScopeFrame(gX, gY1, gW, gH, 'MAGNETIC FLUX Φ(t)', '#06b6d4');
-      drawScopeFrame(gX, gY2, gW, gH, 'INDUCED EMF ε(t) = -dΦ/dt', '#f43f5e');
+      drawScopeFrame(gX, gY1, gW, gH, '磁通量 Φ(t) 实时曲线', '#06b6d4');
+      drawScopeFrame(gX, gY2, gW, gH, '感应电动势 ε(t) = -dΦ/dt', '#f43f5e');
 
       if (state.history.length < 2) return;
 
@@ -473,31 +456,48 @@ export default function FaradayLawSimulation() {
       renderWaveform(gY2, gH, 'emf', 100, 'rgb(244, 63, 94)', true);
     };
 
-    const drawHUDPanel = (state, x, y) => {
+    // 重构 HUD 布局：水平展开，放置于顶部安全区，彻底解决遮挡问题
+    const drawHUDPanel = (state, width) => {
       ctx.save();
+      const isMobile = width < 700;
+      const w = isMobile ? Math.max(width - 40, 300) : 720;
+      const h = isMobile ? 100 : 60;
+      const x = (width - w) / 2;
+      const y = 20;
+
       ctx.fillStyle = 'rgba(2, 6, 23, 0.7)';
       ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.roundRect(x, y, 260, 160, 8); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 8); ctx.fill(); ctx.stroke();
       
       ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(x, y + 20, 3, 20);
+      ctx.beginPath(); ctx.roundRect(x, y + 15, 4, h - 30, 2); ctx.fill();
 
       ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 15px "SF Pro Display", sans-serif';
-      ctx.fillText('SYSTEM TELEMETRY', x + 15, y + 35);
+      ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      ctx.fillText('实时物理数据', x + 15, isMobile ? y + 25 : y + 30);
       
       ctx.font = '13px "Roboto Mono", monospace';
       
-      const drawDataRow = (dy, label, val, unit, color) => {
-        ctx.fillStyle = '#64748b'; ctx.fillText(label, x + 15, y + dy);
-        ctx.fillStyle = color; ctx.textAlign = 'right'; 
-        ctx.fillText(`${val} ${unit}`, x + 245, y + dy);
-        ctx.textAlign = 'left';
-      };
+      if (isMobile) {
+        ctx.fillStyle = '#64748b'; ctx.fillText('速度(v):', x + 15, y + 55);
+        ctx.fillStyle = '#38bdf8'; ctx.fillText(`${Math.abs(state.velocity).toFixed(0)} px/s`, x + 75, y + 55);
+        
+        ctx.fillStyle = '#64748b'; ctx.fillText('磁通量(Φ):', x + 160, y + 55);
+        ctx.fillStyle = '#06b6d4'; ctx.fillText(`${state.flux.toFixed(2)} Wb`, x + 235, y + 55);
 
-      drawDataRow(70, 'MAGNET VEL (v)', Math.abs(state.velocity).toFixed(0), 'px/s', '#38bdf8');
-      drawDataRow(100, 'MAG FLUX (Φ)', state.flux.toFixed(1), 'Wb', '#06b6d4');
-      drawDataRow(130, 'INDUCED EMF (ε)', Math.abs(state.emf).toFixed(1), 'V', Math.abs(state.emf) > 5 ? '#f43f5e' : '#94a3b8');
+        ctx.fillStyle = '#64748b'; ctx.fillText('感应电动势(ε):', x + 15, y + 80);
+        ctx.fillStyle = Math.abs(state.emf) > 5 ? '#f43f5e' : '#94a3b8'; 
+        ctx.fillText(`${Math.abs(state.emf).toFixed(2)} V`, x + 115, y + 80);
+      } else {
+        const drawDataRow = (offsetX, label, val, unit, color) => {
+          ctx.fillStyle = '#64748b'; ctx.fillText(label, x + 130 + offsetX, y + 30);
+          ctx.fillStyle = color; ctx.fillText(`${val} ${unit}`, x + 130 + offsetX + ctx.measureText(label).width + 5, y + 30);
+        };
+        drawDataRow(0, '磁铁运动速度 (v):', Math.abs(state.velocity).toFixed(0), 'px/s', '#38bdf8');
+        drawDataRow(210, '线圈磁通量 (Φ):', state.flux.toFixed(2), 'Wb', '#06b6d4');
+        drawDataRow(400, '感应电动势 (ε):', Math.abs(state.emf).toFixed(2), 'V', Math.abs(state.emf) > 5 ? '#f43f5e' : '#94a3b8');
+      }
 
       ctx.restore();
     };
@@ -514,7 +514,9 @@ export default function FaradayLawSimulation() {
 
       const width = canvas.width / (window.devicePixelRatio || 1);
       const height = canvas.height / (window.devicePixelRatio || 1);
-      const cy = activeTab === 2 ? 180 : 200; 
+      
+      // 【核心优化】：将基准Y轴(cy)下调至 250，为顶部的 HUD 留出安全的防遮挡净空区
+      const cy = activeTab === 2 ? 180 : 250; 
 
       ctx.clearRect(0, 0, width, height);
       drawBackground(state, width, height);
@@ -526,22 +528,39 @@ export default function FaradayLawSimulation() {
 
       if (activeTab === 0) {
         drawHUDGalvanometer(state.coilX, cy, state.needleAngle);
-        drawHUDPanel(state, 30, 30);
+        drawHUDPanel(state, width);
       } else if (activeTab === 1) {
         drawHUDGalvanometer(state.coilX, cy, state.needleAngle);
+        
         ctx.save();
+        const isMobile = width < 700;
+        const w = isMobile ? Math.max(width - 40, 300) : 600;
+        const h = isMobile ? 80 : 60;
+        const x = (width - w) / 2;
+        const y = 20;
+
         ctx.fillStyle = 'rgba(15, 23, 42, 0.85)'; ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
-        ctx.beginPath(); ctx.roundRect(30, 30, 280, 110, 12); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(x, y, w, h, 12); ctx.fill(); ctx.stroke();
         
         ctx.fillStyle = '#f43f5e'; ctx.font = 'bold 15px sans-serif';
-        ctx.fillText('LENZ\'S LAW ANALYSIS', 50, 60);
-        ctx.fillStyle = '#cbd5e1'; ctx.font = '13px sans-serif';
-        const msg = Math.abs(state.dFluxDt) < 1 ? '系统稳定，无明显感应' : (state.dFluxDt > 0 ? 'Φ 增加 → 产生阻碍增加的反向磁场' : 'Φ 减小 → 产生阻碍减小的同向磁场');
-        ctx.fillText(msg, 50, 90);
-        ctx.fillStyle = '#f43f5e'; ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText('楞次定律实时分析', x + 20, isMobile ? y + 25 : y + 30);
+        
+        ctx.fillStyle = '#cbd5e1'; ctx.font = '14px sans-serif';
+        const msg = Math.abs(state.dFluxDt) < 1 ? '系统处于稳定状态，无明显电磁感应' : (state.dFluxDt > 0 ? '磁通量 Φ 增加 → 产生阻碍其增加的反向磁场' : '磁通量 Φ 减小 → 产生阻碍其减小的同向磁场');
         const subMsg = Math.abs(state.dFluxDt) < 1 ? '' : (state.dFluxDt > 0 ? '【增反】' : '【减同】');
-        ctx.fillText(subMsg, 50, 115);
+        
+        if (isMobile) {
+            ctx.fillText(msg, x + 20, y + 55);
+            ctx.fillStyle = '#f43f5e'; ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(subMsg, x + 20 + ctx.measureText(msg).width + 5, y + 55);
+        } else {
+            ctx.fillText(msg, x + 160, y + 30);
+            ctx.fillStyle = '#f43f5e'; ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(subMsg, x + 160 + ctx.measureText(msg).width + 5, y + 30);
+        }
         ctx.restore();
+
       } else if (activeTab === 2) {
         drawOscilloscope(state, width, height);
       }
@@ -591,7 +610,7 @@ export default function FaradayLawSimulation() {
               Faraday Engine Pro
             </h2>
             <p className="mt-1 text-[10px] md:text-xs tracking-[0.25em] text-cyan-500 font-mono">
-              ELECTROMAGNETIC INDUCTION SIMULATOR V2.0
+              电磁感应现象与法拉第定律仿真引擎 V2.0
             </p>
           </div>
         </div>
@@ -602,7 +621,7 @@ export default function FaradayLawSimulation() {
             <span className={`relative inline-flex rounded-full h-3 w-3 ${isMoving ? 'bg-rose-500' : 'bg-slate-600'}`}></span>
           </span>
           <span className="text-xs font-mono text-slate-400 font-semibold tracking-widest">
-            {isMoving ? 'FLUX CHANGING' : 'IDLE'}
+            {isMoving ? '磁通量变化中 (ACTIVE)' : '系统待机 (IDLE)'}
           </span>
         </div>
       </div>
@@ -639,7 +658,7 @@ export default function FaradayLawSimulation() {
         {!isMoving && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none">
             <div className="px-6 py-2 rounded-full border border-slate-700 bg-slate-900/60 backdrop-blur text-xs tracking-widest text-slate-400 animate-pulse">
-              [ 拖动磁铁 模拟通量变化 ]
+              [ 左右拖动磁铁 模拟闭合回路磁通量变化 ]
             </div>
           </div>
         )}
@@ -647,17 +666,17 @@ export default function FaradayLawSimulation() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 bg-slate-950 border-t border-slate-800 divide-y md:divide-y-0 md:divide-x divide-slate-800">
         <div className="p-5 flex flex-col justify-center">
-          <span className="text-[10px] text-slate-500 font-mono tracking-widest mb-1">MODULE 01</span>
+          <span className="text-[10px] text-slate-500 font-mono tracking-widest mb-1">模块 01</span>
           <h3 className="text-sm font-bold text-slate-300">产生条件：磁通量必须变化</h3>
           <p className="text-xs text-slate-500 mt-2">只有当闭合回路中的磁通量发生改变时，才会激发感应电流。静止时不产生电流。</p>
         </div>
         <div className="p-5 flex flex-col justify-center">
-          <span className="text-[10px] text-rose-500/70 font-mono tracking-widest mb-1">MODULE 02</span>
+          <span className="text-[10px] text-rose-500/70 font-mono tracking-widest mb-1">模块 02</span>
           <h3 className="text-sm font-bold text-rose-400">楞次定律：阻碍变化</h3>
           <p className="text-xs text-slate-500 mt-2">感应电流产生的磁场，总是阻碍引起感应电流的磁通量变化 (即"增反减同")。</p>
         </div>
         <div className="p-5 flex flex-col justify-center bg-cyan-950/10">
-          <span className="text-[10px] text-cyan-500/70 font-mono tracking-widest mb-1">MODULE 03</span>
+          <span className="text-[10px] text-cyan-500/70 font-mono tracking-widest mb-1">模块 03</span>
           <h3 className="text-sm font-bold text-cyan-400">法拉第定律：定量计算</h3>
           <p className="text-xs text-slate-500 mt-2 flex items-center justify-between">
             <span>感应电动势与磁通量变化率成正比。</span>
