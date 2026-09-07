@@ -31,6 +31,8 @@ import TapeTimerSimulator from '@/components/physics-dong-hua/zhi-dai-fa-ce-a';
 import PhotogateSimulator from '@/components/physics-dong-hua/guang-dian-men-fang-zhen';
 // 在现有的引入下方添加这一行：
 import DianCiGanYing from '@/components/physics-dong-hua/dian-ci-gan-ying';
+import AmpereLorentzSimulation from '@/components/physics-dong-hua/an-pei-li-bu-zuo-gong';
+
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -108,10 +110,12 @@ export default async function NotePage({ params }) {
                {currentSlug === 'tian-ti-yun-dong' && <TianTiYunDongSimulation/>}
                {currentSlug === 'pei-su-fa' && <PeiSuFaSimulation/>}
                {currentSlug === 'dan-feng-yan-she' && <SingleSlitDiffractionSim/>}
-               {currentSlug === 'dai-dian-li-zi-fang-zhen' && <ParticleMagneticLab />}
-              {currentSlug === 'guang-dian-men-ce-su-du' && <PhotogateSimulator />}
+               {currentSlug === 'dai-dian-li-zi-fang-zhen' && <ParticleMagneticLab/>}
+              {currentSlug === 'guang-dian-men-ce-su-du' && <PhotogateSimulator/>}
               {currentSlug === 'zhi-dai-fa-ce-a' && <TapeTimerSimulator />}
-              {currentSlug === 'dian-ci-gan-ying' && <DianCiGanYing />}
+              {currentSlug === 'dian-ci-gan-ying' && <DianCiGanYing/>}
+              {currentSlug === 'an-pei-li-bu-zuo-gong' && <AmpereLorentzSimulation/>}
+              
             </div>
 
           </article>

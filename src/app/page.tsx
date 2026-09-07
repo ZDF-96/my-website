@@ -356,11 +356,14 @@ function TeachingContent() {
     { title: '电介质的电磁性质', slug: 'jie-zhi', desc: '介质中的麦克斯韦方程组' },
     { title: '向心加速度的由来', slug: 'xiang-xin-a', desc: '圆周运动与向心加速度' },
     { title: '万有引力定律与天体运动', slug: 'tian-ti-yun-dong', desc: '天体运动学规律' },
+     { title: '带电粒子运动：配速法', slug: 'pei-su-fa', desc: '配速法' },
     { title: '单缝夫琅禾费衍射', slug: 'dan-feng-yan-she', desc: '原理与实验观测' },
     { title: '带电粒子在磁场中的运动仿真', slug: 'dai-dian-li-zi-fang-zhen', desc: '带电粒子在磁场中的偏转' },
     { title: '光电门测量小车瞬时速度', slug: 'guang-dian-men-ce-su-du', desc: '光电门测瞬时速度' },
     { title: '纸带法测小车加速度', slug: 'zhi-dai-fa-ce-a', desc: '逐差法' },
-    { title: '法拉第电磁感应定律', slug: 'dian-ci-gan-ying', desc: '楞次定律' }
+    { title: '法拉第电磁感应定律', slug: 'dian-ci-gan-ying', desc: '楞次定律' },
+    { title: '浅谈安培力与洛伦兹力的关系', slug: 'an-pei-li-bu-zuo-gong', desc: '安培力' }
+
 
 
   ];
