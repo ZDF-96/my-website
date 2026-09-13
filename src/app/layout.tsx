@@ -1,4 +1,4 @@
- import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -8,9 +8,12 @@ import "katex/dist/katex.min.css";
 // 引入全局背景组件
 import HtmlBackground from "@/components/HtmlBackground"; 
 
+// 👇 新增 1：引入全局悬浮音乐播放器组件
+import MusicPlayer from "@/components/MusicPlayer";
+
 const inter = Inter({ subsets: ["latin"] });
 
-// 配置视口参数，确保移动端 1:1 渲染与完美适配
+// 配置视口参数，确保移动端 1:1 渲染与完美适配[cite: 5]
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -38,6 +41,9 @@ export default function RootLayout({
         <div className="relative z-0">
           {children}
         </div>
+
+        {/* 👇 新增 2：全局音乐播放器（放在最底层，页面切换时音乐绝不中断） */}
+        <MusicPlayer />
       </body>
     </html>
   );
