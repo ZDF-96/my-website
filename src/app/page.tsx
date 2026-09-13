@@ -362,7 +362,11 @@ function TeachingContent() {
     { title: '光电门测量小车瞬时速度', slug: 'guang-dian-men-ce-su-du', desc: '光电门测瞬时速度' },
     { title: '纸带法测小车加速度', slug: 'zhi-dai-fa-ce-a', desc: '逐差法' },
     { title: '法拉第电磁感应定律', slug: 'dian-ci-gan-ying', desc: '楞次定律' },
-    { title: '浅谈安培力与洛伦兹力的关系', slug: 'an-pei-li-bu-zuo-gong', desc: '安培力' }
+    { title: '浅谈安培力与洛伦兹力的关系', slug: 'an-pei-li-bu-zuo-gong', desc: '安培力' },
+    { title: '自感、互感', slug: 'zi-gan-hu-gan', desc: '' },
+    { title: '感生电动势、感生电场', slug: 'gan-sheng-e', desc: '' }
+  
+
 
 
 
