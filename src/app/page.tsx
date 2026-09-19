@@ -1,8 +1,9 @@
- "use client";
+"use client";
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, Mail, Book, FileText, Presentation, Users, Info, Sparkles, ArrowRight, Orbit, BookOpen, Download, Bot, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 // ==========================================
 // TypeScript 接口定义
@@ -135,7 +136,6 @@ export default function AcademicPortal() {
           aria-hidden="true"
         />
 
-        {/* ⚡️ 终极修复 2：取消绝对定位，采用自然堆叠，并将导航条的单行横向滑动改为 flex-wrap 折行展示！ */}
         <header className="relative z-30 shrink-0 w-full bg-[#030305]/60 md:bg-[#030305]/40 backdrop-blur-xl border-b border-white/[0.05] flex flex-col md:flex-row items-center">
           
           <div className="hidden md:flex items-center gap-3 shrink-0 pl-8 pr-6 border-r border-white/[0.05] h-16">
@@ -147,7 +147,7 @@ export default function AcademicPortal() {
             {NAV_ITEMS.map((item) => {
               if (item.isLink) {
                 return (
-                  <a
+                  <Link
                     key={item.id}
                     href={item.href}
                     target="_blank" 
@@ -156,7 +156,7 @@ export default function AcademicPortal() {
                   >
                     <item.icon size={13} className="shrink-0" />
                     <span className="whitespace-nowrap">{item.label}</span>
-                  </a>
+                  </Link>
                 );
               }
 
@@ -184,8 +184,6 @@ export default function AcademicPortal() {
           </nav>
         </header>
 
-        {/* 动态内容渲染区 */}
-        {/* ⚡️ 彻底移除 pt-14 这种硬编码上内边距，让内容自然填满剩余空间 */}
         <div 
           ref={scrollContainerRef}
           className="relative z-10 flex-1 min-w-0 w-full overflow-y-auto overflow-x-hidden scroll-smooth"
@@ -281,7 +279,7 @@ function EssaysContent() {
       <SectionHeader title="随笔" subtitle="Essays" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 w-full">
         {essays.map((essay, i) => (
-          <a href={`/notes/${essay.slug}`} key={i} className="block group w-full min-w-0">
+          <Link href={`/notes/${essay.slug}`} key={i} className="block group w-full min-w-0">
             <div className="relative p-5 md:p-6 bg-white/[0.02] border border-white/[0.05] group-hover:border-cyan-400/40 rounded-2xl transition-all duration-500 group-hover:-translate-y-1.5 group-hover:shadow-[0_12px_40px_-15px_rgba(34,211,238,0.3)] backdrop-blur-md overflow-hidden flex flex-col justify-between min-h-[140px] md:min-h-[170px] w-full">
               
               <div className="absolute -right-8 -top-8 w-32 h-32 bg-cyan-500/0 group-hover:bg-cyan-500/10 blur-[40px] rounded-full transition-all duration-700" />
@@ -305,7 +303,7 @@ function EssaysContent() {
                 </div>
               </div>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>
@@ -325,7 +323,7 @@ function NotesContent() {
       <SectionHeader title="科研与研读笔记" subtitle="Notes" />
       <div className="space-y-3 font-mono text-xs md:text-sm lg:text-base w-full min-w-0">
         {notes.map((note, i) => (
-          <a href={`/notes/${note.slug}`} key={i} className="flex items-center gap-3 md:gap-4 p-4 md:p-5 bg-white/[0.015] hover:bg-white/[0.04] rounded-xl border border-white/[0.05] hover:border-cyan-400/30 cursor-pointer transition-all duration-300 backdrop-blur-sm group hover:shadow-[0_4px_20px_rgba(34,211,238,0.05)] w-full min-w-0">
+          <Link href={`/notes/${note.slug}`} key={i} className="flex items-center gap-3 md:gap-4 p-4 md:p-5 bg-white/[0.015] hover:bg-white/[0.04] rounded-xl border border-white/[0.05] hover:border-cyan-400/30 cursor-pointer transition-all duration-300 backdrop-blur-sm group hover:shadow-[0_4px_20px_rgba(34,211,238,0.05)] w-full min-w-0">
             <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white/[0.03] flex items-center justify-center group-hover:bg-cyan-500/10 border border-transparent group-hover:border-cyan-500/20 transition-colors shrink-0">
                <FileText size={14} className="md:w-4 md:h-4 text-white/30 group-hover:text-cyan-400 transition-colors" />
             </div>
@@ -337,7 +335,7 @@ function NotesContent() {
                </span>
                <ChevronRight size={14} className="md:w-4 md:h-4 text-white/10 group-hover:text-cyan-400/60 group-hover:translate-x-1 transition-all" />
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>
@@ -356,7 +354,7 @@ function TeachingContent() {
     { title: '电介质的电磁性质', slug: 'jie-zhi', desc: '介质中的麦克斯韦方程组' },
     { title: '向心加速度的由来', slug: 'xiang-xin-a', desc: '圆周运动与向心加速度' },
     { title: '万有引力定律与天体运动', slug: 'tian-ti-yun-dong', desc: '天体运动学规律' },
-     { title: '带电粒子运动：配速法', slug: 'pei-su-fa', desc: '配速法' },
+    { title: '带电粒子运动：配速法', slug: 'pei-su-fa', desc: '配速法' },
     { title: '单缝夫琅禾费衍射', slug: 'dan-feng-yan-she', desc: '原理与实验观测' },
     { title: '带电粒子在磁场中的运动仿真', slug: 'dai-dian-li-zi-fang-zhen', desc: '带电粒子在磁场中的偏转' },
     { title: '光电门测量小车瞬时速度', slug: 'guang-dian-men-ce-su-du', desc: '光电门测瞬时速度' },
@@ -364,12 +362,9 @@ function TeachingContent() {
     { title: '法拉第电磁感应定律', slug: 'dian-ci-gan-ying', desc: '楞次定律' },
     { title: '浅谈安培力与洛伦兹力的关系', slug: 'an-pei-li-bu-zuo-gong', desc: '安培力' },
     { title: '自感、互感', slug: 'zi-gan-hu-gan', desc: '' },
-    { title: '感生电动势、感生电场', slug: 'gan-sheng-e', desc: '' }
-  
-
-
-
-
+    { title: '感生电动势、感生电场', slug: 'gan-sheng-e', desc: '' },
+    { title: 'R-L 电路的暂态动力学与能量转化', slug: 'r-l', desc: '' },
+    { title: '三种理想元件的电压与电流关系', slug: 'r-l-c', desc: '' }
   ];
 
   return (
@@ -377,7 +372,7 @@ function TeachingContent() {
       <SectionHeader title="高中物理教学" subtitle="Teaching Modules" />
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5 w-full min-w-0">
         {courses.map((course, i) => (
-          <a href={`/notes/${course.slug}`} key={i} className="block group w-full min-w-0">
+          <Link href={`/notes/${course.slug}`} key={i} className="block group w-full min-w-0">
             <div className="relative bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/40 rounded-2xl p-5 md:p-6 flex flex-col transition-all duration-500 cursor-pointer hover:-translate-y-1 hover:shadow-[0_12px_30px_-10px_rgba(34,211,238,0.15)] overflow-hidden min-h-[150px] md:min-h-[170px] w-full">
               
               <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -400,7 +395,7 @@ function TeachingContent() {
                 <ArrowRight size={12} className="ml-2 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 ease-out shrink-0" />
               </div>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>

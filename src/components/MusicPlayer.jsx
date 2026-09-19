@@ -80,6 +80,12 @@ export default function MusicPlayer() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = 0.4;
+      
+      // 🚀 量子记忆：组件挂载时，尝试读取上次播放的秒数
+      const savedTime = localStorage.getItem('bgm_time');
+      if (savedTime) {
+        audioRef.current.currentTime = parseFloat(savedTime);
+      }
     }
   }, []);
 
@@ -96,6 +102,9 @@ export default function MusicPlayer() {
     if (!audioRef.current) return;
     const currentTime = audioRef.current.currentTime;
     
+    // 🚀 量子记忆：每时每刻将进度存入浏览器本地存储
+    localStorage.setItem('bgm_time', currentTime.toString());
+    
     const activeLyric = LYRICS.slice().reverse().find(lyric => currentTime >= lyric.time);
     if (activeLyric && activeLyric.text !== currentLyric) {
       setCurrentLyric(activeLyric.text);
@@ -105,24 +114,21 @@ export default function MusicPlayer() {
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-4">
       
-      {/* 🚀 赛博全息歌词舱 */}
+      {/* 赛博全息歌词舱 */}
       <div 
         className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] origin-bottom-right ${
           isPlaying ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'
         }`}
       >
         <div className="relative px-5 py-2.5 rounded-2xl bg-[#030305]/80 backdrop-blur-2xl border border-cyan-500/30 shadow-[0_0_25px_rgba(34,211,238,0.15)] overflow-hidden">
-          {/* 背景微弱雷达光晕 */}
           <div className="absolute inset-0 w-full h-full bg-[linear-gradient(90deg,transparent_0%,rgba(34,211,238,0.08)_50%,transparent_100%)] animate-[pulse_3s_ease-in-out_infinite]" />
           
           <div className="flex items-center gap-3 relative z-10">
-            {/* 动态量子脉冲点 */}
             <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500 shadow-[0_0_8px_#22d3ee]"></span>
             </span>
             
-            {/* 渐变发光歌词本体：带有强制重绘 Key */}
             <p 
               key={currentLyric} 
               className="text-xs md:text-sm font-mono tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"

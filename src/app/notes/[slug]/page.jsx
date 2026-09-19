@@ -35,6 +35,9 @@ import AmpereLorentzSimulation from '@/components/physics-dong-hua/an-pei-li-bu-
 import ZiGanHuGanSimulation from '@/components/physics-dong-hua/zi-gan-hu-gan';
 
 import GanShengSimulation from '@/components/physics-dong-hua/gan-sheng-e';
+import RLTransientLab from '@/components/physics-dong-hua/r-l';
+import RLCPhasorLab from '@/components/physics-dong-hua/r-l-c';
+
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -119,6 +122,8 @@ export default async function NotePage({ params }) {
               {currentSlug === 'an-pei-li-bu-zuo-gong' && <AmpereLorentzSimulation/>}
                {currentSlug === 'zi-gan-hu-gan' && <ZiGanHuGanSimulation/>}
                {currentSlug === 'gan-sheng-e' && <GanShengSimulation/>}
+               {currentSlug === 'r-l' && <RLTransientLab/>}
+               {currentSlug === 'r-l-c' && <RLCPhasorLab/>}
               
             </div>
 
