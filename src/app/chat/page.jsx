@@ -31,6 +31,12 @@ export default function ChatPage() {
       });
 
       const data = await res.json();
+      
+      // 🚀 核心强制跳转逻辑：一旦检测到后端返回 error，立刻在新标签页打开 DeepSeek 充值
+      if (data.error) {
+        window.open("https://platform.deepseek.com/top_up", "_blank");
+      }
+
       setMessages([...newMessages, { role: 'ai', text: data.reply || data.error }]);
     } catch (error) {
       setMessages([...newMessages, { role: 'ai', text: '<p>量子链路断开，请稍后再试。</p>' }]);
@@ -56,7 +62,6 @@ export default function ChatPage() {
           <Sparkles size={16} />
           <span className="text-xs font-mono tracking-widest uppercase">Quantum Portal // AI 答疑</span>
         </div>
-        {/* （右侧的菜单按钮已移除，因为返回按钮放到了下方主体区域左侧） */}
       </header>
 
       {/* 💬 3. 聊天内容主体容器 */}
