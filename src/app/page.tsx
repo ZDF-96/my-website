@@ -364,7 +364,8 @@ function TeachingContent() {
     { title: '自感、互感', slug: 'zi-gan-hu-gan', desc: '' },
     { title: '感生电动势、感生电场', slug: 'gan-sheng-e', desc: '' },
     { title: 'R-L 电路的暂态动力学与能量转化', slug: 'r-l', desc: '' },
-    { title: '三种理想元件的电压与电流关系', slug: 'r-l-c', desc: '' }
+    { title: '三种理想元件的电压与电流关系', slug: 'r-l-c', desc: '' },
+     { title: '斜交分解处理斜抛运动', slug: 'xie-jiao-fen-jie', desc: '斜交分解' },
   ];
 
   return (
