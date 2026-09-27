@@ -38,6 +38,10 @@ import GanShengSimulation from '@/components/physics-dong-hua/gan-sheng-e';
 import RLTransientLab from '@/components/physics-dong-hua/r-l';
 import RLCPhasorLab from '@/components/physics-dong-hua/r-l-c';
 import XieJiaoFenJieSimulations from '@/components/physics-dong-hua/xie-jiao-fen-jie';
+import ZhiXinFaSimulation from '@/components/physics-dong-hua/zhi-xin-fa';
+
+
+
 
 export default async function NotePage({ params }) {
   const { slug } = await params;
@@ -125,6 +129,8 @@ export default async function NotePage({ params }) {
                {currentSlug === 'r-l' && <RLTransientLab/>}
                {currentSlug === 'r-l-c' && <RLCPhasorLab/>}
                {currentSlug === 'xie-jiao-fen-jie' && <XieJiaoFenJieSimulations/>}
+               {currentSlug === 'zhi-xin-fa' && <ZhiXinFaSimulation/>}
+               
                
               
             </div>
