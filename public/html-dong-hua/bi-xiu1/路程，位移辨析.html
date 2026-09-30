@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教科书级 | 位移与路程概念辨析</title>
+    <style>
+        :root {
+            --bg-color: #0d1117; /* 深色背景 */
+            --panel-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --cyan-accent: #00ffff; /* 位移颜色 */
+            --teal-accent: #14b8a6; /* 路程颜色 */
+            --button-primary: #1f6feb;
+            --button-hover: #388bfd;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* 说明侧边栏 */
+        .sidebar {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar h2 {
+            color: var(--cyan-accent);
+            margin: 0 0 15px 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-size: 1.4rem;
+        }
+
+        .sidebar p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin: 0 0 20px 0;
+            font-size: 0.9rem;
+        }
+
+        .concept-card {
+            border-left: 4px solid;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 4px;
+        }
+
+        .card-displacement { border-left-color: var(--cyan-accent); }
+        .card-distance { border-left-color: var(--teal-accent); }
+
+        .concept-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+        .concept-displacement { color: var(--cyan-accent); }
+        .concept-distance { color: var(--teal-accent); }
+
+        .symbol { font-family: 'Times New Roman', 'PingFang SC', serif; font-size: 1.2rem; font-weight: bold; }
+
+        /* 右侧演示区域 */
+        .demo-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .canvas-wrapper {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            background: radial-gradient(circle at center, #161b22 0%, #0d1117 100%);
+            border-radius: 8px;
+            cursor: crosshair;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+        }
+        .bg-cyan {
+            background-color: var(--cyan-accent);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
+        }
+        .bg-teal {
+            background-color: var(--teal-accent);
+            box-shadow: 0 0 10px rgba(20, 184, 166, 0.7);
+        }
+
+        /* 数据面板和控制按钮 */
+        .dashboard-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .data-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .data-title {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .val-disp { color: var(--cyan-accent); text-shadow: 0 0 15px rgba(0, 255, 255, 0.8); }
+        .val-dist { color: var(--teal-accent); text-shadow: 0 0 15px rgba(20, 184, 166, 0.8); }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
+            justify-content: center;
+        }
+
+        button {
+            background-color: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--border-color);
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        button:hover {
+            border-color: var(--button-hover);
+            color: var(--button-hover);
+            background-color: rgba(56, 139, 253, 0.05);
+        }
+
+        button.primary {
+            background-color: var(--button-primary);
+            border-color: var(--button-primary);
+            color: #fff;
+        }
+
+        button.primary:hover {
+            background-color: var(--button-hover);
+            border-color: var(--button-hover);
+            box-shadow: 0 0 15px rgba(56, 139, 253, 0.5);
+        }
+
+        /* 响应式适配：小屏幕时改为单列布局 */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .dashboard-controls {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="sidebar">
+        <h2>概念辨析</h2>
+        <p>质点沿曲线运动时，位移与路程是两个截然不同的物理量。</p>
+        
+        <div class="concept-card card-displacement">
+            <div class="concept-title concept-displacement">
+                <span class="symbol">x⃗</span> 位移 (Displacement)
+            </div>
+            <p><strong>矢量</strong>：表示质点位置的变化。由起点指向终点的有向线段。与轨迹无关。</p>
+        </div>
+
+        <div class="concept-card card-distance">
+            <div class="concept-title concept-distance">
+                <span class="symbol">s</span> 路程 (Distance)
+            </div>
+            <p><strong>标量</strong>：表示质点实际运动轨迹的长度。随时间单调增加。</p>
+        </div>
+
+        <p style="border-top: 1px solid var(--border-color); padding-top: 20px; font-style: italic;">关系： |x⃗| ≤ s <br>只有在单向直线运动时 |x⃗| = s。</p>
+    </div>
+
+    <div class="demo-area">
+        <div class="canvas-wrapper">
+            <canvas id="simCanvas" width="860" height="420"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="color-box bg-cyan"></div>
+                    <span>位移 (起点→当前)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box bg-teal"></div>
+                    <span>路程 (实际轨迹)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-controls">
+            <div class="data-card displacement">
+                <div class="data-title"><span class="symbol">x⃗</span> 当前位移大小</div>
+                <div class="data-value val-disp"><span id="dispValue">0.00</span> m</div>
+            </div>
+            <div class="data-card distance">
+                <div class="data-title"><span class="symbol">s</span> 当前路程</div>
+                <div class="data-value val-dist"><span id="distValue">0.00</span> m</div>
+            </div>
+            <div class="controls">
+                <button id="btnStart" class="primary">开始演示</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btnPause" style="flex: 1;">暂停</button>
+                    <button id="btnReset" style="flex: 1;">重置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const dispValueEl = document.getElementById('dispValue');
+    const distValueEl = document.getElementById('distValue');
+    
+    // 教科书风格颜色和样式配置
+    const config = {
+        scale: 10, // 10像素 = 1米
+        colors: {
+            grid: '#21262d',
+            pathBase: '#30363d',
+            displacement: '#00ffff', // 强烈青色
+            displacementGlow: 'rgba(0, 255, 255, 0.8)',
+            distance: '#14b8a6', // 蓝绿色
+            distanceGlow: 'rgba(20, 184, 166, 0.6)',
+            particle: '#ffffff',
+            particleGlow: 'rgba(255, 255, 255, 0.9)',
+            point: '#e6edf3',
+            pointGlow: 'rgba(230, 237, 243, 0.5)'
+        },
+        styles: {
+            dispLineWidth: 8, // 位移矢量更粗
+            distLineWidth: 6, // 路程轨迹粗体
+            arrowHeadLen: 30, // 箭头头部极大化
+            arrowHeadAngle: Math.PI / 7, // 调整角度使其更坚固
+            particleRadius: 10 // 质点更大
+        }
+    };
+
+    // 物理量与状态
+    let isPlaying = false;
+    let progress = 0; // 0 to 1
+    const animationSpeed = 0.002;
+    let animationId = null;
+
+    // 轨迹生成
+    const startPoint = { x: 100, y: 210 };
+    const endPoint = { x: 760, y: 210 };
+    const controlPoint1 = { x: 250, y: 30 };
+    const controlPoint2 = { x: 550, y: 390 };
+    
+    const pathPoints = [];
+    const numSamples = 600; // 增加点数以获得更好的路程计算和更顺滑的线
+    
+    for(let i = 0; i <= numSamples; i++) {
+        let t = i / numSamples;
+        let invT = 1 - t;
+        // 三次贝塞尔曲线
+        let px = invT**3 * startPoint.x + 3 * invT**2 * t * controlPoint1.x + 3 * invT * t**2 * controlPoint2.x + t**3 * endPoint.x;
+        let py = invT**3 * startPoint.y + 3 * invT**2 * t * controlPoint1.y + 3 * invT * t**2 * controlPoint2.y + t**3 * endPoint.y;
+        
+        let point = { x: px, y: py, distObj: 0 };
+        
+        if (i > 0) {
+            let prev = pathPoints[i-1];
+            let segmentLen = Math.sqrt((px - prev.x)**2 + (py - prev.y)**2);
+            point.distObj = prev.distObj + segmentLen;
+        }
+        pathPoints.push(point);
+    }
+    
+    const totalPixelDistance = pathPoints[numSamples].distObj;
+
+    // 绘制坐标网格 (精细化)
+    function drawGrid() {
+        ctx.strokeStyle = config.colors.grid;
+        ctx.lineWidth = 0.5;
+        for(let i = 0; i < canvas.width; i += 50) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+        }
+        for(let i = 0; i < canvas.height; i += 50) {
+            ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+        }
+    }
+
+    // 教科书级别发光箭头绘制函数
+    function drawTextbookArrow(fromx, fromy, tox, toy) {
+        const dx = tox - fromx;
+        const dy = toy - fromy;
+        const angle = Math.atan2(dy, dx);
+        
+        // 1. 绘制位移矢量线段和发光
+        ctx.save();
+        ctx.strokeStyle = config.colors.displacement;
+        ctx.lineWidth = config.styles.dispLineWidth;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(fromx, fromy);
+        ctx.lineTo(tox, toy);
+        
+        // 添加发光效果
+        ctx.shadowColor = config.colors.displacementGlow;
+        ctx.shadowBlur = 20;
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. 绘制箭头头部和发光
+        ctx.save();
+        ctx.fillStyle = config.colors.displacement;
+        ctx.beginPath();
+        ctx.moveTo(tox, toy);
+        
+        // 计算箭头顶点的两个点
+        const p1x = tox - config.styles.arrowHeadLen * Math.cos(angle - config.styles.arrowHeadAngle);
+        const p1y = toy - config.styles.arrowHeadLen * Math.sin(angle - config.styles.arrowHeadAngle);
+        const p2x = tox - config.styles.arrowHeadLen * Math.cos(angle + config.styles.arrowHeadAngle);
+        const p2y = toy - config.styles.arrowHeadLen * Math.sin(angle + config.styles.arrowHeadAngle);
+        
+        // 使用填充的箭头形状，并确保它看起来坚固醒目
+        ctx.lineTo(p1x, p1y);
+        ctx.lineTo(p2x, p2y);
+        ctx.closePath();
+        
+        // 再次添加发光效果以增强箭头
+        ctx.shadowColor = config.colors.displacementGlow;
+        ctx.shadowBlur = 25;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 绘制起点/终点标记 (发光风格)
+    function drawPointMarker(x, y, label, isStart) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = config.colors.point;
+        // 添加发光效果
+        ctx.shadowColor = config.colors.pointGlow;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.restore();
+
+        // 标签文字
+        ctx.fillStyle = config.colors.point;
+        ctx.font = '700 16px "PingFang SC", sans-serif';
+        if (isStart) {
+            ctx.fillText(`A (${label})`, x - 35, y - 20);
+        } else {
+            ctx.fillText(`B (${label})`, x + 15, y + 15);
+        }
+    }
+
+    // 主绘制函数
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawGrid();
+
+        // 1. 绘制底层完整暗色虚线轨迹
+        ctx.beginPath();
+        ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+        for(let i=1; i<pathPoints.length; i++) {
+            ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+        }
+        ctx.strokeStyle = config.colors.pathBase;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.stroke();
+        ctx.setLineDash([]); // 恢复实线
+
+        // 计算当前位置索引
+        let currentIndex = Math.floor(progress * numSamples);
+        let currentPos = pathPoints[currentIndex];
+
+        // 2. 绘制起点和终点标记
+        drawPointMarker(startPoint.x, startPoint.y, "起点", true);
+        drawPointMarker(endPoint.x, endPoint.y, "终点", false);
+
+        // 3. 绘制路程轨迹 (加粗、发光实线)
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+        for(let i=1; i<=currentIndex; i++) {
+            ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+        }
+        ctx.strokeStyle = config.colors.distance;
+        ctx.lineWidth = config.styles.distLineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // 添加路程发光效果
+        ctx.shadowColor = config.colors.distanceGlow;
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. 绘制位移矢量 (最强发光、最粗、最大箭头)
+        if (progress > 0) {
+            drawTextbookArrow(startPoint.x, startPoint.y, currentPos.x, currentPos.y);
+        }
+
+        // 5. 绘制当前质点 (加粗发光小球)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(currentPos.x, currentPos.y, config.styles.particleRadius, 0, Math.PI * 2);
+        ctx.fillStyle = config.colors.particle;
+        ctx.shadowColor = config.colors.particleGlow;
+        ctx.shadowBlur = 20;
+        ctx.fill();
+        ctx.restore();
+
+        // 更新数据面板
+        let pixelDisplacement = Math.sqrt((currentPos.x - startPoint.x)**2 + (currentPos.y - startPoint.y)**2);
+        let meterDisplacement = (pixelDisplacement / config.scale).toFixed(2);
+        let meterDistance = (currentPos.distObj / config.scale).toFixed(2);
+        
+        dispValueEl.textContent = meterDisplacement;
+        distValueEl.textContent = meterDistance;
+    }
+
+    // 动画循环
+    function animate() {
+        if (!isPlaying) return;
+        
+        progress += animationSpeed;
+        if (progress >= 1) {
+            progress = 1;
+            isPlaying = false;
+            document.getElementById('btnStart').textContent = "重新演示";
+        }
+        
+        draw();
+        
+        if (isPlaying) {
+            animationId = requestAnimationFrame(animate);
+        }
+    }
+
+    // 绑定按钮事件
+    document.getElementById('btnStart').addEventListener('click', function() {
+        if (progress >= 1) {
+            progress = 0;
+        }
+        if (!isPlaying) {
+            isPlaying = true;
+            this.textContent = "演示中...";
+            this.classList.add('primary');
+            animate();
+        }
+    });
+
+    document.getElementById('btnPause').addEventListener('click', function() {
+        isPlaying = false;
+        if(animationId) cancelAnimationFrame(animationId);
+        document.getElementById('btnStart').textContent = "继续演示";
+        document.getElementById('btnStart').classList.remove('primary');
+    });
+
+    document.getElementById('btnReset').addEventListener('click', function() {
+        isPlaying = false;
+        if(animationId) cancelAnimationFrame(animationId);
+        progress = 0;
+        document.getElementById('btnStart').textContent = "开始演示";
+        document.getElementById('btnStart').classList.add('primary');
+        draw();
+    });
+
+    // 初始化绘制
+    draw();
+</script>
+</body>
+</html>

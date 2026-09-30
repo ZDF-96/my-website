@@ -22,34 +22,36 @@ const s3Client = new S3Client({
 export async function GET() {
   try {
     const R2_PUBLIC_DOMAIN = process.env.R2_PUBLIC_URL;
-    
+
     // 只扫描 ppt/ 文件夹
     const command = new ListObjectsV2Command({
       Bucket: process.env.R2_BUCKET_NAME,
       Prefix: 'ppt/',
     });
-    
+
     const response = await s3Client.send(command);
     const fileList: SlideItem[] = [];
 
     if (response.Contents) {
       response.Contents.forEach((item) => {
         if (!item.Key || item.Key.endsWith('/')) return; 
-        
-        // ✅ 完美匹配所有格式
+
+        // ✅ 完美匹配所有云端课件格式
         const isMatch = item.Key.match(/\.(pdf|ppt|pptx|doc|docx)$/i);
         if (!isMatch) return;
 
         const parts = item.Key.split('/');
         const fileName = parts.pop() || '';
-        
+
         const category = parts.length > 1 ? parts[parts.length - 1] : '未分类';
         const title = fileName.replace(/\.(pdf|ppt|pptx|doc|docx)$/i, '').replace(/-/g, ' ');
         const link = `${R2_PUBLIC_DOMAIN}/${item.Key}`;
-        
+
         fileList.push({ title, category, link });
       });
     }
+
+    // 返回纯净的 R2 云端课件数据
     return NextResponse.json(fileList);
   } catch (error) {
     console.error('扫描 R2 课件失败:', error);

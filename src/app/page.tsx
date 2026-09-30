@@ -405,7 +405,8 @@ function TeachingContent() {
 }
 
 function SlidesContent() {
-  const [activeMode, setActiveMode] = React.useState<'books' | 'slides'>('books');
+  // 👇 关键修改点：支持 'animations' 的状态切换
+  const [activeMode, setActiveMode] = React.useState<'books' | 'slides' | 'animations'>('books');
   const [groupedData, setGroupedData] = React.useState<Record<string, ResourceItem[]>>({});
   const [loading, setLoading] = React.useState(true);
 
@@ -464,6 +465,19 @@ function SlidesContent() {
               )}
               <span className="relative z-10 flex items-center gap-2"><Presentation size={14} /> 教学课件</span>
             </button>
+
+            {/* 👇 完美并列的新增选项卡：交互动画 */}
+            <button
+              onClick={() => setActiveMode('animations')}
+              className={`relative px-5 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-medium rounded-lg transition-all duration-300 shrink-0 ${
+                activeMode === 'animations' ? 'text-white' : 'text-white/40 hover:text-white/70'
+              }`}
+            >
+              {activeMode === 'animations' && (
+                <motion.div layoutId="resource-toggle" className="absolute inset-0 bg-cyan-500/20 border border-cyan-400/30 rounded-lg" />
+              )}
+              <span className="relative z-10 flex items-center gap-2"><Orbit size={14} /> html动画</span>
+            </button>
         </div>
       </div>
 
@@ -494,7 +508,7 @@ function SlidesContent() {
                     <div className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white/[0.015] hover:bg-white/[0.03] border border-white/[0.05] hover:border-cyan-400/40 rounded-2xl transition-all duration-300 hover:shadow-[0_4px_20px_rgba(34,211,238,0.05)] backdrop-blur-sm w-full min-w-0">
                       
                       <div className="w-10 h-12 flex-shrink-0 bg-[#030305] border border-white/[0.05] rounded-lg flex items-center justify-center text-white/30 group-hover:text-cyan-400 group-hover:border-cyan-400/30 group-hover:bg-cyan-500/10 transition-all shrink-0">
-                        {item.link.match(/\.docx?$/i) ? <FileText size={16} /> : item.link.match(/\.pptx?$/i) ? <Presentation size={16} /> : <BookOpen size={16} />}
+                        {item.link.match(/\.docx?$/i) ? <FileText size={16} /> : item.link.match(/\.pptx?$/i) ? <Presentation size={16} /> : item.link.match(/\.html$/i) ? <Orbit size={16} className="text-cyan-400" /> : <BookOpen size={16} />}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -503,7 +517,7 @@ function SlidesContent() {
                         </h4>
                         <div className="mt-1">
                           <span className="text-[9px] md:text-[10px] text-white/30 font-mono uppercase tracking-wider">
-                            {item.link.match(/\.docx?$/i) ? 'WORD DOC' : item.link.match(/\.pptx?$/i) ? 'PPT DECK' : 'PDF DOC'}
+                            {item.link.match(/\.docx?$/i) ? 'WORD DOC' : item.link.match(/\.pptx?$/i) ? 'PPT DECK' : item.link.match(/\.html$/i) ? 'HTML APP' : 'PDF DOC'}
                           </span>
                         </div>
                       </div>

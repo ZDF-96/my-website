@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>高一物理互动课件：速度、速率、位移与路程</title>
+
+<style>
+:root{
+    --bg:#f3f5f7;
+    --paper:#ffffff;
+    --paper-soft:#f8fafb;
+
+    --ink:#18232d;
+    --muted:#687581;
+    --line:#d7dee5;
+
+    --blue:#1769aa;
+    --blue-soft:#eaf3fb;
+
+    --teal:#14866d;
+    --teal-soft:#eaf7f3;
+
+    --orange:#c47b18;
+    --red:#b84b4b;
+
+    --axis:#8d99a5;
+    --grid:#e9edf1;
+
+    --shadow:0 8px 24px rgba(24,35,45,.07);
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    padding:24px;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", -apple-system, sans-serif;
+}
+
+.container{
+    width:100%;
+    max-width:1450px;
+    margin:auto;
+    display:grid;
+    grid-template-columns:310px minmax(0,1fr);
+    gap:22px;
+}
+
+/* =========================================================
+   左侧概念区
+   ========================================================= */
+
+.sidebar{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:24px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+}
+
+.sidebar-title{
+    margin:0;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line);
+    font-size:21px;
+    font-weight:700;
+    letter-spacing:.02em;
+}
+
+.subtitle{
+    margin:10px 0 20px;
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.7;
+}
+
+.concept-card{
+    margin-bottom:13px;
+    padding:15px 16px;
+    border:1px solid var(--line);
+    border-left:4px solid;
+    border-radius:7px;
+    background:var(--paper-soft);
+}
+
+.concept-card.blue{ border-left-color:var(--blue); }
+.concept-card.teal{ border-left-color:var(--teal); }
+.concept-card.orange{ border-left-color:var(--orange); }
+.concept-card.red{ border-left-color:var(--red); }
+
+.concept-title{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:7px;
+    font-size:16px;
+    font-weight:700;
+}
+
+.concept-title .symbol{
+    font-family:"Times New Roman",serif;
+    font-size:20px;
+    font-style:italic;
+    margin-right: 4px;
+}
+
+.concept-title .normal-symbol{
+    font-family:"Times New Roman",serif;
+    font-size:18px;
+    margin-right: 4px;
+}
+
+.blue-text{ color:var(--blue); }
+.teal-text{ color:var(--teal); }
+.orange-text{ color:var(--orange); }
+.red-text{ color:var(--red); }
+
+.concept-desc{
+    margin:0;
+    color:#596672;
+    font-size:13px;
+    line-height:1.75;
+}
+
+.formula-box{
+    margin-top:auto;
+    padding:17px;
+    border:1px solid #cfd8df;
+    border-radius:7px;
+    background:#f8fafb;
+    text-align:center;
+}
+
+.formula-main{
+    margin-bottom:9px;
+    font-family:"Times New Roman",serif;
+    font-size:22px;
+    font-style:italic;
+    font-weight: bold;
+    color: var(--ink);
+}
+
+.formula-note{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.6;
+}
+
+/* =========================================================
+   主区域
+   ========================================================= */
+
+.main-area{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+}
+
+.header{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:17px 20px;
+    box-shadow:var(--shadow);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:20px;
+}
+
+.header-title{
+    margin:0;
+    font-size:21px;
+    font-weight:700;
+}
+
+.header-subtitle{
+    margin:5px 0 0;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.status{
+    flex:none;
+    padding:7px 12px;
+    border:1px solid #cfd8df;
+    border-radius:20px;
+    color:var(--muted);
+    background:#fafbfc;
+    font-size:12px;
+}
+
+/* =========================================================
+   Canvas
+   ========================================================= */
+
+.canvas-container{
+    position:relative;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px;
+    box-shadow:var(--shadow);
+}
+
+canvas{
+    display:block;
+    width:100%;
+    height:510px;
+    background:#ffffff;
+    border-radius:6px;
+}
+
+.legend{
+    position:absolute;
+    left:24px;
+    top:23px;
+    display:flex;
+    flex-direction: column;
+    gap:10px;
+    padding:12px 16px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:rgba(255,255,255,.98); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    font-size:13px;
+    font-weight: bold;
+    color:#53616c;
+    z-index: 10;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.legend-line{
+    width:24px;
+    height:3px;
+    border-radius:2px;
+}
+
+.legend-line.path{ background:var(--teal); }
+.legend-line.displacement{ background:var(--blue); border-top: 2px dashed var(--blue); height: 0; background: transparent; }
+.legend-line.avg-velocity{ background:var(--red); }
+.legend-line.velocity{ background:var(--orange); }
+
+/* =========================================================
+   数据看板
+   ========================================================= */
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+}
+
+.data-box{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:15px 12px;
+    text-align:center;
+    box-shadow:var(--shadow);
+}
+
+.data-title{
+    color:var(--muted);
+    font-size:12px;
+    margin-bottom:8px;
+}
+
+.data-symbol{
+    font-family:"Times New Roman",serif;
+    font-style:italic;
+    font-size:13px;
+    margin-left: 2px;
+}
+
+.data-value{
+    font-family: "Times New Roman", "Courier New", monospace;
+    font-size:25px;
+    font-weight:700;
+}
+
+.data-unit{
+    margin-left:4px;
+    color:var(--muted);
+    font-size:12px;
+    font-family:"Microsoft YaHei",sans-serif;
+}
+
+.data-box.orange{ border-top:3px solid var(--orange); }
+.data-box.blue{ border-top:3px solid var(--blue); }
+.data-box.red{ border-top:3px solid var(--red); }
+.data-box.teal{ border-top:3px solid var(--teal); }
+
+/* =========================================================
+   关键物理关系
+   ========================================================= */
+
+.relation-panel{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:14px 18px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:28px;
+    box-shadow:var(--shadow);
+}
+
+.relation-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#56636e;
+    font-size:13px;
+}
+
+.relation-formula{
+    color:var(--ink);
+    font-family:"Times New Roman",serif;
+    font-size:18px;
+    font-style:italic;
+    font-weight: bold;
+}
+
+/* =========================================================
+   控制区与模式选择
+   ========================================================= */
+
+.mode-panel{
+    display:flex;
+    justify-content:center;
+    gap:7px;
+    flex-wrap: wrap; 
+}
+
+.mode-btn{
+    min-width:115px;
+}
+
+.mode-btn.active{
+    background:#edf4fa;
+    color:var(--blue);
+    border-color:#9ebed8;
+    font-weight:600;
+}
+
+.controls{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:12px 15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    box-shadow:var(--shadow);
+}
+
+button{
+    min-width:105px;
+    padding:9px 18px;
+    border:1px solid #cbd4db;
+    border-radius:6px;
+    background:#ffffff;
+    color:#394752;
+    font-size:13px;
+    cursor:pointer;
+    transition:.18s ease;
+}
+
+button:hover{ background:#f3f6f8; border-color:#aebac4; }
+button.primary{ background:var(--blue); border-color:var(--blue); color:white; }
+button.primary:hover{ background:#145d97; }
+
+/* =========================================================
+   底部说明
+   ========================================================= */
+
+.explanation{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:13px 18px;
+    color:#586672;
+    font-size:14px;
+    line-height:1.7;
+    box-shadow:var(--shadow);
+}
+.explanation strong{ color:var(--ink); }
+
+/* =========================================================
+   响应式
+   ========================================================= */
+@media(max-width:1050px){
+    .container{ grid-template-columns:1fr; }
+    .sidebar{ display:block; }
+    .formula-box{ margin-top:18px; }
+}
+
+@media(max-width:720px){
+    body{ padding:10px; }
+    .dashboard{ grid-template-columns:repeat(2,1fr); }
+    .header{ align-items:flex-start; flex-direction:column; }
+    .legend{ display:none; }
+    canvas{ height:430px; }
+    .relation-panel{ flex-wrap:wrap; gap:12px; }
+    .controls{ flex-wrap:wrap; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+    <aside class="sidebar">
+        <h1 class="sidebar-title">运动学基本概念</h1>
+        <p class="subtitle">通过同一质点的运动，同时观察速度、速率、位移与路程的动态变化。</p>
+
+        <div class="concept-card blue">
+            <div class="concept-title blue-text">
+                <span class="normal-symbol">Δ</span><span class="symbol">x</span>位移
+            </div>
+            <p class="concept-desc">
+                空间位置的变化。图中用<strong>蓝色虚线</strong>连接初位置和末位置。
+            </p>
+        </div>
+
+        <div class="concept-card red">
+            <div class="concept-title red-text">
+                <span class="symbol">v̄</span>平均速度
+            </div>
+            <p class="concept-desc">
+                矢量（位移÷时间）。图中用<strong>红色实心箭头</strong>表示。<br>
+                1. <strong>方向</strong>始终与位移方向相同。<br>
+                2. <strong>大小（长度）</strong>反映平均运动快慢。
+            </p>
+        </div>
+
+        <div class="concept-card orange">
+            <div class="concept-title orange-text">
+                <span class="symbol">v</span>瞬时速度
+            </div>
+            <p class="concept-desc">
+                矢量。用<strong>橙色实心箭头</strong>表示。<br>
+                1. <strong>方向</strong>始终沿轨迹的切线方向。<br>
+                2. <strong>大小（长度）</strong>即瞬时速率，可以和红色的平均速度箭头直观对比大小。
+            </p>
+        </div>
+
+        <div class="concept-card teal">
+            <div class="concept-title teal-text">
+                <span class="symbol">s</span>路程
+            </div>
+            <p class="concept-desc">
+                标量。表示质点实际运动轨迹的总长度，是一个不断累加的过程量。
+            </p>
+        </div>
+    </aside>
+
+    <main class="main-area">
+
+        <header class="header">
+            <div>
+                <h2 class="header-title">速度、速率、位移与路程</h2>
+                <p class="header-subtitle">对比观察：瞬时速度(橙)与平均速度(红)不仅方向不同，大小也在随时发生变化。</p>
+            </div>
+            <div class="status" id="status">等待开始</div>
+        </header>
+
+        <div class="mode-panel">
+            <button class="mode-btn active" data-mode="curve">八字曲线</button>
+            <button class="mode-btn" data-mode="straight">直线单向</button>
+            <button class="mode-btn" data-mode="return">往返运动</button>
+            <button class="mode-btn" data-mode="circle">圆周运动</button>
+            <button class="mode-btn" data-mode="sine">正弦波形</button>
+            <button class="mode-btn" data-mode="spiral">螺旋盘旋</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="simCanvas"></canvas>
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-line path"></span>路程 s
+                </div>
+                <div class="legend-item">
+                    <span class="legend-line displacement"></span>位移 Δx
+                </div>
+                <div class="legend-item">
+                    <span class="legend-line avg-velocity"></span>平均速度 v̄ (加粗)
+                </div>
+                <div class="legend-item">
+                    <span class="legend-line velocity"></span>瞬时速度 v
+                </div>
+            </div>
+        </div>
+
+        <section class="dashboard">
+            <div class="data-box blue">
+                <div class="data-title">位移大小<span class="data-symbol">|Δx|</span></div>
+                <div class="data-value blue-text">
+                    <span id="val-displacement">0.00</span><span class="data-unit">m</span>
+                </div>
+            </div>
+
+            <div class="data-box red">
+                <div class="data-title">平均速度大小<span class="data-symbol">|v̄|</span></div>
+                <div class="data-value red-text">
+                    <span id="val-avg-v">0.00</span><span class="data-unit">m/s</span>
+                </div>
+            </div>
+            
+            <div class="data-box orange">
+                <div class="data-title">瞬时速度大小 (速率)<span class="data-symbol">|v|</span></div>
+                <div class="data-value orange-text">
+                    <span id="val-inst-v">0.00</span><span class="data-unit">m/s</span>
+                </div>
+            </div>
+
+            <div class="data-box teal">
+                <div class="data-title">平均速率<span class="data-symbol">s/t</span></div>
+                <div class="data-value teal-text">
+                    <span id="val-avg-s">0.00</span><span class="data-unit">m/s</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="relation-panel">
+            <div class="relation-item">
+                <span>平均速度：</span>
+                <span class="relation-formula">v̄ = Δx / t (与位移同向)</span>
+            </div>
+            <div class="relation-item">
+                <span>平均速率：</span>
+                <span class="relation-formula">v̄<sub>s</sub> = s / t</span>
+            </div>
+        </section>
+
+        <div class="controls">
+            <button id="btnStart" class="primary">开始模拟</button>
+            <button id="btnPause">暂停</button>
+            <button id="btnStep">单步</button>
+            <button id="btnReset">重置</button>
+        </div>
+
+        <div class="explanation" id="explanation">
+            <strong>观察提示：</strong>请点击“开始模拟”。注意比较图中红色箭头（平均速度）与橙色箭头（瞬时速度）的动态差异。
+        </div>
+
+    </main>
+</div>
+
+<script>
+
+const canvas = document.getElementById("simCanvas");
+const ctx = canvas.getContext("2d");
+let layout = { w: 900, h: 510 };
+
+function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    layout.w = rect.width;
+    layout.h = rect.height;
+}
+
+const dom = {
+    instV: document.getElementById("val-inst-v"),
+    displacement: document.getElementById("val-displacement"),
+    avgV: document.getElementById("val-avg-v"),
+    avgS: document.getElementById("val-avg-s"),
+    status: document.getElementById("status"),
+    explanation: document.getElementById("explanation")
+};
+
+const PX_PER_METER = 100;
+
+// 【修复核心1】放大全局矢量的渲染系数，确保小数值矢量也有足够的展示长度
+const V_RENDER_SCALE = 0.8; 
+
+let mode = "curve";
+let playing = false;
+let time = 0;
+let animationId = null;
+const TOTAL_TIME = 8;
+
+
+function getPosition(t){
+    const cx = layout.w / 2;
+    const cy = layout.h / 2 + 10;
+    const u = Math.min(t / TOTAL_TIME, 1);
+
+    if(mode === "straight"){
+        return { x: cx - 350 + 700*u, y: cy };
+    }
+    if(mode === "return"){
+        const phase = u * 2;
+        if(phase <= 1){
+            return { x: cx - 330 + 660*phase, y: cy };
+        } else {
+            const q = phase - 1;
+            return { x: cx + 330 - 660*q, y: cy };
+        }
+    }
+    if(mode === "circle"){
+        const R = 180;
+        const theta = u * 2 * Math.PI - Math.PI;
+        return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta) };
+    }
+    if(mode === "sine"){
+        return { x: cx - 350 + 700 * u, y: cy + 130 * Math.sin(u * 4 * Math.PI) };
+    }
+    if(mode === "spiral"){
+        const R = 230 * u;
+        // 【修复核心2】略微减少螺旋圈数，使得红箭头的数值和橙箭头的数值落差缩小
+        const theta = u * 4.5 * Math.PI - Math.PI; 
+        return { x: cx + R * Math.cos(theta), y: cy + R * Math.sin(theta) };
+    }
+    const theta = u * 2*Math.PI;
+    return {
+        x: cx - 320*Math.cos(theta),
+        y: cy + 130*Math.sin(2*theta)
+    };
+}
+
+function getVelocity(t){
+    const h = 0.0005;
+    const p1 = getPosition(Math.max(0,t-h));
+    const p2 = getPosition(Math.min(TOTAL_TIME,t+h));
+    return {
+        vx:(p2.x-p1.x)/(2*h),
+        vy:(p2.y-p1.y)/(2*h)
+    };
+}
+
+function buildArcLength(){
+    const samples = 3000;
+    const arr = new Array(samples+1);
+    let length = 0;
+    let prev = getPosition(0);
+    arr[0] = { t:0, s:0 };
+    for(let i=1;i<=samples;i++){
+        const t = TOTAL_TIME*i/samples;
+        const p = getPosition(t);
+        const dx = p.x-prev.x;
+        const dy = p.y-prev.y;
+        length += Math.hypot(dx,dy);
+        arr[i] = { t:t, s:length };
+        prev=p;
+    }
+    return arr;
+}
+let arcTable = [];
+
+function getDistance(t){
+    if(t<=0) return 0;
+    if(t>=TOTAL_TIME) return arcTable[arcTable.length-1].s;
+    const n = arcTable.length-1;
+    const index = Math.min(Math.floor(t/TOTAL_TIME*n), n-1);
+    const a = arcTable[index];
+    const b = arcTable[index+1];
+    const ratio = (t-a.t)/(b.t-a.t);
+    return a.s + (b.s-a.s)*ratio;
+}
+
+
+// 【修复核心3】增强画箭头的鲁棒性，应对长度较短的极端小矢量
+function drawArrow(x1,y1,x2,y2,color,width=3,head=11,isDashed=false){
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const mag = Math.hypot(dx, dy);
+    
+    if (mag < 0.1) return;
+
+    // 如果矢量极短，自适应缩小箭头三角形，防止头部比身体还大
+    const actualHead = Math.min(head, mag * 0.5); 
+    const angle = Math.atan2(dy, dx);
+    
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+
+    if (isDashed) {
+        ctx.setLineDash([6, 6]);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+    ctx.setLineDash([]); 
+
+    if (actualHead > 0) {
+        ctx.beginPath();
+        ctx.moveTo(x2,y2);
+        ctx.lineTo(x2-actualHead*Math.cos(angle-Math.PI/6), y2-actualHead*Math.sin(angle-Math.PI/6));
+        ctx.lineTo(x2-actualHead*Math.cos(angle+Math.PI/6), y2-actualHead*Math.sin(angle+Math.PI/6));
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function text(str,x,y,options={}){
+    ctx.save();
+    ctx.font = options.font || 'bold 15px "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = options.color || "#394752";
+    ctx.textAlign = options.align || "center";
+    ctx.textBaseline = options.baseline || "middle";
+    
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#ffffff";
+    ctx.strokeText(str, x, y);
+    ctx.fillText(str,x,y);
+    
+    ctx.restore();
+}
+
+function drawBackground(){
+    ctx.fillStyle="#ffffff";
+    ctx.fillRect(0,0,layout.w,layout.h);
+    ctx.strokeStyle="#eef1f4";
+    ctx.lineWidth=1;
+    const step=50;
+    for(let x=0; x<=layout.w; x+=step){
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,layout.h); ctx.stroke();
+    }
+    for(let y=0; y<=layout.h; y+=step){
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(layout.w,y); ctx.stroke();
+    }
+}
+
+function drawFullPath(){
+    const N=700;
+    ctx.save();
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+        const t = TOTAL_TIME*i/N;
+        const p = getPosition(t);
+        if(i===0) ctx.moveTo(p.x,p.y);
+        else ctx.lineTo(p.x,p.y);
+    }
+    ctx.strokeStyle="#d8dfe5";
+    ctx.lineWidth=2;
+    ctx.setLineDash([6,6]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+function drawTravelledPath(){
+    const N=500;
+    ctx.save();
+    ctx.beginPath();
+    for(let i=0;i<=N;i++){
+        const localT = time*i/N;
+        const p = getPosition(localT);
+        if(i===0) ctx.moveTo(p.x,p.y);
+        else ctx.lineTo(p.x,p.y);
+    }
+    ctx.strokeStyle="#14866d";
+    ctx.lineWidth=4;
+    ctx.lineCap="round";
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawStartPoint(){
+    const p = getPosition(0);
+    ctx.save();
+    ctx.fillStyle="#ffffff";
+    ctx.strokeStyle="#5c6872";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,6,0,Math.PI*2);
+    ctx.fill(); ctx.stroke();
+    text("起点", p.x, p.y-25, {font:'600 14px "Microsoft YaHei"', color:"#46535e"});
+    ctx.restore();
+}
+
+function drawCurrentPoint(p){
+    ctx.save();
+    ctx.fillStyle="#ffffff";
+    ctx.strokeStyle="#26333d";
+    ctx.lineWidth=2.5;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,8,0,Math.PI*2);
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+}
+
+
+function drawDisplacementLine(start, current){
+    const dx = current.x - start.x;
+    const dy = current.y - start.y;
+    const magnitude = Math.hypot(dx, dy);
+
+    if(magnitude < 12) return;
+
+    drawArrow(start.x, start.y, current.x, current.y, "#1769aa", 2, 7, true);
+
+    const mx = (start.x+current.x)/2;
+    const my = (start.y+current.y)/2;
+    const nx = -dy/magnitude;
+    const ny = dx/magnitude;
+
+    text("位移 Δx", mx+nx*25, my+ny*25, {color:"#1769aa", font:'14px "Microsoft YaHei"'});
+}
+
+function drawAverageVelocity(start, current, t, labelAngle){
+    if (t < 0.05) return;
+    
+    const avg_vx = (current.x - start.x) / t;
+    const avg_vy = (current.y - start.y) / t;
+    const avg_mag = Math.hypot(avg_vx, avg_vy);
+
+    if (avg_mag < 0.001) return;
+
+    const ex = current.x + avg_vx * V_RENDER_SCALE;
+    const ey = current.y + avg_vy * V_RENDER_SCALE;
+
+    // 【修改核心4】将平均速度箭头加粗为5px。这样在直线运动中，3px的橙色箭头上会透出一圈红边，完美体现“两支箭重叠”
+    drawArrow(current.x, current.y, ex, ey, "#b84b4b", 5, 13);
+
+    const labelDistance = 35;
+    text("平均速度 v̄", ex+Math.cos(labelAngle)*labelDistance, ey+Math.sin(labelAngle)*labelDistance, {color:"#b84b4b"});
+}
+
+function drawVelocity(current, velocity, labelAngle){
+    const mag = Math.hypot(velocity.vx, velocity.vy);
+    if(mag < 0.001) return;
+
+    const ex = current.x + velocity.vx * V_RENDER_SCALE;
+    const ey = current.y + velocity.vy * V_RENDER_SCALE;
+
+    drawArrow(current.x, current.y, ex, ey, "#c47b18", 3, 11);
+
+    const labelDistance = 45; 
+    text("瞬时速度 v", ex+Math.cos(labelAngle)*labelDistance, ey+Math.sin(labelAngle)*labelDistance, {color:"#c47b18"});
+}
+
+
+function render(){
+    ctx.clearRect(0,0,layout.w,layout.h);
+    drawBackground();
+    drawFullPath();
+    drawTravelledPath();
+
+    const start = getPosition(0);
+    const current = getPosition(time);
+    const velocity = getVelocity(time);
+    
+    let avgLabelAngle = 0;
+    let instLabelAngle = Math.atan2(velocity.vy, velocity.vx);
+
+    if(time > 0.05){
+        const avg_vx = (current.x - start.x) / time;
+        const avg_vy = (current.y - start.y) / time;
+        const avgAngle = Math.atan2(avg_vy, avg_vx);
+        avgLabelAngle = avgAngle;
+
+        let diff = instLabelAngle - avgAngle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+
+        if (Math.abs(diff) < 0.6) {
+            avgLabelAngle -= 0.5;
+            instLabelAngle += 0.5;
+        } else if (diff >= 0) {
+            avgLabelAngle -= 0.25;
+            instLabelAngle += 0.25;
+        } else {
+            avgLabelAngle += 0.25;
+            instLabelAngle -= 0.25;
+        }
+    }
+
+    drawStartPoint();
+    drawDisplacementLine(start, current);            
+    
+    // 【修改核心5：最关键一步】先画质点的白圈，然后再画速度箭头。让箭头压住白圈，再短也不会被“吞掉”！
+    drawCurrentPoint(current);
+
+    if(time>0.05){
+        text("当前位置", current.x, current.y+35, {
+            font:'13px "Microsoft YaHei"', color:"#46535e"
+        });
+    }
+
+    drawAverageVelocity(start, current, time, avgLabelAngle); 
+    drawVelocity(current, velocity, instLabelAngle);          
+
+    updateData();
+}
+
+function updateData(){
+    const start = getPosition(0);
+    const current = getPosition(time);
+    const velocity = getVelocity(time);
+
+    const speedPx = Math.hypot(velocity.vx,velocity.vy);
+    const speed = speedPx/PX_PER_METER;
+
+    const displacementPx = Math.hypot(current.x-start.x, current.y-start.y);
+    const displacement = displacementPx/PX_PER_METER;
+
+    const distancePx = getDistance(time);
+    const distance = distancePx/PX_PER_METER;
+
+    let averageVelocity=0;
+    let averageSpeed=0;
+
+    if(time>0.0001){
+        averageVelocity = displacement/time;
+        averageSpeed = distance/time;
+    }
+
+    dom.instV.textContent = speed.toFixed(2);
+    dom.displacement.textContent = displacement.toFixed(2);
+    dom.avgV.textContent = averageVelocity.toFixed(2);
+    dom.avgS.textContent = averageSpeed.toFixed(2);
+
+    updateExplanation(speed, displacement, distance, averageVelocity, averageSpeed);
+}
+
+function updateExplanation(speed, displacement, distance, averageVelocity, averageSpeed){
+    if(time<0.01){
+        dom.status.textContent="等待开始";
+        dom.explanation.innerHTML = "<strong>观察提示：</strong>开始运动后，图中将出现<strong>两根速度箭头</strong>（瞬时橙，平均红），它们长度代表大小，方向代表速度方向，请注意对比它们的动态差异。";
+        return;
+    }
+
+    const u = time / TOTAL_TIME;
+
+    if(mode==="return"){
+        if(u<0.48){
+            dom.status.textContent="离开起点";
+            dom.explanation.innerHTML = "<strong>往返运动：</strong>质点正在离开起点，瞬时速度（橙）与平均速度（红）同向。";
+        } else if(u<0.96){
+            dom.status.textContent="返回途中";
+            dom.explanation.innerHTML = "<strong>返回过程中：</strong>发生折返，此时瞬时速度（橙）已反向，但平均速度（红）仍然指向质点当前位置！";
+        } else {
+            dom.status.textContent="回到起点";
+            dom.explanation.innerHTML = "<strong>关键结论：</strong>质点回到起点，位移 <i>Δx = 0</i>，红色平均速度箭头消失（即大小为0），但经历了过程，路程 <i>s &gt; 0</i>。";
+        }
+        return;
+    }
+
+    if(mode==="straight"){
+        dom.status.textContent="直线单向运动";
+        dom.explanation.innerHTML = "<strong>直线单向运动：</strong>由于质点始终沿一条直线且不折返，你能看到<strong>橙色箭头嵌在加粗的红色箭头里，红橙两根速度箭头完美重叠</strong>。这证明此时平均速度完全等于瞬时速度。";
+        return;
+    }
+
+    if(mode==="circle"){
+        if(u >= 0.99) {
+            dom.status.textContent="回到起点";
+            dom.explanation.innerHTML = "<strong>圆周运动完成：</strong>质点绕行一周回到起点，位移 <i>Δx</i> 瞬间清零，平均速度（红）消失；但瞬时速度（橙）依旧存在。";
+        } else {
+            dom.status.textContent="匀速圆周运动";
+            dom.explanation.innerHTML = "<strong>匀速圆周运动：</strong>瞬时速度（橙）长度不变但时刻在拐弯；而平均速度（红）随着远离起点逐渐变长，再随着靠近起点逐渐缩短。";
+        }
+        return;
+    }
+
+    if(mode==="sine"){
+        dom.status.textContent="正弦曲线运动";
+        dom.explanation.innerHTML = "<strong>正弦波形：</strong>质点在垂直方向不断振荡。请观察平均速度（红）是如何始终与蓝色的位移虚线保持严格一致方向的。";
+        return;
+    }
+
+    if(mode==="spiral"){
+        dom.status.textContent="螺旋运动";
+        dom.explanation.innerHTML = "<strong>螺旋盘旋：</strong>轨迹不断扩大。瞬时速度（橙）的速率随着半径增加越来越大。同时由于盘旋运动路程极大而位移极小，平均速度（红）的数值非常小（箭头很短）。";
+        return;
+    }
+
+    dom.status.textContent="曲线运动";
+    const ratio = displacement/(distance || 1);
+    if(ratio>0.98){
+        dom.explanation.innerHTML = "<strong>观察提示：</strong>此时质点基本在走直线，红色箭头与橙色箭头大小接近且方向夹角极小。";
+    } else {
+        dom.explanation.innerHTML = "<strong>观察提示：</strong>在曲线运动中，红色的平均速度方向只由位移决定，与橙色的瞬时速度（切线）分道扬镳，且大小完全不同。";
+    }
+}
+
+
+let lastTimestamp=null;
+function animate(timestamp){
+    if(!playing) return;
+    if(lastTimestamp===null) lastTimestamp=timestamp;
+    const delta = (timestamp-lastTimestamp)/1000;
+    lastTimestamp=timestamp;
+
+    time += delta;
+    if(time>=TOTAL_TIME){
+        time=TOTAL_TIME;
+        playing=false;
+        dom.status.textContent="模拟结束";
+        document.getElementById("btnStart").textContent="重新开始";
+        lastTimestamp=null;
+        render();
+        return;
+    }
+    render();
+    animationId = requestAnimationFrame(animate);
+}
+
+document.getElementById("btnStart").addEventListener("click",()=>{
+    if(time>=TOTAL_TIME) time=0;
+    if(!playing){
+        playing=true;
+        lastTimestamp=null;
+        document.getElementById("btnStart").textContent="运行中…";
+        animationId = requestAnimationFrame(animate);
+    }
+});
+
+document.getElementById("btnPause").addEventListener("click",()=>{
+    playing=false;
+    lastTimestamp=null;
+    if(animationId){
+        cancelAnimationFrame(animationId);
+        animationId=null;
+    }
+    document.getElementById("btnStart").textContent="继续模拟";
+    dom.status.textContent="已暂停";
+});
+
+document.getElementById("btnStep").addEventListener("click",()=>{
+    playing=false;
+    lastTimestamp=null;
+    time = Math.min(time+0.08, TOTAL_TIME);
+    document.getElementById("btnStart").textContent="继续模拟";
+    render();
+});
+
+document.getElementById("btnReset").addEventListener("click",()=>{
+    playing=false;
+    lastTimestamp=null;
+    if(animationId){
+        cancelAnimationFrame(animationId);
+        animationId=null;
+    }
+    time=0;
+    document.getElementById("btnStart").textContent="开始模拟";
+    dom.status.textContent="等待开始";
+    render();
+});
+
+document.querySelectorAll(".mode-btn").forEach(button=>{
+    button.addEventListener("click",()=>{
+        document.querySelectorAll(".mode-btn").forEach(btn=>btn.classList.remove("active"));
+        button.classList.add("active");
+        mode = button.dataset.mode;
+        
+        playing=false;
+        lastTimestamp=null;
+        time=0;
+        document.getElementById("btnStart").textContent="开始模拟";
+        
+        arcTable = buildArcLength();
+        render();
+    });
+});
+
+window.addEventListener("resize", ()=>{
+    resizeCanvas();
+    arcTable = buildArcLength();
+    render();
+});
+
+resizeCanvas();
+arcTable = buildArcLength();
+render();
+
+</script>
+</body>
+</html>

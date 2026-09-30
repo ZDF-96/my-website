@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极限与导数：瞬时速度的几何意义</title>
+<style>
+:root {
+    --bg: #030712;
+    --panel: rgba(15, 23, 42, 0.75);
+    --border: rgba(148, 163, 184, 0.15);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --blue: #38bdf8;
+    --yellow: #fbbf24;
+    --green: #10b981;
+    --red: #f43f5e;
+    --white: #ffffff;
+    --glow-blue: rgba(56, 189, 248, 0.5);
+    --glow-green: rgba(16, 185, 129, 0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+body {
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% -20%, #1e293b 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.main {
+    width: min(1440px, 96vw);
+    height: min(840px, 94vh);
+    display: grid;
+    grid-template-columns: minmax(750px, 1fr) 380px;
+    gap: 24px;
+    padding: 24px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.8), inset 0 0 40px rgba(56,189,248,0.03);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.stage {
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: #000000;
+    box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
+    overflow: hidden;
+}
+
+canvas { width: 100%; height: 100%; display: block; }
+
+.scene-title {
+    position: absolute;
+    top: 24px; left: 24px;
+    pointer-events: none;
+    z-index: 10;
+}
+.scene-title h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: 0.5px; color: #e2e8f0; }
+.scene-title p { margin-top: 6px; font-size: 0.85rem; color: var(--muted); }
+
+.conclusion {
+    position: absolute;
+    left: 50%; bottom: 30px;
+    transform: translateX(-50%);
+    min-width: 540px;
+    padding: 16px 32px;
+    text-align: center;
+    background: rgba(2, 6, 23, 0.85);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(16, 185, 129, 0.15);
+    backdrop-filter: blur(12px);
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+.conclusion.limit-state {
+    border-color: var(--green);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 50px rgba(16, 185, 129, 0.3);
+}
+
+.conclusion .small { color: var(--muted); font-size: 0.8rem; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;}
+.conclusion .main-text { color: var(--green); font-size: 1.15rem; font-weight: 600; }
+.conclusion .formula { margin: 0 10px; color: white; font-family: "Cambria Math", "Times New Roman", serif; font-size: 1.25rem; letter-spacing: 1px;}
+
+.sidebar { display: flex; flex-direction: column; overflow-y: auto; padding-right: 8px; }
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+.header { padding: 0 4px 20px; }
+.header h1 { font-size: 1.4rem; line-height: 1.4; background: linear-gradient(135deg, #7dd3fc, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
+.header p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+.panel { padding: 20px; margin-bottom: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; transition: border-color 0.3s; }
+.panel:hover { border-color: rgba(255,255,255,0.1); }
+.panel-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 0.95rem; font-weight: 600; color: #f1f5f9; }
+.value { padding: 4px 12px; color: var(--blue); font-family: "Cambria Math", "Times New Roman", serif; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 6px; font-weight: 700; }
+
+input[type="range"] { width: 100%; height: 6px; appearance: none; background: #1e293b; border-radius: 6px; outline: none; }
+input[type="range"]::-webkit-slider-thumb { appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); border: 2px solid white; box-shadow: 0 0 16px var(--glow-blue); cursor: pointer; transition: transform 0.1s; }
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+.explanation { color: var(--muted); font-size: 0.85rem; line-height: 1.7; }
+.explanation strong { color: #e2e8f0; }
+.math { margin: 12px 0; padding: 12px; text-align: center; font-family: "Cambria Math", "Times New Roman", serif; font-size: 1.2rem; color: #f8fafc; background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; letter-spacing: 0.5px; }
+
+.logic { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.logic-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.03); font-size: 0.85rem; }
+.logic-number { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; background: rgba(56,189,248,0.15); color: var(--blue); font-weight: 700; font-size: 0.8rem; }
+
+.legend { display: flex; flex-direction: column; gap: 10px; }
+.legend-item { display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: var(--muted); }
+.legend-line { width: 32px; height: 3px; flex-shrink: 0; border-radius: 3px; }
+
+.buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: auto; padding-bottom: 8px; }
+button { padding: 14px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); letter-spacing: 0.5px; }
+.primary { color: white; border: none; background: linear-gradient(135deg, #0284c7, #2563eb); box-shadow: 0 8px 20px rgba(37,99,235,0.3); }
+.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(37,99,235,0.4); }
+.secondary { color: var(--text); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+.secondary:hover { background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div class="main">
+    <div class="stage">
+        <canvas id="canvas"></canvas>
+        <div class="scene-title">
+            <h2>局部线性化：割线如何逼近切线</h2>
+            <p>当 Δt 趋近于零，割线方向逐步转化为轨迹在 P 点处的切线方向</p>
+        </div>
+        <div class="conclusion" id="conclusionBox">
+            <div class="small">核心结论</div>
+            <div class="main-text">
+                瞬时速度 <span class="formula">v = lim<sub>Δt→0</sub> (Δx / Δt)</span> 的方向，即轨迹在该点的切线方向
+            </div>
+        </div>
+    </div>
+    
+    <div class="sidebar">
+        <div class="header">
+            <h1>极限思想与瞬时速度的方向</h1>
+            <p>借助“割线逼近切线”与“局部放大”两重视角，直观体会瞬时速度的几何含义，触摸导数概念的底层逻辑。</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">
+                <span>时间间隔 Δt</span>
+                <span class="value" id="dtValue">2.00 s</span>
+            </div>
+            <input id="dtRange" type="range" min="0" max="2" step="0.005" value="2" />
+        </div>
+
+        <div class="panel">
+            <div class="panel-title"><span>① 宏观视角：平均速度</span></div>
+            <div class="explanation">
+                在时间间隔 <strong>Δt</strong> 内，质点自 <strong>P</strong> 点运动至 <strong>Q</strong> 点，发生的位移为 <strong>Δx</strong>。
+                <div class="math">平均速度 v̄ = Δx / Δt</div>
+                位移 <strong>Δx</strong> 的方向即为割线 <strong>PQ</strong> 的方向，也就是该时间段内平均速度的方向。
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title"><span>② 极限视角：Δt → 0</span></div>
+            <div class="explanation">
+                <div class="logic">
+                    <div class="logic-item">
+                        <div class="logic-number">1</div>
+                        随着 Δt 减小，割线 PQ 绕 P 点缓缓旋转。
+                    </div>
+                    <div class="logic-item">
+                        <div class="logic-number">2</div>
+                        留意右上角<strong>放大镜</strong>，体会曲线局部近似为直线的“局部线性”。
+                    </div>
+                    <div class="logic-item">
+                        <div class="logic-number">3</div>
+                        当 Δt 趋于零，割线的极限位置便是 <strong>P 点处的切线</strong>。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title"><span>图例说明</span></div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-line" style="background:var(--yellow); box-shadow:0 0 8px rgba(251,191,36,0.6);"></div>
+                    割线 PQ · 平均速度方向
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background:var(--green); box-shadow:0 0 8px rgba(16,185,129,0.6);"></div>
+                    切线 · 瞬时速度方向
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background:var(--blue);"></div>
+                    抛物线运动轨迹
+                </div>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="playBtn" class="primary">▶ 自动演示极限过程</button>
+            <button id="resetBtn" class="secondary">↺ 重置实验</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const dtRange = document.getElementById("dtRange");
+const dtValue = document.getElementById("dtValue");
+const playBtn = document.getElementById("playBtn");
+const resetBtn = document.getElementById("resetBtn");
+const conclusionBox = document.getElementById("conclusionBox");
+
+let dpr = Math.min(window.devicePixelRatio || 1, 2);
+let W, H;
+
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+}
+window.addEventListener("resize", resizeCanvas);
+
+// 物理系统参数
+const g = 9.8;
+const v0 = 26;
+const theta = 65 * Math.PI / 180;
+const v0x = v0 * Math.cos(theta);
+const v0y = v0 * Math.sin(theta);
+const tP = 1.0; // 固定点 P
+
+function getGeometry() {
+    return {
+        originX: W * 0.1,
+        originY: H * 0.85,
+        scale: Math.min(W / 65, H / 42)
+    };
+}
+
+function positionAt(t) {
+    const G = getGeometry();
+    const x = v0x * t;
+    const y = v0y * t - 0.5 * g * t * t;
+    return {
+        x: G.originX + x * G.scale,
+        y: G.originY - y * G.scale,
+        vx: v0x,
+        vy: v0y - g * t // 物理Y正方向向上
+    };
+}
+
+let dt = 2.0;
+let playing = false;
+let animationId = null;
+let shockwaveT = 0; 
+
+function drawBackground() {
+    ctx.clearRect(0, 0, W, H);
+    const G = getGeometry();
+    
+    // 背景网格
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth = 1;
+    const grid = G.scale * 4;
+    for (let x = G.originX; x < W; x += grid) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = G.originY; y > 0; y -= grid) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    
+    // 主坐标轴
+    ctx.strokeStyle = "rgba(255,255,255,0.2)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(20, G.originY); ctx.lineTo(W - 20, G.originY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(G.originX, 30); ctx.lineTo(G.originX, H - 20); ctx.stroke();
+    
+    // 轴标签
+    ctx.font = 'italic 14px "Cambria Math", "Times New Roman", serif';
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.fillText("x", W - 35, G.originY - 10);
+    ctx.fillText("y", G.originX + 10, 40);
+    ctx.restore();
+}
+
+function drawTrajectory() {
+    const totalTime = (2 * v0y) / g;
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(56,189,248,0.7)";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    
+    for (let i = 0; i <= 250; i++) {
+        const t = totalTime * i / 250;
+        const p = positionAt(t);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawVector(from, to, color, label, showComponents = false) {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.hypot(dx, dy);
+    if (len < 0.1) return;
+    const angle = Math.atan2(dy, dx);
+
+    ctx.save();
+    
+    // 贯穿参考线
+    ctx.beginPath();
+    let ex = dx / len * 1500; let ey = dy / len * 1500;
+    ctx.moveTo(from.x - ex, from.y - ey);
+    ctx.lineTo(from.x + ex, from.y + ey);
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = 0.15;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([8, 8]);
+    ctx.stroke();
+    
+    ctx.globalAlpha = 1.0;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // 箭头
+    const head = 14; const spread = Math.PI / 7;
+    ctx.beginPath();
+    ctx.moveTo(to.x, to.y);
+    ctx.lineTo(to.x - head * Math.cos(angle - spread), to.y - head * Math.sin(angle - spread));
+    ctx.lineTo(to.x - head * Math.cos(angle + spread), to.y - head * Math.sin(angle + spread));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // 正交分解辅助线（标注 Δx, Δy）
+    if (showComponents && dt > 0.05) {
+        ctx.beginPath();
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+
+        // Δx 标注
+        ctx.setLineDash([]);
+        ctx.font = 'italic 14px "Cambria Math", "Times New Roman", serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.fillText("Δx", (from.x + to.x) / 2 - 10, from.y + 16);
+        // Δy 标注
+        ctx.fillText("Δy", to.x + 6, (from.y + to.y) / 2);
+    }
+
+    // 标签（手动绘制上划线，解决 v_avg 渲染问题）
+    if (label) {
+        ctx.font = 'italic 18px "Cambria Math", "Times New Roman", serif';
+        let text = label;
+        let isAvg = false;
+        if (label === "v_avg") {
+            text = "v";
+            isAvg = true;
+        }
+        const lblW = ctx.measureText(text).width;
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(to.x + 8, to.y - 20, lblW + 6, 22);
+        ctx.fillStyle = color;
+        ctx.fillText(text, to.x + 10, to.y - 4);
+        if (isAvg) {
+            ctx.beginPath();
+            ctx.moveTo(to.x + 10, to.y - 22);
+            ctx.lineTo(to.x + 10 + lblW, to.y - 22);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+    }
+    ctx.restore();
+}
+
+function drawZoomLens(P) {
+    const lensRadius = Math.min(130, W * 0.15);
+    const lensX = W - lensRadius - 30;
+    const lensY = lensRadius + 40;
+    const zoom = 4.0;
+
+    ctx.save();
+    ctx.beginPath(); ctx.arc(lensX, lensY, lensRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.8)";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "#38bdf8"; ctx.shadowBlur = 20;
+    ctx.stroke();
+    
+    ctx.clip();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#020612";
+    ctx.fill();
+
+    // 雷达网格
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.1)";
+    ctx.lineWidth = 1;
+    for (let r = 20; r < lensRadius * 2; r += 20) {
+        ctx.beginPath(); ctx.arc(lensX, lensY, r, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.3)";
+    ctx.beginPath(); ctx.moveTo(lensX - lensRadius, lensY); ctx.lineTo(lensX + lensRadius, lensY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lensX, lensY - lensRadius); ctx.lineTo(lensX, lensY + lensRadius); ctx.stroke();
+
+    // 缩放变换
+    ctx.translate(lensX, lensY);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-P.x, -P.y);
+
+    drawTrajectory();
+    
+    // 切线
+    ctx.beginPath();
+    let tgtDx = P.vx; let tgtDy = -P.vy;
+    let len = Math.hypot(tgtDx, tgtDy);
+    let ex = tgtDx / len * 500; let ey = tgtDy / len * 500;
+    ctx.moveTo(P.x - ex, P.y - ey); ctx.lineTo(P.x + ex, P.y + ey);
+    ctx.strokeStyle = "rgba(16, 185, 129, 0.3)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    if (dt > 0.005) {
+        const tQ = Math.min(tP + dt, (2 * v0y) / g);
+        const Q = positionAt(tQ);
+        // 割线
+        ctx.beginPath();
+        let sDx = Q.x - P.x; let sDy = Q.y - P.y;
+        let sLen = Math.hypot(sDx, sDy);
+        let sEx = sDx / sLen * 500; let sEy = sDy / sLen * 500;
+        ctx.moveTo(P.x - sEx, P.y - sEy); ctx.lineTo(P.x + sEx, P.y + sEy);
+        ctx.strokeStyle = "rgba(251, 191, 36, 0.6)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        ctx.beginPath(); ctx.arc(Q.x, Q.y, 4, 0, Math.PI*2); ctx.fillStyle = "#f43f5e"; ctx.fill();
+    }
+
+    ctx.beginPath(); ctx.arc(P.x, P.y, 4, 0, Math.PI*2); ctx.fillStyle = "#ffffff"; ctx.fill();
+    ctx.restore();
+    
+    // 标题
+    ctx.save();
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText("🔍 局部放大：曲线近似为直线", lensX - 85, lensY + lensRadius + 22);
+    ctx.restore();
+}
+
+function draw() {
+    drawBackground();
+    drawTrajectory();
+
+    const P = positionAt(tP);
+    
+    if (dt === 0 && shockwaveT < 1.0) {
+        shockwaveT += 0.05;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(P.x, P.y, shockwaveT * 100, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(16, 185, 129, ${1 - shockwaveT})`;
+        ctx.lineWidth = 4 * (1 - shockwaveT);
+        ctx.stroke();
+        ctx.restore();
+        if (shockwaveT < 1.0) requestAnimationFrame(draw);
+    }
+
+    if (dt <= 0.005) {
+        dt = 0;
+        const tgtDx = P.vx; const tgtDy = -P.vy;
+        const len = Math.hypot(tgtDx, tgtDy);
+        const end = { x: P.x + tgtDx/len * 120, y: P.y + tgtDy/len * 120 };
+        
+        drawVector(P, end, "#10b981", "v");
+        
+        ctx.beginPath(); ctx.arc(P.x, P.y, 7, 0, Math.PI*2); 
+        ctx.fillStyle = "#ffffff"; ctx.shadowColor = "#10b981"; ctx.shadowBlur = 15; ctx.fill(); ctx.shadowBlur = 0;
+        
+        ctx.font = 'italic 18px "Cambria Math", "Times New Roman", serif'; ctx.fillStyle = "#ffffff";
+        ctx.fillText("P, Q", P.x - 40, P.y - 15);
+    } else {
+        const G = getGeometry();
+        const totalTime = (2 * v0y) / g;
+        const tQ = Math.min(tP + dt, totalTime);
+        const Q = positionAt(tQ);
+
+        const tgtDx = P.vx; const tgtDy = -P.vy;
+        const len = Math.hypot(tgtDx, tgtDy);
+        const tgtEnd = { x: P.x + tgtDx/len * 120, y: P.y + tgtDy/len * 120 };
+        ctx.save();
+        ctx.beginPath(); ctx.moveTo(P.x, P.y); ctx.lineTo(tgtEnd.x, tgtEnd.y);
+        ctx.strokeStyle = "rgba(16, 185, 129, 0.25)"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.restore();
+
+        const sDx = Q.x - P.x; const sDy = Q.y - P.y;
+        const sLen = Math.max(Math.hypot(sDx, sDy), 0.001);
+        const v_mag = Math.hypot(P.vx, P.vy);
+        
+        // 动态计算平均速度向量长度：v_avg = (sLen / (G.scale * dt)) * (120 / v_mag)
+        // 其中 120 是瞬时速度向量（绿色）的固定显示长度
+        const L_px = Math.min((sLen / (G.scale * dt)) * (120 / v_mag), 120);
+        const sEnd = { x: P.x + sDx/sLen * L_px, y: P.y + sDy/sLen * L_px };
+        
+        drawVector(P, sEnd, "#fbbf24", "v_avg", true);
+
+        ctx.beginPath(); ctx.arc(P.x, P.y, 6, 0, Math.PI*2); ctx.fillStyle = "#ffffff"; ctx.fill();
+        ctx.beginPath(); ctx.arc(Q.x, Q.y, 6, 0, Math.PI*2); ctx.fillStyle = "#f43f5e"; ctx.fill();
+        
+        ctx.font = 'italic 18px "Cambria Math", "Times New Roman", serif';
+        ctx.fillStyle = "#ffffff"; ctx.fillText("P", P.x - 20, P.y - 12);
+        ctx.fillStyle = "#f43f5e"; ctx.fillText("Q", Q.x + 12, Q.y - 12);
+    }
+
+    drawZoomLens(P);
+}
+
+function updateUI() {
+    dtValue.textContent = dt.toFixed(3) + " s";
+    if (dt === 0) {
+        conclusionBox.classList.add("limit-state");
+        if (shockwaveT >= 1.0) shockwaveT = 0;
+    } else {
+        conclusionBox.classList.remove("limit-state");
+        shockwaveT = 0;
+    }
+}
+
+dtRange.addEventListener("input", function() {
+    playing = false; cancelAnimationFrame(animationId);
+    playBtn.textContent = "▶ 自动演示极限过程";
+    dt = parseFloat(this.value);
+    updateUI(); draw();
+});
+
+function animateLoop() {
+    if (!playing) return;
+    const decrease = Math.max(0.002, dt * 0.018);
+    dt -= decrease;
+    
+    if (dt <= 0.005) {
+        dt = 0; playing = false;
+        playBtn.textContent = "↺ 重新演示";
+    }
+    
+    dtRange.value = dt;
+    updateUI(); draw();
+    
+    if (playing) animationId = requestAnimationFrame(animateLoop);
+}
+
+playBtn.addEventListener("click", function() {
+    if (!playing) {
+        if (dt === 0) { dt = 2; dtRange.value = dt; }
+        playing = true;
+        playBtn.textContent = "⏸ 暂停演示";
+        animateLoop();
+    } else {
+        playing = false;
+        cancelAnimationFrame(animationId);
+        playBtn.textContent = "▶ 继续演示";
+    }
+});
+
+resetBtn.addEventListener("click", function() {
+    playing = false; cancelAnimationFrame(animationId);
+    dt = 2; dtRange.value = 2;
+    playBtn.textContent = "▶ 自动演示极限过程";
+    updateUI(); draw();
+});
+
+resizeCanvas();
+updateUI();
+draw();
+</script>
+</body>
+</html>

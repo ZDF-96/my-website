@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>加速度实验室 · 物理空间</title>
+<style>
+  :root {
+    --bg-app: #0b1120;
+    --bg-card: #1e293b;
+    --bg-control: #0f172a;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    
+    --v-color: #38bdf8;       
+    --a-color: #f87171;       
+    --dv-color: #facc15;      
+    --x-color: #34d399;       
+    --v0-color: #cbd5e1;      
+    
+    --btn-primary: linear-gradient(135deg, #0284c7, #2563eb);
+    --btn-primary-hover: linear-gradient(135deg, #0369a1, #1d4ed8);
+    --btn-reset: linear-gradient(135deg, #475569, #334155);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Microsoft YaHei", sans-serif;
+    background: var(--bg-app); color: var(--text-main);
+    min-height: 100vh; padding: 24px 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  .wrap {
+    max-width: 1120px; margin: 0 auto;
+    background: var(--bg-card); border-radius: 20px;
+    padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+  
+  h1 {
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--v-color); letter-spacing: 1px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
+
+  /* 模式切换 Tabs */
+  .mode-tabs {
+    display: flex; gap: 12px; margin-bottom: 16px;
+  }
+  .mode-tab {
+    padding: 10px 20px; background: var(--bg-app); border: 1px solid var(--border-color);
+    color: var(--text-muted); border-radius: 10px; cursor: pointer;
+    font-size: 0.95rem; font-weight: 600; transition: all 0.2s;
+  }
+  .mode-tab:hover { border-color: var(--v-color); color: var(--text-main); }
+  .mode-tab.active {
+    background: var(--v-color); color: #000;
+    border-color: var(--v-color); box-shadow: 0 0 15px rgba(56,189,248,0.2);
+  }
+
+  /* 控制栏容器 */
+  .controls-wrap {
+    background: var(--bg-control); border-radius: 16px; 
+    padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color);
+  }
+
+  /* 滑块模式 */
+  .slider-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .ctrl-item label {
+    display: flex; justify-content: space-between;
+    font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;
+  }
+  .ctrl-item label span { color: var(--text-main); font-weight: 700; font-family: ui-monospace, monospace; }
+  input[type=range] {
+    width: 100%; height: 6px; background: var(--border-color);
+    border-radius: 99px; outline: none; -webkit-appearance: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px;
+    background: var(--v-color); border-radius: 50%; cursor: pointer;
+    border: 4px solid var(--bg-control); box-shadow: 0 0 0 1px var(--v-color);
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+
+  /* 函数模式 */
+  .func-panel { display: none; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .func-panel.active { display: flex; }
+  .func-input-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 280px; }
+  .func-label { font-family: ui-monospace, monospace; font-size: 1.1rem; font-weight: 700; color: var(--v-color); }
+  .func-input {
+    flex: 1; padding: 12px 16px; background: var(--bg-app);
+    border: 1px solid var(--border-color); border-radius: 10px;
+    color: var(--text-main); font-family: ui-monospace, monospace; font-size: 1.05rem;
+    transition: all 0.2s;
+  }
+  .func-input:focus { outline: none; border-color: var(--v-color); box-shadow: 0 0 0 2px rgba(56,189,248,0.2); }
+  .func-help { font-size: 0.8rem; color: var(--text-muted); width: 100%; margin-top: -6px; }
+
+  /* 预设场景 */
+  .presets { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+  .preset-btn {
+    padding: 8px 16px; background: var(--bg-control);
+    color: var(--text-muted); border: 1px solid var(--border-color);
+    border-radius: 99px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .preset-btn:hover { border-color: var(--v-color); color: var(--v-color); }
+  .preset-btn.active {
+    background: rgba(56,189,248,0.15); color: var(--v-color); border-color: var(--v-color);
+  }
+
+  /* 操作按钮 */
+  .action-bar { display: flex; gap: 12px; margin-bottom: 24px; }
+  .action-btn {
+    flex: 1; padding: 14px; background: var(--btn-primary); color: #fff;
+    border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; letter-spacing: 1px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+  }
+  .action-btn:hover { transform: translateY(-2px); background: var(--btn-primary-hover); }
+  .action-btn:active { transform: translateY(0); }
+  .action-btn.reset { background: var(--btn-reset); }
+
+  /* 舞台区 */
+  .stage {
+    background: var(--bg-control); border-radius: 16px; padding: 16px; 
+    margin-bottom: 20px; position: relative; border: 1px solid var(--border-color);
+  }
+  .stage-title {
+    position: absolute; top: 14px; left: 20px;
+    font-size: 0.75rem; color: var(--text-muted);
+    letter-spacing: 1px; font-weight: 700; z-index: 10;
+  }
+  canvas { display: block; width: 100%; height: auto; border-radius: 8px; }
+  
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 800px) { .row { grid-template-columns: 1fr; } }
+  
+  .legend {
+    display: flex; gap: 24px; justify-content: center;
+    margin-top: 12px; font-size: 0.85rem; color: var(--text-muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend i { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚡ 运动学数据控制台</h1>
+  <div class="subtitle">实时调节恒定参数，或输入任意解析函数探索复杂非线性运动动力学特征。</div>
+
+  <!-- 选项卡切换 -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="slider">恒定加速度模式</button>
+    <button class="mode-tab" data-mode="func">自定义 v(t) 函数模式</button>
+  </div>
+
+  <div class="controls-wrap">
+    <!-- 滑块控制面板 -->
+    <div class="slider-panel active" id="sliderPanel">
+      <div class="ctrl-item">
+        <label>初速度 v₀ <span id="v0Label">0.0 m/s</span></label>
+        <input type="range" id="v0" min="-10" max="10" step="0.5" value="0">
+      </div>
+      <div class="ctrl-item">
+        <label>加速度 a <span id="aLabel">+2.0 m/s²</span></label>
+        <input type="range" id="a" min="-5" max="5" step="0.2" value="2">
+      </div>
+    </div>
+    
+    <!-- 自定义函数控制面板 -->
+    <div class="func-panel" id="funcPanel">
+      <div class="func-input-wrap">
+        <span class="func-label">v(t) =</span>
+        <input type="text" class="func-input" id="funcInput" value="8 * sin(2*t)" placeholder="输入JavaScript数学表达式，例如: 5*sin(t)">
+      </div>
+      <div class="func-help">可用函数: sin(t), cos(t), tan(t), exp(t), abs(t), PI (提示: 运算需加 *, 例如 2*t 不能写成 2t)</div>
+    </div>
+  </div>
+
+  <div class="presets" id="presetGroup">
+    <button class="preset-btn active" data-type="slider" data-v0="2" data-a="2">① 匀加速</button>
+    <button class="preset-btn" data-type="slider" data-v0="8" data-a="-2">② 匀减速反向</button>
+    <button class="preset-btn" data-type="slider" data-v0="5" data-a="0">③ 匀速运动</button>
+    <button class="preset-btn" data-type="func" data-func="8 * sin(2*t)">④ 简谐振动</button>
+    <button class="preset-btn" data-type="func" data-func="10 * exp(-0.4*t) * cos(3*t)">⑤ 阻尼振荡</button>
+    <button class="preset-btn" data-type="func" data-func="2 * t * t - 8">⑥ 抛物线速度</button>
+  </div>
+
+  <div class="action-bar">
+    <button class="action-btn" id="playBtn">▶ 开始演化</button>
+    <button class="action-btn reset" id="resetBtn">↺ 重置系统</button>
+  </div>
+
+  <!-- 舞台区 -->
+  <div class="stage">
+    <div class="stage-title">空间几何位移 · KINEMATICS</div>
+    <canvas id="scene" width="1080" height="220"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--v-color)"></i>速度 v</span>
+      <span><i style="background:var(--a-color)"></i>加速度 a</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="stage">
+      <div class="stage-title">x-t 位置时间演化图像</div>
+      <canvas id="xtChart" width="530" height="300"></canvas>
+    </div>
+    <div class="stage">
+      <div class="stage-title">v-t 速度时间演化图像 (面积积分即为位移)</div>
+      <canvas id="vtChart" width="530" height="300"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   1. 仿真状态与动态图表平滑状态
+   ================================================================ */
+const sim = {
+  mode: 'slider', // 'slider' 或 'func'
+  t: 0, x: 0, v: 0, a: 2, v0: 0,
+  running: false, history: [],
+  worldMin: -30, worldMax: 30, tWindow: 6,
+  customFunc: null
+};
+
+// 图表阻尼缩放状态器 (用于实现科研级平滑缩放)
+const charts = {
+  xt: { curMin: -30, curMax: 30 },
+  vt: { curMin: -12, curMax: 12 }
+};
+
+const colors = {
+  bg: '#0f172a', grid: 'rgba(255,255,255,0.06)', axis: '#475569', text: '#94a3b8',
+  v: '#38bdf8', a: '#f87171', x: '#34d399', v0: '#cbd5e1'
+};
+
+/* ================================================================
+   2. Canvas 高清与基础绘制工具
+   ================================================================ */
+function setupHiDPI(id) {
+  const canvas = document.getElementById(id);
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.width, cssH = canvas.height;
+  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+  canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, W: cssW, H: cssH };
+}
+const scene = setupHiDPI('scene'), xtC = setupHiDPI('xtChart'), vtC = setupHiDPI('vtChart');
+
+function worldToPx(x, W) {
+  const padL = 60, padR = 60;
+  return padL + ((x - sim.worldMin) / (sim.worldMax - sim.worldMin)) * (W - padL - padR);
+}
+
+function drawTextWithBg(ctx, text, x, y, color, align = 'center') {
+  ctx.font = 'bold 13px ui-monospace, monospace';
+  ctx.textAlign = align; ctx.textBaseline = 'middle';
+  const met = ctx.measureText(text), w = met.width + 12, h = 20;
+  let bgX = x - w/2;
+  if (align === 'left') bgX = x - 6;
+  if (align === 'right') bgX = x - w + 6;
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+  ctx.beginPath(); ctx.roundRect(bgX, y - h/2, w, h, 4); ctx.fill();
+  ctx.fillStyle = color; ctx.fillText(text, x, y);
+}
+
+function drawVector(ctx, x1, y1, x2, y2, color, lw = 3, headLen = 10) {
+  if (Math.abs(x2 - x1) < 1 && Math.abs(y2 - y1) < 1) return;
+  ctx.strokeStyle = color; ctx.fillStyle = color;
+  ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI/6), y2 - headLen * Math.sin(angle - Math.PI/6));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI/6), y2 - headLen * Math.sin(angle + Math.PI/6));
+  ctx.fill();
+}
+
+/* ================================================================
+   3. 解析自定义函数 (注入 Math 对象)
+   ================================================================ */
+function compileFunction(expr) {
+  try {
+    let parsed = expr.replace(/\b(sin|cos|tan|exp|abs|log|sqrt|PI)\b/g, 'Math.$1');
+    let fn = new Function('t', `return ${parsed};`);
+    fn(0); // Test execution
+    return fn;
+  } catch (e) {
+    alert('函数解析失败，请检查语法！例如: 5 * sin(2*t)');
+    return null;
+  }
+}
+
+/* ================================================================
+   4. 渲染情景与动态图表
+   ================================================================ */
+function drawScene() {
+  const { ctx, W, H } = scene;
+  ctx.clearRect(0, 0, W, H);
+  const groundY = 150;
+
+  // 地面虚线基准
+  ctx.strokeStyle = colors.axis; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(40, groundY); ctx.lineTo(W - 40, groundY); ctx.stroke();
+
+  ctx.fillStyle = colors.text; ctx.font = '11px ui-monospace'; ctx.textAlign = 'center';
+  for (let x = -30; x <= 30; x += 5) {
+    const px = worldToPx(x, W);
+    ctx.beginPath(); ctx.moveTo(px, groundY); ctx.lineTo(px, groundY + 6);
+    ctx.strokeStyle = colors.axis; ctx.lineWidth = x === 0 ? 2 : 1; ctx.stroke();
+    ctx.fillText(x, px, groundY + 20);
+    
+    if (x === 0) {
+      ctx.setLineDash([4, 4]); ctx.beginPath();
+      ctx.moveTo(px, groundY - 100); ctx.lineTo(px, groundY);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.stroke(); ctx.setLineDash([]);
+    }
+  }
+
+  // 小车
+  const carX = worldToPx(sim.x, W), carY = groundY - 16;
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath(); ctx.roundRect(carX - 28, carY - 18, 56, 24, 6); ctx.fill();
+  ctx.strokeStyle = colors.v; ctx.lineWidth = 2; ctx.stroke();
+  
+  ctx.fillStyle = '#0f172a'; ctx.strokeStyle = colors.v;
+  ctx.beginPath(); ctx.arc(carX - 16, carY + 8, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(carX + 16, carY + 8, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+  // 速度 & 加速度矢量
+  const vScale = 8, vPx = sim.v * vScale;
+  if (Math.abs(vPx) > 1) {
+    drawVector(ctx, carX, carY - 35, carX + vPx, carY - 35, colors.v);
+    drawTextWithBg(ctx, `v=${sim.v.toFixed(1)}`, carX + vPx + (vPx>0?10:-10), carY - 35, colors.v, vPx>0?'left':'right');
+  } else { drawTextWithBg(ctx, `v=0`, carX, carY - 35, colors.v); }
+
+  const aScale = 12, aPx = sim.a * aScale;
+  if (Math.abs(aPx) > 1) {
+    drawVector(ctx, carX, carY - 65, carX + aPx, carY - 65, colors.a);
+    drawTextWithBg(ctx, `a=${sim.a>0?'+':''}${sim.a.toFixed(1)}`, carX + aPx + (aPx>0?10:-10), carY - 65, colors.a, aPx>0?'left':'right');
+  }
+}
+
+// 高级平滑图表绘制器
+function drawChart(canvasCtx, field, color, yLabel, stateBlock, isVt = false) {
+  const { ctx, W, H } = canvasCtx;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { L: 50, R: 30, T: 40, B: 30 };
+  const plotW = W - pad.L - pad.R, plotH = H - pad.T - pad.B;
+  
+  const tWindow = sim.tWindow;
+  let t0 = Math.max(0, sim.t - tWindow);
+  const getX = tVal => pad.L + plotW * (tVal - t0) / tWindow;
+
+  // 1. 动态量程请求计算
+  let reqMin = Infinity, reqMax = -Infinity;
+  const visible = sim.history.filter(p => p.t >= t0);
+  visible.forEach(p => { if(p[field] < reqMin) reqMin = p[field]; if(p[field] > reqMax) reqMax = p[field]; });
+  
+  if (isVt) {
+    if (reqMin > 0) reqMin = -2; 
+    if (reqMax < 0) reqMax = 2;
+  } else {
+    // 位移图优先保持物理空间全局观
+    reqMin = Math.min(-10, reqMin); reqMax = Math.max(10, reqMax);
+  }
+  if (!isFinite(reqMin) || reqMax - reqMin < 0.1) { reqMin -= 5; reqMax += 5; }
+  
+  const range = Math.max(reqMax - reqMin, 4);
+  reqMin -= range * 0.1; reqMax += range * 0.1;
+
+  // 2. 阻尼平滑更新 (Lerp) 使得视口平稳放大缩小
+  stateBlock.curMin += (reqMin - stateBlock.curMin) * 0.08;
+  stateBlock.curMax += (reqMax - stateBlock.curMax) * 0.08;
+  const yMin = stateBlock.curMin, yMax = stateBlock.curMax;
+  
+  const getY = val => pad.T + plotH * (1 - (val - yMin) / (yMax - yMin));
+  const zeroY = getY(0);
+
+  // 3. 绘制科研级背景网格
+  ctx.beginPath();
+  for (let i = 0; i <= 6; i++) { // 垂直时间网格
+    const x = getX(t0 + tWindow * i / 6);
+    ctx.moveTo(x, pad.T); ctx.lineTo(x, pad.T + plotH);
+  }
+  for (let i = 0; i <= 6; i++) { // 水平数值网格
+    const y = pad.T + plotH * i / 6;
+    ctx.moveTo(pad.L, y); ctx.lineTo(pad.L + plotW, y);
+  }
+  ctx.strokeStyle = colors.grid; ctx.lineWidth = 1; ctx.stroke();
+
+  // 坐标外框与零轴线
+  ctx.beginPath();
+  ctx.moveTo(pad.L, pad.T); ctx.lineTo(pad.L, pad.T + plotH); 
+  ctx.moveTo(pad.L, pad.T + plotH); ctx.lineTo(pad.L + plotW, pad.T + plotH);
+  ctx.strokeStyle = colors.axis; ctx.lineWidth = 2; ctx.stroke();
+  
+  if (zeroY > pad.T && zeroY < pad.T + plotH) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(pad.L, zeroY); ctx.lineTo(pad.L + plotW, zeroY); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // 4. 渲染发光数据曲线
+  if (visible.length > 1) {
+    if (isVt) {
+      // 位移面积渐变积分填充
+      ctx.beginPath();
+      ctx.moveTo(getX(visible[0].t), zeroY);
+      visible.forEach(p => ctx.lineTo(getX(p.t), getY(p[field])));
+      ctx.lineTo(getX(visible[visible.length-1].t), zeroY);
+      ctx.closePath();
+      const gradient = ctx.createLinearGradient(0, pad.T, 0, pad.T + plotH);
+      gradient.addColorStop(0, color + '55'); gradient.addColorStop(1, color + '05');
+      ctx.fillStyle = gradient; ctx.fill();
+    }
+
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+    ctx.shadowColor = color; ctx.shadowBlur = 10; // 霓虹发光核心
+    ctx.beginPath();
+    visible.forEach((p, i) => {
+      const px = getX(p.t), py = getY(p[field]);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    ctx.restore();
+
+    // 最新点追踪游标
+    const last = visible[visible.length - 1];
+    const lastX = getX(last.t), lastY = getY(last[field]);
+    
+    ctx.strokeStyle = color + '88'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(lastX, zeroY); ctx.lineTo(lastX, lastY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = colors.bg; ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(lastX, lastY, 4, 0, Math.PI*2);
+    ctx.fill(); ctx.stroke();
+  }
+
+  // 5. 轴标签渲染
+  ctx.fillStyle = colors.text; ctx.font = '11px ui-monospace'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (let i = 0; i <= 4; i++) {
+    const val = yMin + (yMax - yMin) * i / 4;
+    ctx.fillText(val.toFixed(1), pad.L - 8, getY(val));
+  }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i = 0; i <= 6; i++) {
+    const val = t0 + tWindow * i / 6;
+    ctx.fillText(val.toFixed(1) + 's', getX(val), pad.T + plotH + 8);
+  }
+  ctx.fillStyle = color; ctx.font = 'bold 12px ui-monospace';
+  ctx.textAlign = 'right'; ctx.fillText(yLabel, pad.L + plotW, pad.T - 20);
+}
+
+/* ================================================================
+   5. 物理演化核心循环
+   ================================================================ */
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+
+  if (sim.running) {
+    sim.t += dt;
+
+    if (sim.mode === 'slider') {
+      sim.v += sim.a * dt;
+      sim.x += sim.v * dt;
+    } else if (sim.mode === 'func' && sim.customFunc) {
+      // 自定义函数模式：基于 v(t) 解析，利用中心差分求导获取平滑瞬时加速度
+      sim.v = sim.customFunc(sim.t);
+      sim.a = (sim.customFunc(sim.t + 0.001) - sim.customFunc(sim.t - 0.001)) / 0.002;
+      sim.x += sim.v * dt;
+    }
+
+    if (sim.x < sim.worldMin || sim.x > sim.worldMax) {
+      sim.running = false; $('playBtn').textContent = '▶ 继续演化';
+    }
+    
+    sim.history.push({ t: sim.t, x: sim.x, v: sim.v, a: sim.a });
+    if (sim.history.length > 2000) sim.history.shift();
+  }
+
+  drawScene();
+  drawChart(xtC, 'x', colors.x, 'x / m', charts.xt);
+  drawChart(vtC, 'v', colors.v, 'v / (m/s)', charts.vt, true);
+
+  requestAnimationFrame(loop);
+}
+
+/* ================================================================
+   6. UI 逻辑交互绑定
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const updateUI = () => {
+  $('v0Label').textContent = `${parseFloat($('v0').value) >= 0 ? '+' : ''}${parseFloat($('v0').value).toFixed(1)} m/s`;
+  $('aLabel').textContent  = `${parseFloat($('a').value) >= 0 ? '+' : ''}${parseFloat($('a').value).toFixed(1)} m/s²`;
+};
+
+const resetSim = () => {
+  sim.t = 0; sim.x = 0; sim.running = false;
+  if (sim.mode === 'slider') {
+    sim.v0 = parseFloat($('v0').value);
+    sim.v = sim.v0; sim.a = parseFloat($('a').value);
+  } else if (sim.mode === 'func') {
+    const fn = compileFunction($('funcInput').value);
+    if(fn) { sim.customFunc = fn; sim.v = fn(0); sim.v0 = sim.v; sim.a = (fn(0.001)-fn(-0.001))/0.002; }
+  }
+  sim.history = [{ t: 0, x: 0, v: sim.v, a: sim.a }];
+  $('playBtn').textContent = '▶ 开始演化';
+};
+
+// 模式切换
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', e => {
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    sim.mode = e.target.dataset.mode;
+    
+    if (sim.mode === 'slider') {
+      $('sliderPanel').style.display = 'grid';$('funcPanel').style.display = 'none';
+    } else {
+      $('sliderPanel').style.display = 'none';$('funcPanel').style.display = 'flex';
+    }
+    resetSim();
+  });
+});
+
+$('funcInput').addEventListener('change', resetSim);
+$('v0').addEventListener('input', e => { updateUI(); if (!sim.running) resetSim(); });$('a').addEventListener('input', e => { updateUI(); sim.a = parseFloat(e.target.value); });
+
+$('playBtn').addEventListener('click', () => {
+  if (sim.mode === 'func' && !sim.customFunc) {
+     const fn = compileFunction($('funcInput').value);
+     if(!fn) return; sim.customFunc = fn;
+  }
+  sim.running = !sim.running;
+  $('playBtn').textContent = sim.running ? '⏸ 暂停演化' : '▶ 继续演化';
+});
+$('resetBtn').addEventListener('click', resetSim);
+
+// 预设处理
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const type = btn.dataset.type;
+    // 自动切换对应的模式选项卡
+    document.querySelector(`.mode-tab[data-mode="${type}"]`).click();
+    
+    if (type === 'slider') {
+      $('v0').value = btn.dataset.v0; $('a').value = btn.dataset.a;
+      updateUI();
+    } else {
+      $('funcInput').value = btn.dataset.func;
+    }
+    resetSim();
+    sim.running = true; $('playBtn').textContent = '⏸ 暂停演化';
+  });
+});
+
+resetSim(); updateUI(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

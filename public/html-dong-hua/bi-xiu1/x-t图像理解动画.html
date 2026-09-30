@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运动学全场景 x-t 图像与数值微积分解析</title>
+<style>
+    :root {
+        /* 深色极客主题配色 */
+        --bg: #0d1117;
+        --panel: #161b22;
+        --panel-2: #21262d;
+        --border: #30363d;
+        --grid: #21262d;
+        --grid-strong: #30363d;
+        --text: #c9d1d9;
+        --text-bright: #f0f6fc;
+        --muted: #8b949e;
+
+        --primary: #58a6ff;
+        --accent: #2dd4bf;
+
+        --tangent: #f59e0b;
+        --tangent-glow: rgba(245, 158, 11, 0.4);
+        --tangent-fill: rgba(245, 158, 11, 0.15);
+
+        --accel: #a78bfa;
+        --wall: #f87171;
+        --dot: #ff7b72;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: radial-gradient(circle at 50% -20%, #1a2330 0%, var(--bg) 70%);
+        color: var(--text);
+        margin: 0;
+        padding: 24px 16px 40px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+        padding: 28px;
+        max-width: 1040px;
+        width: 100%;
+    }
+
+    /* ------- 头部信息 ------- */
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h2 {
+        margin: 0 0 12px;
+        color: var(--text-bright);
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .header .subtitle {
+        font-size: 14.5px;
+        color: var(--muted);
+        line-height: 1.75;
+    }
+    .header .subtitle b { color: var(--tangent); font-weight: 600; }
+    .header .subtitle .formula {
+        color: var(--text-bright);
+        font-family: "Cambria Math", "Times New Roman", serif;
+        font-style: italic;
+        padding: 0 4px;
+    }
+    .header .kbd-hint {
+        margin-top: 12px;
+        font-size: 12.5px;
+        color: var(--muted);
+    }
+    .kbd-hint kbd {
+        display: inline-block;
+        padding: 2px 7px;
+        margin: 0 3px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 11px;
+        color: var(--text-bright);
+    }
+
+    /* ------- 场景选择网格 ------- */
+    .scenario-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    button.scenario-btn {
+        padding: 12px 10px;
+        border: 1px solid var(--border);
+        background: var(--panel-2);
+        color: var(--text-bright);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        text-align: center;
+        font-family: inherit;
+    }
+    button.scenario-btn span {
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--muted);
+        line-height: 1.45;
+    }
+    button.scenario-btn:hover {
+        background: #2a313c;
+        border-color: #484f58;
+        transform: translateY(-1px);
+    }
+    button.scenario-btn:active { transform: translateY(0); }
+
+    button.scenario-btn.active {
+        background: linear-gradient(145deg, #1f6feb, #184c80);
+        border-color: var(--primary);
+        color: #fff;
+        box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.4),
+                    0 8px 16px rgba(31, 111, 235, 0.25);
+    }
+    button.scenario-btn.active span { color: rgba(255, 255, 255, 0.85); }
+
+    /* 第 10 个按钮特殊强调 */
+    button.scenario-btn[data-mode="s10"] {
+        grid-column: span 3;
+        background: rgba(45, 212, 191, 0.08);
+        border-color: rgba(45, 212, 191, 0.3);
+        color: var(--accent);
+    }
+    button.scenario-btn[data-mode="s10"]:hover { background: rgba(45, 212, 191, 0.15); }
+    button.scenario-btn[data-mode="s10"].active {
+        background: linear-gradient(145deg, #14b8a6, #0d9488);
+        border-color: #2dd4bf;
+        color: #041b1a;
+        box-shadow: 0 8px 16px rgba(20, 184, 166, 0.25);
+    }
+    button.scenario-btn[data-mode="s10"].active span {
+        color: rgba(4, 27, 26, 0.85);
+        font-weight: 600;
+    }
+
+    /* ------- 描述与输入框区域 ------- */
+    .desc-box {
+        background: var(--panel-2);
+        border-left: 4px solid var(--accent);
+        padding: 16px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        color: var(--text-bright);
+        line-height: 1.65;
+        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: center;
+    }
+    .desc-box b { color: var(--tangent); }
+    .desc-box code {
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 13px;
+        color: var(--accent);
+        background: rgba(45, 212, 191, 0.1);
+        padding: 1px 6px;
+        border-radius: 4px;
+    }
+
+    .input-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        width: 340px;
+    }
+    .input-row {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .input-row::before {
+        content: "x(t) = ";
+        position: absolute;
+        left: 14px;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 15px;
+        color: var(--muted);
+        pointer-events: none;
+        z-index: 1;
+    }
+    input#desc-formula {
+        width: 100%;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 15px;
+        color: var(--accent);
+        font-weight: 600;
+        background: rgba(45, 212, 191, 0.05);
+        border: 1px solid rgba(45, 212, 191, 0.3);
+        padding: 10px 12px 10px 72px;
+        border-radius: 8px;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    input#desc-formula:focus:not([readonly]) {
+        background: rgba(45, 212, 191, 0.12);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.25);
+    }
+    input#desc-formula[readonly] {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+        cursor: default;
+        color: var(--primary);
+        font-family: "Cambria Math", "Times New Roman", serif;
+        font-size: 16px;
+    }
+    input#desc-formula.is-error {
+        border-color: var(--wall) !important;
+        color: var(--wall) !important;
+        background: rgba(248, 113, 113, 0.08) !important;
+        box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.2) !important;
+        animation: shake 0.4s ease-in-out;
+    }
+    .error-hint {
+        font-size: 12px;
+        color: var(--muted);
+        min-height: 16px;
+        font-family: "JetBrains Mono", monospace;
+        transition: color 0.15s ease;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+    }
+
+    /* ------- 操作按钮 ------- */
+    .action-row {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        padding-bottom: 20px;
+    }
+    button.action {
+        padding: 12px 32px;
+        background: linear-gradient(180deg, #14b8a6, #0d9488);
+        color: #041b1a;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 14px rgba(20, 184, 166, 0.25);
+        transition: all 0.15s ease;
+    }
+    button.action:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(20, 184, 166, 0.35);
+    }
+    button.action:active { transform: translateY(1px); }
+    button.action.reset {
+        background: transparent;
+        color: var(--text-bright);
+        border: 1px solid var(--border);
+        box-shadow: none;
+    }
+    button.action.reset:hover {
+        background: var(--panel-2);
+        border-color: #6e7681;
+    }
+
+    /* ------- 画布与进度条 ------- */
+    .progress-track {
+        height: 4px;
+        background: var(--grid-strong);
+        border-radius: 2px;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--primary));
+        transition: width 0.1s linear;
+    }
+    canvas {
+        display: block;
+        margin: 0 auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #0a0e14;
+        box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+        width: 100%;
+        max-width: 960px;
+        height: auto;
+    }
+
+    /* ------- 仪表盘 ------- */
+    .dashboard {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        gap: 12px;
+        margin-top: 20px;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 16px;
+        font-weight: 600;
+        background: var(--panel-2);
+        padding: 16px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .dashboard > span {
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .val-t { color: var(--primary); }
+    .val-x { color: var(--accent); }
+    .val-v { color: var(--tangent); }
+    .val-a { color: var(--accel); }
+    .dashboard .num {
+        background: rgba(0,0,0,0.2);
+        padding: 2px 8px;
+        border-radius: 6px;
+        min-width: 80px;
+        text-align: right;
+        display: inline-block;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+        button.scenario-btn[data-mode="s10"] { grid-column: span 2; }
+        .desc-box { grid-template-columns: 1fr; gap: 12px; align-items: stretch; }
+        .input-wrapper { width: 100%; }
+        .dashboard {
+            font-size: 14px;
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>运动学全场景 x-t 图像与数值微积分解析</h2>
+        <div class="subtitle">
+            观察橙色切线与直角三角形：切线斜率
+            <span class="formula">k = lim<sub>Δt→0</sub> (Δx / Δt) = dx / dt = v</span>，
+            几何上即曲线在该点的切线斜率，物理上对应瞬时速度。
+            <b>模块 10 支持自由编写运动解析式！</b>
+        </div>
+        <div class="kbd-hint">
+            <kbd>空格</kbd> 播放 / 暂停 ·
+            <kbd>R</kbd> 重置 ·
+            <kbd>1</kbd>–<kbd>9</kbd> 经典场景 ·
+            <kbd>0</kbd> 自定义
+        </div>
+    </div>
+
+    <!-- 九宫格 + 1 个自定义场景 -->
+    <div class="scenario-grid" id="mode-selector">
+        <button class="scenario-btn active" data-mode="s1">1. 匀速直线（原点出发）<span>加速度为零，图像为一条斜直线</span></button>
+        <button class="scenario-btn" data-mode="s2">2. 匀速返回（正半轴出发）<span>斜率恒为负值，匀速向负方向运动</span></button>
+        <button class="scenario-btn" data-mode="s3">3. 匀加速（初速为零）<span>切线斜率从零开始逐渐变陡</span></button>
+        <button class="scenario-btn" data-mode="s4">4. 匀加（有初速，负轴起）<span>切线斜率不断增大的抛物线</span></button>
+        <button class="scenario-btn" data-mode="s5">5. 经典折返（先减后返）<span>切线斜率由正变平，再翻转为负</span></button>
+        <button class="scenario-btn" data-mode="s6">6. 延迟出发（原点滞留）<span>切线先完全水平，随后开始翘起</span></button>
+        <button class="scenario-btn" data-mode="s7">7. 启停运动（匀加→匀速→匀减）<span>切线斜率平滑过渡，加速度突变</span></button>
+        <button class="scenario-btn" data-mode="s8">8. 简谐振动（弹簧振子模型）<span>切线斜率周期性正负交替</span></button>
+        <button class="scenario-btn" data-mode="s9">9. 弹性碰撞（碰壁反弹）<span>尖点处切线斜率瞬间反转</span></button>
+        <button class="scenario-btn" data-mode="s10">10. ⚡ 自定义函数实验室 ⚡<span>在下方编辑区自由修改运动解析式，编辑后实时生效</span></button>
+    </div>
+
+    <div class="desc-box">
+        <span id="desc-text">说明加载中……</span>
+        <div class="input-wrapper">
+            <div class="input-row">
+                <input type="text" id="desc-formula" value="10t" readonly autocomplete="off" spellcheck="false" placeholder="例如：20 * sin(PI * t)">
+            </div>
+            <span class="error-hint" id="error-hint"></span>
+        </div>
+    </div>
+
+    <div class="action-row">
+        <button id="btn-play" class="action" type="button">启动演化</button>
+        <button id="btn-reset" class="action reset" type="button">重置图象</button>
+    </div>
+
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+
+    <!-- 核心绘图区 -->
+    <canvas id="simCanvas" role="img" aria-label="x-t 图像与切线可视化"></canvas>
+
+    <div class="dashboard">
+        <span class="val-t">t = <span class="num" id="txt-t">0.00</span> s</span>
+        <span class="val-x">x = <span class="num" id="txt-x">+0.00</span> m</span>
+        <span class="val-v">v = <span class="num" id="txt-v">+0.00</span> m/s</span>
+        <span class="val-a">a = <span class="num" id="txt-a">+0.00</span> m/s²</span>
+    </div>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ==========================================================
+       0. 超级采样抗锯齿（SSAA）设置
+       ========================================================== */
+    const LOGICAL_W = 960;
+    const LOGICAL_H = 560;
+
+    // 内部分辨率至少按 2 倍渲染，再配合 CSS 自动缩放，可显著提升线条与文字的锐利度
+    const DPR = Math.max(2.0, window.devicePixelRatio || 1);
+
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = LOGICAL_W * DPR;
+    canvas.height = LOGICAL_H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    /* ==========================================================
+       1. DOM 节点绑定
+       ========================================================== */
+    const btnPlay = document.getElementById('btn-play');
+    const btnReset = document.getElementById('btn-reset');
+    const modeButtons = document.querySelectorAll('#mode-selector button');
+
+    const txtT = document.getElementById('txt-t');
+    const txtX = document.getElementById('txt-x');
+    const txtV = document.getElementById('txt-v');
+    const txtA = document.getElementById('txt-a');
+    const descText = document.getElementById('desc-text');
+    const formulaInput = document.getElementById('desc-formula');
+    const errorHint = document.getElementById('error-hint');
+    const progressFill = document.getElementById('progress-fill');
+
+    /* ==========================================================
+       2. 颜色字典
+       ========================================================== */
+    const CLR = {
+        grid: '#21262d',
+        gridStrong: '#30363d',
+        axis: '#4a5560',
+        axisLabel: '#8b949e',
+        trajectoryGhost: 'rgba(45, 212, 191, 0.25)',
+        trajectory: '#2dd4bf',
+        tangent: '#f59e0b',
+        tangentDash: 'rgba(245, 158, 11, 0.55)',
+        tangentFill: 'rgba(245, 158, 11, 0.12)',
+        dot: '#ff7b72',
+        dotHalo: 'rgba(255, 123, 114, 0.35)',
+        trackLine: '#30363d',
+        trackMark: '#6e7681',
+        strobe: 'rgba(88, 166, 255, 0.55)',
+        strobeLabel: '#8b949e',
+        slider: '#58a6ff',
+        sliderTop: '#93c5fd',
+        sliderHighlight: 'rgba(255,255,255,0.2)',
+        velocity: '#f59e0b',
+        projLine: 'rgba(88, 166, 255, 0.15)',
+        wallFill: 'rgba(248, 113, 113, 0.1)',
+        wallLine: '#ff7b72',
+        primary: '#58a6ff',
+        accent: '#2dd4bf',
+        text: '#c9d1d9',
+        muted: '#8b949e',
+        cusp: '#ff7b72',
+        formulaBg: 'rgba(22, 27, 34, 0.85)',
+    };
+
+    /* ==========================================================
+       3. 安全数学求值器（白名单机制）
+       ========================================================== */
+    const MATH_SCOPE = {
+        PI: Math.PI, E: Math.E, TAU: Math.PI * 2,
+        sin: Math.sin, cos: Math.cos, tan: Math.tan,
+        asin: Math.asin, acos: Math.acos, atan: Math.atan, atan2: Math.atan2,
+        sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
+        exp: Math.exp, log: Math.log, log2: Math.log2, log10: Math.log10,
+        sqrt: Math.sqrt, cbrt: Math.cbrt, pow: Math.pow, abs: Math.abs,
+        floor: Math.floor, ceil: Math.ceil, round: Math.round,
+        sign: Math.sign, min: Math.min, max: Math.max,
+    };
+    const MATH_KEYS = Object.keys(MATH_SCOPE);
+    const MATH_VALUES = Object.values(MATH_SCOPE);
+
+    function buildMathFunc(expr) {
+        if (typeof expr !== 'string' || !expr.trim()) return () => NaN;
+        const safeExpr = expr.replace(/\^/g, '**');
+        let compiled;
+        try {
+            compiled = new Function('t', ...MATH_KEYS, `
+                "use strict";
+                try {
+                    const __r = (${safeExpr});
+                    return Number.isFinite(__r) ? __r : NaN;
+                } catch (e) { return NaN; }
+            `);
+        } catch (e) {
+            return () => NaN;
+        }
+        return function (t) {
+            return compiled(t, ...MATH_VALUES);
+        };
+    }
+
+    /* ==========================================================
+       4. 数值微积分
+       ========================================================== */
+    function calcKinematics(xFunc, t) {
+        const dt = 0.005;
+        const x = xFunc(t);
+        const xm = t - dt < 0 ? xFunc(0) : xFunc(t - dt);
+        const xp = xFunc(t + dt);
+        // 中心差分求速度，二阶中心差分求加速度
+        const v = (xp - xm) / (2 * dt);
+        const a = (xp - 2 * x + xm) / (dt * dt);
+        return { x, v, a };
+    }
+
+    /* ==========================================================
+       5. 物理场景配置
+       mathText 用于界面显示（人类可读的数学式），code 用于自定义模式编译
+       ========================================================== */
+    const DEFAULT_CUSTOM_CODE = '40 * sin(PI * t / 2) * exp(-0.1 * t)';
+
+    const SCENARIOS = {
+        s1: {
+            text: '从原点出发，以恒定速度做匀速直线运动。图像是一条斜直线，切线斜率恒定。',
+            mathText: '10t',
+            xFunc: (t) => 10 * t,
+        },
+        s2: {
+            text: '从正半轴 x = 60 m 处出发，向负方向匀速运动。切线斜率为负且保持不变。',
+            mathText: '60 − 10t',
+            xFunc: (t) => 60 - 10 * t,
+        },
+        s3: {
+            text: '从原点出发，初速度为零的匀加速直线运动。切线斜率从零开始逐渐变陡。',
+            mathText: '1.25 t²',
+            xFunc: (t) => 1.25 * t * t,
+        },
+        s4: {
+            text: '从负半轴出发，具有初速度的正向匀加速运动。切线斜率不断增大。',
+            mathText: '−20 + 2t + 0.65 t²',
+            xFunc: (t) => -20 + 2 * t + 0.65 * t * t,
+        },
+        s5: {
+            text: '经典折返：具有较大正向初速度，受反向恒力作用。切线由正变平，再翻转为负。',
+            mathText: '32t − 4 t²',
+            xFunc: (t) => 32 * t - 4 * t * t,
+        },
+        s6: {
+            text: '延迟出发：前 3 秒停留在原点（切线水平，速度为零），随后开始匀加速。',
+            mathText: 't ≤ 3 时 x = 0；t > 3 时 x = 3.2(t − 3)²',
+            xFunc: (t) => (t <= 3 ? 0 : 3.2 * Math.pow(t - 3, 2)),
+        },
+        s7: {
+            text: '三段连续启停：匀加速 → 匀速 → 匀减速。接缝处切线斜率平滑过渡，但加速度发生突变。',
+            mathText: '分段连续：匀加 → 匀速 → 匀减',
+            xFunc: (t) => {
+                if (t <= 2) return 3 * t * t;
+                if (t <= 5) return 12 + 12 * (t - 2);
+                const d = t - 5;
+                return 48 + 12 * d - 2 * d * d;
+            },
+        },
+        s8: {
+            text: '简谐振动：围绕 x = 30 m 往复振荡。平衡位置速度最大，波峰与波谷处速度为零。',
+            mathText: '30 − 30 cos(π t / 2)',
+            xFunc: (t) => 30 - 30 * Math.cos((Math.PI * t) / 2),
+        },
+        s9: {
+            text: '完全弹性碰撞：撞击 x = 60 m 刚性墙壁并原速反弹。碰撞点为尖点，此处不可导，切线斜率瞬间反转。',
+            mathText: 't ≤ 4 时 x = 15t；t > 4 时 x = 60 − 15(t − 4)',
+            xFunc: (t) => (t <= 4 ? 15 * t : 60 - 15 * (t - 4)),
+        },
+        s10: {
+            text: '💡 <b>自定义实验室</b>：请在此直接编写代码。支持 <code>sin, cos, exp, PI</code>，可用 <code>^</code> 表示乘方。',
+            mathText: '',
+            code: DEFAULT_CUSTOM_CODE,
+            xFunc: buildMathFunc(DEFAULT_CUSTOM_CODE),
+        },
+    };
+
+    /* ==========================================================
+       6. 全局状态
+       ========================================================== */
+    const state = {
+        mode: 's1',
+        isPlaying: false,
+        t: 0,
+        tMax: 8,
+        history: [],
+        strobe: [],
+        lastStrobeTime: 0,
+    };
+    let animationId = null;
+    let lastTimestamp = 0;
+
+    const GRAPH = { xOff: 70, yOff: 40, w: 820, h: 360, tMax: 8, xMin: -20, xMax: 80, xStep: 10 };
+    const TRACK = { y: 500, xStart: GRAPH.xOff, w: GRAPH.w };
+
+    const mapT = (t) => GRAPH.xOff + (t / GRAPH.tMax) * GRAPH.w;
+    const mapX = (x) =>
+        GRAPH.yOff + GRAPH.h - ((x - GRAPH.xMin) / (GRAPH.xMax - GRAPH.xMin)) * GRAPH.h;
+    const mapTrackX = (x) =>
+        TRACK.xStart + ((x - GRAPH.xMin) / (GRAPH.xMax - GRAPH.xMin)) * TRACK.w;
+
+    const formatNum = (num) => {
+        if (!Number.isFinite(num)) return '—';
+        if (Math.abs(num) < 0.05) return ' 0.00';
+        return (num > 0 ? '+' : '') + num.toFixed(2);
+    };
+
+    /* ==========================================================
+       7. 坐标轴自适应
+       ========================================================== */
+    function computeGraphRange(xFunc, tMax) {
+        let min = Infinity;
+        let max = -Infinity;
+        for (let i = 0; i <= 200; i++) {
+            const v = xFunc((tMax * i) / 200);
+            if (Number.isFinite(v)) {
+                if (v < min) min = v;
+                if (v > max) max = v;
+            }
+        }
+        if (!Number.isFinite(min) || !Number.isFinite(max)) {
+            return { xMin: -20, xMax: 80, xStep: 10 };
+        }
+
+        if (max > 1000) max = 1000;
+        if (min < -1000) min = -1000;
+
+        const span = Math.max(max - min, 1);
+        let lo = min - span * 0.1;
+        let hi = max + span * 0.1;
+        if (hi - lo < 40) {
+            const mid = (lo + hi) / 2;
+            lo = mid - 20;
+            hi = mid + 20;
+        }
+
+        let step = 10;
+        if (hi - lo > 600) step = 100;
+        else if (hi - lo > 280) step = 50;
+        else if (hi - lo > 140) step = 20;
+
+        return {
+            xMin: Math.floor(lo / step) * step,
+            xMax: Math.ceil(hi / step) * step,
+            xStep: step,
+        };
+    }
+
+    function updateGraphRange() {
+        const r = computeGraphRange(SCENARIOS[state.mode].xFunc, state.tMax);
+        GRAPH.xMin = r.xMin;
+        GRAPH.xMax = r.xMax;
+        GRAPH.xStep = r.xStep;
+    }
+
+    /* ==========================================================
+       8. 绘制：网格与坐标框架
+       ========================================================== */
+    function drawGrid() {
+        ctx.clearRect(0, 0, LOGICAL_W, LOGICAL_H);
+
+        // 横向网格与纵轴刻度
+        for (let x = GRAPH.xMin; x <= GRAPH.xMax + 1e-6; x += GRAPH.xStep) {
+            const py = mapX(x);
+            ctx.strokeStyle = Math.abs(x) < 1e-6 ? CLR.gridStrong : CLR.grid;
+            ctx.lineWidth = Math.abs(x) < 1e-6 ? 2 : 1;
+            ctx.beginPath();
+            ctx.moveTo(GRAPH.xOff, py);
+            ctx.lineTo(GRAPH.xOff + GRAPH.w, py);
+            ctx.stroke();
+
+            ctx.fillStyle = CLR.axisLabel;
+            ctx.font = '12px "JetBrains Mono", Arial, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(Math.round(x), GRAPH.xOff - 12, py + 4);
+        }
+
+        // 纵向网格与横轴刻度
+        ctx.strokeStyle = CLR.grid;
+        ctx.lineWidth = 1;
+        for (let t = 0; t <= GRAPH.tMax; t += 1) {
+            const px = mapT(t);
+            ctx.beginPath();
+            ctx.moveTo(px, GRAPH.yOff);
+            ctx.lineTo(px, GRAPH.yOff + GRAPH.h);
+            ctx.stroke();
+
+            ctx.fillStyle = CLR.axisLabel;
+            ctx.textAlign = 'center';
+            ctx.fillText(t, px, GRAPH.yOff + GRAPH.h + 20);
+        }
+
+        // 主坐标轴
+        ctx.strokeStyle = CLR.axis;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(GRAPH.xOff, GRAPH.yOff + GRAPH.h);
+        ctx.lineTo(GRAPH.xOff + GRAPH.w + 20, GRAPH.yOff + GRAPH.h);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(GRAPH.xOff, GRAPH.yOff + GRAPH.h);
+        ctx.lineTo(GRAPH.xOff, GRAPH.yOff - 20);
+        ctx.stroke();
+
+        ctx.fillStyle = CLR.primary;
+        ctx.font = 'bold 14px "JetBrains Mono", Arial, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('t / s', GRAPH.xOff + GRAPH.w + 24, GRAPH.yOff + GRAPH.h + 5);
+        ctx.textAlign = 'right';
+        ctx.fillText('x / m', GRAPH.xOff - 14, GRAPH.yOff - 25);
+
+        // 一维轨道分隔线
+        ctx.strokeStyle = CLR.gridStrong;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(20, 440);
+        ctx.lineTo(LOGICAL_W - 20, 440);
+        ctx.stroke();
+
+        ctx.fillStyle = CLR.axisLabel;
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('空间物理轨道投影（频闪打点 Δt = 0.4 s）', 30, 460);
+    }
+
+    /* ==========================================================
+       9. 绘制：切线与直角三角形
+       ========================================================== */
+    function drawTangent(curPx, curPy, kin, isCusp) {
+        if (isCusp) {
+            // 尖点：分别画左右两条半切线
+            const halfSpan = 0.6;
+            const tL = state.t - halfSpan;
+            const pxL = mapT(tL);
+            const pyL = mapX(15 * tL);
+            const tR = state.t + halfSpan;
+            const pxR = mapT(tR);
+            const pyR = mapX(60 - 15 * (tR - 4));
+
+            ctx.strokeStyle = CLR.tangent;
+            ctx.lineWidth = 2.5;
+            ctx.shadowColor = CLR.tangentGlow;
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(pxL, pyL);
+            ctx.lineTo(curPx, curPy);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(curPx, curPy);
+            ctx.lineTo(pxR, pyR);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = CLR.cusp;
+            ctx.beginPath();
+            ctx.arc(curPx, curPy, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = CLR.tangent;
+            ctx.font = 'bold 12px "JetBrains Mono", sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('左极限 v₋ = +15', pxL - 8, pyL - 6);
+            ctx.textAlign = 'left';
+            ctx.fillText('右极限 v₊ = −15', pxR + 8, pyR + 14);
+            return;
+        }
+
+        // 速度过大时做保护，避免切线拉得过长
+        const maxV = Math.abs(GRAPH.xMax - GRAPH.xMin);
+        const drawV = Math.abs(kin.v) > maxV ? Math.sign(kin.v) * maxV : kin.v;
+
+        if (Math.abs(drawV) < 0.1) {
+            ctx.strokeStyle = CLR.tangent;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(curPx - 50, curPy);
+            ctx.lineTo(curPx + 50, curPy);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = CLR.tangent;
+            ctx.font = 'bold 12px "JetBrains Mono", sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('速度为零，切线水平', curPx + 58, curPy - 6);
+            return;
+        }
+
+        const dtVis = 0.8;
+        const dxVis = drawV * dtVis;
+        const pxL = mapT(state.t - dtVis);
+        const pyL = mapX(kin.x - dxVis);
+        const pxR = mapT(state.t + dtVis);
+        const pyR = mapX(kin.x + dxVis);
+
+        // 切线主干
+        ctx.strokeStyle = CLR.tangent;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = CLR.tangentGlow;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(pxL, pyL);
+        ctx.lineTo(pxR, pyR);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // 直角三角形（Δt、Δx）
+        ctx.fillStyle = CLR.tangentFill;
+        ctx.beginPath();
+        ctx.moveTo(pxL, pyL);
+        ctx.lineTo(pxR, pyL);
+        ctx.lineTo(pxR, pyR);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = CLR.tangentDash;
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(pxL, pyL);
+        ctx.lineTo(pxR, pyL);
+        ctx.lineTo(pxR, pyR);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 标签
+        ctx.fillStyle = CLR.tangent;
+        ctx.font = 'bold 12px "JetBrains Mono", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Δt', (pxL + pxR) / 2, pyL + (drawV >= 0 ? 14 : -8));
+        ctx.textAlign = 'left';
+        ctx.fillText('Δx', pxR + 6, (pyL + pyR) / 2 + 4);
+
+        // 斜率标注
+        const slopeText = `斜率 v = ${kin.v.toFixed(1)} m/s`;
+        const lblW = ctx.measureText(slopeText).width + 12;
+        const lblX = Math.min(pxL + 8, GRAPH.xOff + GRAPH.w - lblW - 8);
+        const lblY = drawV >= 0 ? pyR - 26 : pyR + 8;
+
+        ctx.fillStyle = 'rgba(10, 14, 20, 0.85)';
+        ctx.fillRect(lblX, lblY, lblW, 20);
+        ctx.strokeStyle = CLR.tangentDash;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(lblX, lblY, lblW, 20);
+        ctx.fillStyle = CLR.tangent;
+        ctx.fillText(slopeText, lblX + 6, lblY + 14);
+    }
+
+    /* ==========================================================
+       10. 主绘制函数
+       ========================================================== */
+    function drawSimulation() {
+        drawGrid();
+        const scenario = SCENARIOS[state.mode];
+        const kin = calcKinematics(scenario.xFunc, state.t);
+        const isCusp = state.mode === 's9' && Math.abs(state.t - 4) < 0.15;
+
+        // 裁剪区：防止曲线或切线画出坐标框
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(GRAPH.xOff, GRAPH.yOff - 5, GRAPH.w, GRAPH.h + 10);
+        ctx.clip();
+
+        // 1. 理论背景虚线
+        ctx.strokeStyle = CLR.trajectoryGhost;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        for (let t = 0; t <= state.tMax; t += 0.05) {
+            const px = mapT(t);
+            const py = mapX(scenario.xFunc(t));
+            if (t === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 2. 弹性碰撞的墙面
+        if (state.mode === 's9') {
+            const wallPy = mapX(60);
+            ctx.fillStyle = CLR.wallFill;
+            ctx.fillRect(GRAPH.xOff, wallPy - 20, GRAPH.w, 20);
+            ctx.strokeStyle = CLR.wallLine;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(GRAPH.xOff, wallPy);
+            ctx.lineTo(GRAPH.xOff + GRAPH.w, wallPy);
+            ctx.stroke();
+        }
+
+        // 3. 已走过的真实轨迹
+        if (state.history.length > 0) {
+            ctx.strokeStyle = CLR.trajectory;
+            ctx.lineWidth = 3.5;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.shadowColor = 'rgba(45, 212, 191, 0.45)';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(mapT(state.history[0].t), mapX(state.history[0].x));
+            for (let i = 1; i < state.history.length; i++) {
+                ctx.lineTo(mapT(state.history[i].t), mapX(state.history[i].x));
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+
+        const curPx = mapT(state.t);
+        const curPy = mapX(kin.x);
+
+        // 4. 切线（受裁剪区保护）
+        if (state.t > 0.05 && state.t < state.tMax - 0.05 && Number.isFinite(kin.v)) {
+            drawTangent(curPx, curPy, kin, isCusp);
+        }
+
+        ctx.restore();
+
+        // 5. 十字准星与坐标点
+        if (Number.isFinite(kin.x)) {
+            ctx.strokeStyle = CLR.trackMark;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(curPx, curPy);
+            ctx.lineTo(curPx, GRAPH.yOff + GRAPH.h);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(curPx, curPy);
+            ctx.lineTo(GRAPH.xOff, curPy);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = isCusp ? 'rgba(248, 113, 113, 0.45)' : CLR.dotHalo;
+            ctx.beginPath();
+            ctx.arc(curPx, curPy, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = isCusp ? CLR.cusp : CLR.dot;
+            ctx.beginPath();
+            ctx.arc(curPx, curPy, 5.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 6. 悬浮的解析式标签
+        const eqText = state.mode === 's10' ? formulaInput.value : scenario.mathText;
+        const tagStr = '当前解析式：x(t) = ' + eqText;
+        ctx.font = 'bold 13px "JetBrains Mono", sans-serif';
+        const tagW = ctx.measureText(tagStr).width;
+        ctx.fillStyle = CLR.formulaBg;
+        ctx.strokeStyle = state.mode === 's10' ? CLR.accent : CLR.primary;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(GRAPH.xOff + 16, GRAPH.yOff + 16, tagW + 20, 30, 6);
+        else ctx.rect(GRAPH.xOff + 16, GRAPH.yOff + 16, tagW + 20, 30);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = state.mode === 's10' ? CLR.accent : CLR.primary;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(tagStr, GRAPH.xOff + 26, GRAPH.yOff + 31);
+        ctx.textBaseline = 'alphabetic';
+
+        // 7. 空间轨道基座
+        ctx.strokeStyle = CLR.trackLine;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(TRACK.xStart, TRACK.y);
+        ctx.lineTo(TRACK.xStart + TRACK.w, TRACK.y);
+        ctx.stroke();
+
+        ctx.fillStyle = CLR.axisLabel;
+        ctx.textAlign = 'center';
+        ctx.font = '12px "JetBrains Mono", sans-serif';
+        for (let xMark = GRAPH.xMin; xMark <= GRAPH.xMax + 1e-6; xMark += GRAPH.xStep) {
+            const sx = mapTrackX(xMark);
+            ctx.strokeStyle = CLR.trackMark;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(sx, TRACK.y - 6);
+            ctx.lineTo(sx, TRACK.y + 6);
+            ctx.stroke();
+            ctx.fillText(Math.round(xMark) + 'm', sx, TRACK.y + 24);
+
+            if (Math.abs(xMark) < 1e-6) {
+                ctx.fillStyle = CLR.primary;
+                ctx.font = 'bold 12px sans-serif';
+                ctx.fillText('原点 (0)', sx, TRACK.y - 25);
+                ctx.fillStyle = CLR.axisLabel;
+                ctx.font = '12px "JetBrains Mono", monospace';
+            }
+        }
+
+        // 8. 频闪打点
+        for (let i = 0; i < state.strobe.length; i++) {
+            const sx = mapTrackX(state.strobe[i].x);
+            if (sx >= TRACK.xStart && sx <= TRACK.xStart + TRACK.w) {
+                ctx.fillStyle = CLR.strobe;
+                ctx.beginPath();
+                ctx.arc(sx, TRACK.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = CLR.strobeLabel;
+                ctx.font = '10px "JetBrains Mono", monospace';
+                ctx.fillText(state.strobe[i].t.toFixed(1) + 's', sx, TRACK.y + (i % 2 === 0 ? 14 : 36));
+            }
+        }
+
+        // 9. 滑块与速度矢量
+        if (Number.isFinite(kin.x)) {
+            const trackX = mapTrackX(kin.x);
+            const drawX = Math.max(TRACK.xStart, Math.min(trackX, TRACK.xStart + TRACK.w));
+
+            ctx.fillStyle = CLR.slider;
+            ctx.fillRect(drawX - 14, TRACK.y - 18, 28, 18);
+            ctx.fillStyle = CLR.sliderTop;
+            ctx.fillRect(drawX - 14, TRACK.y - 18, 28, 4);
+            ctx.fillStyle = CLR.sliderHighlight;
+            ctx.fillRect(drawX - 14, TRACK.y - 14, 28, 2);
+
+            if (Math.abs(kin.v) > 0.3) {
+                ctx.strokeStyle = CLR.velocity;
+                ctx.fillStyle = CLR.velocity;
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                const vLen = Math.min(Math.abs(kin.v) * 2, 80);
+                const dir = Math.sign(kin.v);
+                const startX = drawX + dir * 15;
+                const endX = startX + dir * vLen;
+                ctx.moveTo(startX, TRACK.y - 9);
+                ctx.lineTo(endX, TRACK.y - 9);
+                ctx.lineTo(endX - dir * 7, TRACK.y - 14);
+                ctx.moveTo(endX, TRACK.y - 9);
+                ctx.lineTo(endX - dir * 7, TRACK.y - 4);
+                ctx.stroke();
+
+                ctx.font = 'italic 15px Georgia, serif';
+                ctx.textAlign = dir > 0 ? 'left' : 'right';
+                ctx.fillText('v', endX + dir * 12, TRACK.y - 5);
+            }
+
+            ctx.strokeStyle = CLR.projLine;
+            ctx.setLineDash([6, 4]);
+            ctx.beginPath();
+            ctx.moveTo(curPx, curPy);
+            ctx.lineTo(drawX, TRACK.y - 18);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // 10. 仪表盘数据
+        txtT.textContent = state.t.toFixed(2);
+        txtX.textContent = formatNum(kin.x);
+        if (isCusp) {
+            txtV.textContent = '突变';
+            txtV.style.color = 'var(--wall)';
+            txtA.textContent = '碰壁';
+            txtA.style.color = 'var(--wall)';
+        } else {
+            txtV.textContent = formatNum(kin.v);
+            txtV.style.color = '';
+            txtA.textContent = formatNum(kin.a);
+            txtA.style.color = '';
+        }
+        progressFill.style.width = ((state.t / state.tMax) * 100).toFixed(2) + '%';
+    }
+
+    /* ==========================================================
+       11. 主循环
+       ========================================================== */
+    function step(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        let dt = (timestamp - lastTimestamp) / 1000;
+        if (dt > 0.1) dt = 0.1;
+        lastTimestamp = timestamp;
+
+        if (state.isPlaying) {
+            state.t += dt;
+            if (state.t >= state.tMax) {
+                state.t = state.tMax;
+                state.isPlaying = false;
+                btnPlay.textContent = '重置图象';
+            }
+
+            const currentX = SCENARIOS[state.mode].xFunc(state.t);
+            if (Number.isFinite(currentX)) {
+                state.history.push({ t: state.t, x: currentX });
+                if (state.t - state.lastStrobeTime >= 0.4) {
+                    state.strobe.push({ t: state.t, x: currentX });
+                    state.lastStrobeTime = state.t;
+                }
+            }
+        }
+
+        drawSimulation();
+
+        if (state.isPlaying) {
+            animationId = requestAnimationFrame(step);
+        } else {
+            lastTimestamp = 0;
+        }
+    }
+
+    /* ==========================================================
+       12. 自定义公式处理
+       ========================================================== */
+    let customDebounce = null;
+
+    function applyCustomFormula(expr) {
+        try {
+            const fn = buildMathFunc(expr);
+            const probe = fn(0.5);
+            if (!Number.isFinite(probe)) throw new Error('invalid math execution');
+
+            SCENARIOS.s10.code = expr;
+            SCENARIOS.s10.xFunc = fn;
+
+            formulaInput.classList.remove('is-error');
+            errorHint.textContent = '✓ 编译成功，已应用新解析式';
+            errorHint.style.color = 'var(--accent)';
+
+            updateGraphRange();
+            resetSim();
+        } catch (e) {
+            formulaInput.classList.add('is-error');
+            errorHint.textContent = '⚠ 表达式非法或运行出错，请检查语法';
+            errorHint.style.color = 'var(--wall)';
+        }
+    }
+
+    formulaInput.addEventListener('input', (e) => {
+        if (state.mode !== 's10') return;
+        clearTimeout(customDebounce);
+        const expr = e.target.value;
+        customDebounce = setTimeout(() => applyCustomFormula(expr), 300);
+    });
+
+    /* ==========================================================
+       13. 场景信息与模式切换
+       ========================================================== */
+    function updateScenarioInfo() {
+        const s = SCENARIOS[state.mode];
+        descText.innerHTML = s.text;
+
+        if (state.mode === 's10') {
+            formulaInput.removeAttribute('readonly');
+            formulaInput.value = s.code;
+            formulaInput.classList.remove('is-error');
+            errorHint.textContent = '';
+        } else {
+            formulaInput.setAttribute('readonly', 'true');
+            // 只读模式下只显示人类可读的数学公式
+            formulaInput.value = s.mathText;
+            formulaInput.classList.remove('is-error');
+            errorHint.textContent = '';
+        }
+    }
+
+    function togglePlay() {
+        if (state.t >= state.tMax) {
+            resetSim();
+            state.isPlaying = true;
+            btnPlay.textContent = '暂停演化';
+            animationId = requestAnimationFrame(step);
+            return;
+        }
+
+        state.isPlaying = !state.isPlaying;
+        btnPlay.textContent = state.isPlaying ? '暂停演化' : '启动演化';
+
+        if (state.isPlaying) {
+            lastTimestamp = performance.now();
+            animationId = requestAnimationFrame(step);
+        } else {
+            cancelAnimationFrame(animationId);
+        }
+    }
+
+    function resetSim() {
+        state.isPlaying = false;
+        state.t = 0;
+        const x0 = SCENARIOS[state.mode].xFunc(0);
+        const safeX = Number.isFinite(x0) ? x0 : 0;
+        state.history = [{ t: 0, x: safeX }];
+        state.strobe = [{ t: 0, x: safeX }];
+        state.lastStrobeTime = 0;
+        btnPlay.textContent = '启动演化';
+        cancelAnimationFrame(animationId);
+        lastTimestamp = 0;
+        updateScenarioInfo();
+        drawSimulation();
+    }
+
+    btnPlay.addEventListener('click', togglePlay);
+    btnReset.addEventListener('click', resetSim);
+
+    modeButtons.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            modeButtons.forEach((b) => b.classList.remove('active'));
+            const target = e.target.closest('.scenario-btn');
+            target.classList.add('active');
+            state.mode = target.dataset.mode;
+
+            if (state.mode !== 's10') {
+                formulaInput.classList.remove('is-error');
+                errorHint.textContent = '';
+            }
+
+            updateGraphRange();
+            resetSim();
+        });
+    });
+
+    // 键盘快捷键：空格播放/暂停，R 重置，数字键 1–9 与 0 切换场景
+    window.addEventListener('keydown', (e) => {
+        if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+        if (e.key === ' ') {
+            e.preventDefault();
+            togglePlay();
+        } else if (e.key === 'r' || e.key === 'R') {
+            resetSim();
+        } else if (e.key >= '0' && e.key <= '9') {
+            const num = parseInt(e.key, 10);
+            const idx = num === 0 ? 9 : num - 1; // 0 映射为第 10 个模块
+            const btn = modeButtons[idx];
+            if (btn) btn.click();
+        }
+    });
+
+    // 启动
+    updateGraphRange();
+    resetSim();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>x-t 图像切线与速度动态解析 (深色极简版)</title>
+    <style>
+        /* 深色科技风配色字典 */
+        :root {
+            --bg-color: #0f172a;       /* 页面深邃蓝背景 */
+            --card-bg: #1e293b;        /* 卡片深灰蓝背景 */
+            --text-main: #f8fafc;      /* 主文字亮白 */
+            --text-muted: #94a3b8;     /* 辅助说明文字灰 */
+            --accent-blue: #3b82f6;    /* 控制台和高亮蓝 */
+            --accent-red: #ef4444;     /* 强调红 */
+            --border-color: #334155;   /* 边框色 */
+            --canvas-bg: #0b1120;      /* 坐标系背景色，比卡片更深 */
+            --panel-bg: #0f172a;       /* 信息面板背景 */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #f1f5f9;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        /* 控制台样式 */
+        .controls {
+            background: var(--card-bg);
+            padding: 15px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 1200px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+        }
+
+        button {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #60a5fa;
+        }
+
+        .slider-container {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-main);
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            cursor: pointer;
+            accent-color: var(--accent-blue);
+        }
+
+        .time-display {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #60a5fa;
+            min-width: 80px;
+        }
+
+        /* 布局网格 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .section-title {
+            grid-column: 1 / -1;
+            font-size: 22px;
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+            margin-top: 10px;
+            color: #e2e8f0;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-header {
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            color: #e2e8f0;
+        }
+
+        canvas {
+            background-color: var(--canvas-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: crosshair;
+        }
+
+        /* 实时物理意义面板 */
+        .info-panel {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--panel-bg);
+            border-left: 4px solid var(--accent-blue);
+            font-size: 15px;
+            line-height: 1.6;
+            min-height: 80px;
+            color: #cbd5e1;
+        }
+
+        .info-panel strong {
+            color: #ffffff;
+        }
+
+        .val-highlight {
+            font-family: monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>x-t 图像切线与速度动态解析</h1>
+    <div class="subtitle">观察白色切线斜率（倾斜程度与正负）如何实时反映物体瞬时速度的大小与方向。</div>
+
+    <!-- 全局控制台 -->
+    <div class="controls">
+        <button id="playBtn">暂停动画</button>
+        <button id="resetBtn">重置</button>
+        <div class="slider-container">
+            <label for="timeSlider">时间进度:</label>
+            <input type="range" id="timeSlider" min="0" max="5" step="0.01" value="0">
+        </div>
+        <div class="time-display">t = <span id="timeVal">0.00</span> s</div>
+    </div>
+
+    <div class="grid-container">
+        <!-- 板块一 -->
+        <div class="section-title">板块一：从原点向右出发 (初位置 x₀ = 0)</div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">A. 速度越来越大 (向右加速)</h2>
+            </div>
+            <canvas id="canvasA" width="500" height="300"></canvas>
+            <div class="info-panel" id="infoA">等待动画启动...</div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">B. 速度越来越小 (向右减速)</h2>
+            </div>
+            <canvas id="canvasB" width="500" height="300"></canvas>
+            <div class="info-panel" id="infoB">等待动画启动...</div>
+        </div>
+
+        <!-- 板块二 -->
+        <div class="section-title">板块二：从 x₀ 向左出发 (初位置 x₀ = 50m)</div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">C. 速度越来越大 (向左加速)</h2>
+            </div>
+            <canvas id="canvasC" width="500" height="300"></canvas>
+            <div class="info-panel" id="infoC">等待动画启动...</div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h2 class="chart-title">D. 速度越来越小 (向左减速)</h2>
+            </div>
+            <canvas id="canvasD" width="500" height="300"></canvas>
+            <div class="info-panel" id="infoD">等待动画启动...</div>
+        </div>
+    </div>
+
+<script>
+    const T_MAX = 5.0; 
+    
+    // 物理模型 (调整了深色模式下的曲线颜色以增加对比度)
+    const models = {
+        A: {
+            calcX: (t) => 2 * t * t,
+            calcV: (t) => 4 * t,
+            color: '#f87171', // 亮红
+            desc: (v) => `切线斜率为正 ➔ <strong>速度向右</strong><br>曲线越来越陡 (斜率绝对值增大) ➔ <strong>速度变大 (加速)</strong>`
+        },
+        B: {
+            calcX: (t) => 20 * t - 2 * t * t,
+            calcV: (t) => 20 - 4 * t,
+            color: '#4ade80', // 亮绿
+            desc: (v) => v > 0 
+                ? `切线斜率为正 ➔ <strong>速度向右</strong><br>曲线越来越平缓 (斜率绝对值减小) ➔ <strong>速度变小 (减速)</strong>`
+                : `切线水平 (斜率为0) ➔ <strong style="color:#fcd34d">速度为0，物体停止</strong>`
+        },
+        C: {
+            calcX: (t) => 50 - 2 * t * t,
+            calcV: (t) => -4 * t,
+            color: '#60a5fa', // 亮蓝
+            desc: (v) => `切线斜率为负 ➔ <strong>速度向左</strong><br>曲线向下越来越陡 (斜率绝对值增大) ➔ <strong>速度变大 (加速)</strong>`
+        },
+        D: {
+            calcX: (t) => 50 - 20 * t + 2 * t * t,
+            calcV: (t) => -20 + 4 * t,
+            color: '#fbbf24', // 亮黄
+            desc: (v) => v < 0
+                ? `切线斜率为负 ➔ <strong>速度向左</strong><br>曲线向下越来越平缓 (斜率绝对值减小) ➔ <strong>速度变小 (减速)</strong>`
+                : `切线水平 (斜率为0) ➔ <strong style="color:#fcd34d">速度为0，物体停止</strong>`
+        }
+    };
+
+    class Graph {
+        constructor(canvasId, modelId, infoId) {
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext('2d');
+            this.model = models[modelId];
+            this.infoPanel = document.getElementById(infoId);
+            
+            // DPI 高清缩放
+            this.logicalW = this.canvas.width;
+            this.logicalH = this.canvas.height;
+            const dpr = window.devicePixelRatio || 1;
+            
+            this.canvas.width = this.logicalW * dpr;
+            this.canvas.height = this.logicalH * dpr;
+            this.canvas.style.width = this.logicalW + 'px';
+            this.canvas.style.height = this.logicalH + 'px';
+            this.ctx.scale(dpr, dpr);
+
+            this.pad = { top: 30, right: 30, bottom: 40, left: 50 };
+            this.w = this.logicalW - this.pad.left - this.pad.right; 
+            this.h = this.logicalH - this.pad.top - this.pad.bottom; 
+            this.tMaxAxis = 6;
+            this.xMaxAxis = 60;
+        }
+
+        getPx(t) { return this.pad.left + (t / this.tMaxAxis) * this.w; }
+        getPy(x) { return this.logicalH - this.pad.bottom - (x / this.xMaxAxis) * this.h; }
+
+        drawAxes() {
+            const ctx = this.ctx;
+            ctx.clearRect(0, 0, this.logicalW, this.logicalH);
+            
+            // 绘制深色科技感坐标轴
+            ctx.beginPath();
+            ctx.strokeStyle = '#64748b'; // 显眼的灰蓝色轴线
+            ctx.lineWidth = 1.5;
+
+            let y0 = this.getPy(0);
+            let x0 = this.getPx(0);
+
+            // X轴线
+            ctx.moveTo(this.pad.left, y0);
+            ctx.lineTo(this.logicalW - 10, y0);
+            // Y轴线
+            ctx.moveTo(x0, this.logicalH - this.pad.bottom);
+            ctx.lineTo(x0, 10);
+            ctx.stroke(); // <--- 修复：加上stroke才能画出主轴线条
+
+            // 绘制轴线箭头
+            ctx.beginPath();
+            ctx.fillStyle = '#64748b';
+            // X轴箭头
+            ctx.moveTo(this.logicalW - 8, y0);
+            ctx.lineTo(this.logicalW - 16, y0 - 4);
+            ctx.lineTo(this.logicalW - 16, y0 + 4);
+            // Y轴箭头
+            ctx.moveTo(x0, 8);
+            ctx.lineTo(x0 - 4, 16);
+            ctx.lineTo(x0 + 4, 16);
+            ctx.fill();
+
+            // 绘制刻度与文字
+            ctx.fillStyle = '#94a3b8'; // 浅灰色字体
+            ctx.font = '12px sans-serif';
+            ctx.fillText('t (s)', this.logicalW - 35, y0 + 20);
+            ctx.fillText('x (m)', x0 - 40, 15);
+
+            for(let i=1; i<=5; i++) {
+                ctx.fillText(i, this.getPx(i) - 4, y0 + 18);
+            }
+            [25, 50].forEach(val => {
+                ctx.fillText(val, x0 - 25, this.getPy(val) + 4);
+            });
+            ctx.fillText('0', x0 - 15, y0 + 15);
+        }
+
+        drawPath(currentTime) {
+            const ctx = this.ctx;
+            
+            // 1. 虚线(未来轨迹)，深色背景下用深空灰
+            ctx.beginPath();
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            for(let t=0; t<=T_MAX; t+=0.1) {
+                let px = this.getPx(t);
+                let py = this.getPy(this.model.calcX(t));
+                t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]); 
+
+            // 2. 实体轨迹，高亮显示
+            ctx.beginPath();
+            ctx.strokeStyle = this.model.color;
+            ctx.lineWidth = 3.5; // 加粗一点
+            for(let t=0; t<=currentTime; t+=0.05) {
+                let px = this.getPx(t);
+                let py = this.getPy(this.model.calcX(t));
+                t === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+        }
+
+        drawTangentAndPoint(t) {
+            const ctx = this.ctx;
+            let currentX = this.model.calcX(t);
+            let currentV = this.model.calcV(t);
+            
+            let px = this.getPx(t);
+            let py = this.getPy(currentX);
+
+            // 1. 切线段 (深色背景下用醒目的纯白色)
+            const dt = 1.2;
+            let t1 = t - dt;
+            let x1 = currentX + currentV * (-dt);
+            let t2 = t + dt;
+            let x2 = currentX + currentV * dt;
+
+            ctx.beginPath();
+            ctx.strokeStyle = '#ffffff'; 
+            ctx.lineWidth = 2;
+            ctx.moveTo(this.getPx(t1), this.getPy(x1));
+            ctx.lineTo(this.getPx(t2), this.getPy(x2));
+            ctx.stroke();
+
+            // 2. 切线箭头 (同为白色)
+            let px1 = this.getPx(t1);
+            let py1 = this.getPy(x1);
+            let px2 = this.getPx(t2);
+            let py2 = this.getPy(x2);
+            let angle = Math.atan2(py2 - py1, px2 - px1);
+
+            ctx.beginPath();
+            ctx.fillStyle = '#ffffff';
+            ctx.moveTo(px2, py2);
+            ctx.lineTo(px2 - 10 * Math.cos(angle - Math.PI/6), py2 - 10 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(px2 - 10 * Math.cos(angle + Math.PI/6), py2 - 10 * Math.sin(angle + Math.PI/6));
+            ctx.fill();
+
+            // 3. 当前质点
+            ctx.beginPath();
+            ctx.fillStyle = this.model.color;
+            ctx.arc(px, py, 6, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff'; // 白色描边
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 4. 更新面板
+            this.updateInfo(currentV, currentX);
+        }
+
+        updateInfo(v, x) {
+            let directionText = v > 0 ? "向右" : (v < 0 ? "向左" : "静止");
+            this.infoPanel.innerHTML = `
+                <div>瞬时速度 <span class="val-highlight">v = ${v.toFixed(1)} m/s</span> (${directionText})</div>
+                <div>当前位置 x = ${x.toFixed(1)} m</div>
+                <hr style="border:0; border-top:1px dashed #334155; margin:8px 0;">
+                <div>${this.model.desc(v)}</div>
+            `;
+        }
+
+        render(t) {
+            this.drawAxes();
+            this.drawPath(t);
+            this.drawTangentAndPoint(t);
+        }
+    }
+
+    const graphs = [
+        new Graph('canvasA', 'A', 'infoA'),
+        new Graph('canvasB', 'B', 'infoB'),
+        new Graph('canvasC', 'C', 'infoC'),
+        new Graph('canvasD', 'D', 'infoD')
+    ];
+
+    let currentTime = 0;
+    let isPlaying = true;
+    let animationId;
+    let lastTimestamp = 0;
+
+    const playBtn = document.getElementById('playBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const timeSlider = document.getElementById('timeSlider');
+    const timeVal = document.getElementById('timeVal');
+
+    function updateAllGraphs(t) {
+        timeVal.innerText = t.toFixed(2);
+        timeSlider.value = t;
+        graphs.forEach(g => g.render(t));
+    }
+
+    function loop(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        let deltaTime = (timestamp - lastTimestamp) / 1000;
+        lastTimestamp = timestamp;
+
+        if (isPlaying) {
+            currentTime += deltaTime * 0.8; 
+            if (currentTime >= T_MAX) {
+                currentTime = T_MAX;
+                isPlaying = false;
+                playBtn.innerText = "重新播放";
+            }
+            updateAllGraphs(currentTime);
+        }
+        
+        animationId = requestAnimationFrame(loop);
+    }
+
+    playBtn.addEventListener('click', () => {
+        if (currentTime >= T_MAX) {
+            currentTime = 0;
+            isPlaying = true;
+        } else {
+            isPlaying = !isPlaying;
+        }
+        playBtn.innerText = isPlaying ? "暂停动画" : "继续播放";
+        if (isPlaying) lastTimestamp = 0; 
+    });
+
+    resetBtn.addEventListener('click', () => {
+        currentTime = 0;
+        isPlaying = false;
+        playBtn.innerText = "播放动画";
+        updateAllGraphs(0);
+    });
+
+    timeSlider.addEventListener('input', (e) => {
+        currentTime = parseFloat(e.target.value);
+        isPlaying = false;
+        playBtn.innerText = "继续播放";
+        updateAllGraphs(currentTime);
+    });
+
+    requestAnimationFrame(loop);
+
+</script>
+</body>
+</html>

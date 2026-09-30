@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>超声波测速 (含真实误差模拟)</title>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+    :root {
+        --bg-color: #09090b;
+        --panel-bg: rgba(24, 24, 27, 0.75);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text-main: #f8fafc;
+        --text-muted: #a1a1aa;
+        
+        --ir-color: #ef4444;      
+        --us-color: #06b6d4;      
+        --accent: #f59e0b;        
+        --real-v: #10b981;        
+        --error-color: #f43f5e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background-color: var(--bg-color); font-family: -apple-system, "PingFang SC", sans-serif; color: var(--text-main); }
+
+    body {
+        background: radial-gradient(circle at 50% 0%, #1e1e24 0%, var(--bg-color) 70%),
+                    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 100% 100%, 50px 50px, 50px 50px;
+        background-position: center top, center center, center center;
+    }
+
+    .main-container {
+        width: min(1400px, 96vw); height: min(900px, 94vh);
+        margin: 2vh auto 0; display: grid; grid-template-columns: 1fr 390px; gap: 24px;
+    }
+
+    .stage {
+        position: relative; border-radius: 16px; background: #000;
+        border: 1px solid var(--panel-border); box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        overflow: hidden;
+    }
+    canvas { width: 100%; height: 100%; display: block; }
+    
+    .scene-title { position: absolute; top: 24px; left: 24px; pointer-events: none; }
+    .scene-title h2 { font-size: 1.4rem; font-weight: 600; color: var(--us-color); letter-spacing: 1px; }
+    .scene-title p { font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; }
+
+    .status-badge {
+        position: absolute; top: 24px; right: 24px;
+        padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;
+        letter-spacing: 1px; transition: 0.3s; opacity: 0;
+    }
+    .status-badge.paused { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; opacity: 1; }
+    .status-badge.done { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; opacity: 1; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-right: 4px; }
+    
+    .glass-panel {
+        background: var(--panel-bg); border: 1px solid var(--panel-border);
+        border-radius: 16px; padding: 22px;
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    
+    .panel-title { font-size: 1rem; font-weight: 600; margin-bottom: 18px; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+    .panel-title::before { content: ""; display: inline-block; width: 4px; height: 14px; background: var(--us-color); border-radius: 2px; }
+
+    .control-group { margin-bottom: 20px; }
+    .control-label { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; }
+    .val-display { color: var(--real-v); font-weight: 600; font-family: monospace; font-size: 1.1rem; }
+    
+    .range-slider {
+        -webkit-appearance: none; width: 100%; height: 4px; border-radius: 2px;
+        background: #3F3F46; outline: none; transition: 0.2s; cursor: pointer;
+    }
+    .range-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+        background: var(--text-main); cursor: grab; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    /* 误差开关 */
+    .error-toggle-wrapper {
+        display: flex; justify-content: space-between; align-items: center;
+        background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2);
+        padding: 10px 14px; border-radius: 8px; margin-bottom: 10px; cursor: pointer;
+    }
+    .error-toggle-wrapper:hover { background: rgba(244, 63, 94, 0.15); }
+    .error-label { font-size: 0.9rem; color: #fecdd3; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    
+    .switch { position: relative; width: 40px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); border-radius: 24px; transition: .3s; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .3s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+    input:checked + .slider { background-color: var(--error-color); }
+    input:checked + .slider:before { transform: translateX(18px); }
+
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .data-table th, .data-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+    .data-table th { color: var(--text-muted); font-weight: 500; }
+    .data-table td.mono { font-family: "SFMono-Regular", Consolas, monospace; font-size: 1.1rem; font-weight: 600; color: var(--us-color); text-align: right; }
+    .data-table td.mono.highlight { color: var(--accent); font-size: 1.3rem; }
+    .data-table td.mono.highlight-real { color: var(--real-v); font-size: 1.3rem; }
+    .error-rate { font-size: 0.8rem; color: var(--error-color); margin-left: 6px; font-weight: normal; background: rgba(244, 63, 94, 0.15); padding: 2px 6px; border-radius: 4px; display: none; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+    .btn-action {
+        flex: 1; padding: 12px; border-radius: 10px; font-size: 1rem; font-weight: 600; letter-spacing: 1px;
+        cursor: pointer; transition: 0.2s; font-family: inherit; border: 1px solid transparent;
+        display: flex; justify-content: center; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: rgba(6, 182, 212, 0.15); color: var(--us-color); border-color: rgba(6, 182, 212, 0.3); }
+    .btn-primary:hover:not(:disabled) { background: rgba(6, 182, 212, 0.25); box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); }
+    .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border-color: rgba(255, 255, 255, 0.1); }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+    .btn-action:active:not(:disabled) { transform: scale(0.96); }
+    .btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .theory-box { font-size: 0.9rem; color: #cbd5e1; line-height: 1.8; }
+    .formula-block { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; margin: 12px 0; text-align: center; border: 1px dashed rgba(255,255,255,0.1); }
+    .status-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #3f3f46; margin-right: 8px; transition: 0.2s; }
+    .status-indicator.active { background: var(--ir-color); box-shadow: 0 0 10px var(--ir-color); }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="stage">
+        <canvas id="simCanvas"></canvas>
+        <div class="scene-title">
+            <h2>超声波双脉冲测速 (伴随真实误差)</h2>
+            <p>基于教材原理：捕获 \(x_1, x_2\) 进行推导验证</p>
+        </div>
+        <div class="status-badge" id="statusBadge">PAUSED</div>
+    </div>
+
+    <div class="sidebar">
+        <!-- 参数控制 -->
+        <div class="glass-panel">
+            <div class="panel-title">1. 实验参数与物理干扰</div>
+            
+            <div class="control-group" style="margin-bottom:12px;">
+                <div class="control-label">
+                    <span>系统预设真实车速 \(v_{real}\)</span>
+                    <span class="val-display" id="val-v-cart">25 m/s</span>
+                </div>
+                <input type="range" id="slider-v" class="range-slider" min="10" max="60" step="1" value="25">
+            </div>
+            
+            <div class="control-group" style="margin-bottom:16px;">
+                <div class="control-label">
+                    <span>两次发射时间间隔 \(\Delta t\)</span>
+                    <span class="val-display" style="color:var(--us-color)" id="val-dt">1.5 s</span>
+                </div>
+                <input type="range" id="slider-dt" class="range-slider" min="0.8" max="2.5" step="0.1" value="1.5">
+            </div>
+
+            <!-- 新增误差开关 -->
+            <label class="error-toggle-wrapper">
+                <div class="error-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    注入仪器环境误差 (精度限制 & 扰动)
+                </div>
+                <div class="switch"><input type="checkbox" id="errorToggle"><div class="slider"></div></div>
+            </label>
+        </div>
+
+        <!-- 实时数据 -->
+        <div class="glass-panel">
+            <div class="panel-title">2. 接收器 B 数据终端</div>
+            <table class="data-table">
+                <tr>
+                    <th>系统预设真实车速 \(v_{real}\)</th>
+                    <td class="mono highlight-real" id="data-v-real">25.0 m/s</td>
+                </tr>
+                <tr>
+                    <th><div class="status-indicator" id="ind-1"></div>第一次测得时差 \(t_1\)</th>
+                    <td class="mono" id="data-t1">--</td>
+                </tr>
+                <tr>
+                    <th><div class="status-indicator" id="ind-2"></div>第二次测得时差 \(t_2\)</th>
+                    <td class="mono" id="data-t2">--</td>
+                </tr>
+                <tr>
+                    <th style="color:#fff; font-weight:bold;">计算机推导车速 \(v\)</th>
+                    <td class="mono highlight" id="data-v-calc">
+                        <span id="calc-val">--</span>
+                        <span class="error-rate" id="error-rate"></span>
+                    </td>
+                </tr>
+            </table>
+            
+            <div class="btn-row">
+                <button class="btn-action btn-primary" id="playPauseBtn">▶ 开始实验</button>
+                <button class="btn-action btn-secondary" id="resetBtn">↺ 重置</button>
+            </div>
+        </div>
+
+        <!-- 推导区 -->
+        <div class="glass-panel" style="flex-grow: 1;">
+            <div class="panel-title">3. 理论推导过程</div>
+            <div class="theory-box">
+                (1) 第一次测得 A 与 B 之间距离：
+                <div class="formula-block">\(x_1 = v_0 \cdot t_1\)</div>
+                (2) 第二次测得 A 与 B 之间距离：
+                <div class="formula-block">\(x_2 = v_0 \cdot t_2\)</div>
+                <div class="formula-block" style="font-size: 1.1rem; border-color: var(--accent);">
+                    \(v = \frac{\Delta x}{\Delta t} = \frac{v_0(t_2 - t_1)}{\Delta t}\)
+                    <!-- 动态公式代入区 -->
+                    <div id="dynamic-calc" style="margin-top: 10px; color: var(--accent); font-weight: bold; display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const sliderV = document.getElementById('slider-v');
+    const sliderDt = document.getElementById('slider-dt');
+    const valV = document.getElementById('val-v-cart');
+    const valDt = document.getElementById('val-dt');
+    const dataVReal = document.getElementById('data-v-real');
+    const dataT1 = document.getElementById('data-t1');
+    const dataT2 = document.getElementById('data-t2');
+    const calcVal = document.getElementById('calc-val');
+    const errorRateDisp = document.getElementById('error-rate');
+    const dynamicCalc = document.getElementById('dynamic-calc');
+    const errorToggle = document.getElementById('errorToggle');
+    
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusBadge = document.getElementById('statusBadge');
+    
+    const ind1 = document.getElementById('ind-1');
+    const ind2 = document.getElementById('ind-2');
+    
+    let W, H, dpr;
+    const V_SOUND = 340; 
+    const V_SOUND_VISUAL = 250; 
+    const SCALE = V_SOUND_VISUAL / V_SOUND; 
+    
+    let v_cart = parseFloat(sliderV.value);
+    let delta_t = parseFloat(sliderDt.value); 
+    
+    let state = 'IDLE'; 
+    let simTime = 0;
+    let lastTimestamp = 0;
+    
+    const B_X = 100; 
+    let TRACK_Y = 500; 
+    let A_X = B_X + 200; 
+    let initial_A_X = A_X;
+
+    let pos_x1 = null, pos_x2 = null;
+    let irBeams = [], usWaves = []; 
+    let t1 = 0, t2 = 0;
+    let pulse1Emitted = false, pulse1Received = false;
+    let pulse2Emitted = false, pulse2Received = false;
+
+    sliderV.addEventListener('input', (e) => {
+        if(state === 'IDLE') {
+            v_cart = parseFloat(e.target.value);
+            valV.textContent = v_cart + ' m/s';
+            dataVReal.textContent = v_cart.toFixed(1) + ' m/s';
+        } else { e.target.value = v_cart; }
+    });
+    
+    sliderDt.addEventListener('input', (e) => {
+        if(state === 'IDLE') {
+            delta_t = parseFloat(e.target.value);
+            valDt.textContent = delta_t.toFixed(1) + ' s';
+        } else { e.target.value = delta_t; }
+    });
+
+    playPauseBtn.addEventListener('click', () => {
+        if (state === 'IDLE') startSim();
+        else if (state === 'RUNNING') pauseSim();
+        else if (state === 'PAUSED') resumeSim();
+    });
+
+    resetBtn.addEventListener('click', () => resetSim());
+
+    function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        W = rect.width; H = rect.height;
+        dpr = window.devicePixelRatio || 1;
+        canvas.width = W * dpr; canvas.height = H * dpr;
+        ctx.scale(dpr, dpr);
+        TRACK_Y = H * 0.7; 
+        A_X = B_X + W * 0.15; 
+        initial_A_X = A_X;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function startSim() {
+        state = 'RUNNING';
+        playPauseBtn.innerHTML = '⏸ 暂停实验';
+        sliderV.disabled = true; sliderDt.disabled = true;
+        statusBadge.className = 'status-badge';
+        lastTimestamp = performance.now();
+    }
+
+    function pauseSim() {
+        state = 'PAUSED'; playPauseBtn.innerHTML = '▶ 继续实验';
+        statusBadge.textContent = 'PAUSED / 暂停中'; statusBadge.className = 'status-badge paused';
+    }
+
+    function resumeSim() {
+        state = 'RUNNING'; playPauseBtn.innerHTML = '⏸ 暂停实验';
+        statusBadge.className = 'status-badge'; lastTimestamp = performance.now();
+    }
+
+    function finishSim() {
+        state = 'DONE'; playPauseBtn.innerHTML = '实验完成'; playPauseBtn.disabled = true;
+        statusBadge.textContent = 'DONE / 数据已锁定'; statusBadge.className = 'status-badge done';
+    }
+
+    function resetSim() {
+        state = 'IDLE'; simTime = 0; A_X = initial_A_X;
+        pos_x1 = null; pos_x2 = null; irBeams = []; usWaves = [];
+        t1 = 0; t2 = 0;
+        pulse1Emitted = false; pulse1Received = false;
+        pulse2Emitted = false; pulse2Received = false;
+        
+        dataT1.textContent = '--'; dataT2.textContent = '--';
+        calcVal.textContent = '--';
+        errorRateDisp.style.display = 'none';
+        
+        dynamicCalc.style.display = 'none'; dynamicCalc.innerHTML = '';
+        ind1.classList.remove('active'); ind2.classList.remove('active');
+        
+        playPauseBtn.disabled = false; playPauseBtn.innerHTML = '▶ 开始实验';
+        sliderV.disabled = false; sliderDt.disabled = false;
+        statusBadge.className = 'status-badge';
+    }
+
+    function emitPulse(index, currentX) {
+        irBeams.push({ life: 0.15, alpha: 1.0 }); 
+        usWaves.push({ x: currentX, radius: 0, index: index, active: true });
+        
+        if (index === 1) {
+            pulse1Emitted = true; pos_x1 = currentX;
+            ind1.classList.add('active'); dataT1.textContent = '计时中...';
+        } else {
+            pulse2Emitted = true; pos_x2 = currentX;
+            ind2.classList.add('active'); dataT2.textContent = '计时中...';
+        }
+    }
+
+    function applyMeasurementError(trueTime) {
+        if (!errorToggle.checked) return trueTime; // 不开启误差时返回完美值
+        // 模拟物理环境波动 (+- 3ms 白噪声)
+        const noise = (Math.random() - 0.5) * 0.006; 
+        const measured = trueTime + noise;
+        // 模拟数字计时器截断精度 (仅能显示到 0.001 秒)
+        return Math.round(measured * 1000) / 1000;
+    }
+
+    function drawDimensionLine(startX, endX, yOffset, label, color = '#cbd5e1') {
+        const y = TRACK_Y - yOffset;
+        ctx.save(); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.5;
+        
+        ctx.beginPath(); ctx.moveTo(startX, y); ctx.lineTo(endX, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(startX, y - 6); ctx.lineTo(startX, y + 6); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(endX, y - 6); ctx.lineTo(endX, y + 6); ctx.stroke();
+        ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+        ctx.moveTo(endX, y); ctx.lineTo(endX, TRACK_Y - 20); ctx.stroke();
+        
+        ctx.font = '14px "PingFang SC", sans-serif'; ctx.textAlign = 'center';
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillStyle = '#000'; ctx.fillRect((startX + endX)/2 - textWidth/2 - 4, y - 16, textWidth + 8, 20);
+        ctx.fillStyle = color; ctx.fillText(label, (startX + endX) / 2, y + 1);
+        ctx.restore();
+    }
+
+    function renderScene() {
+        ctx.clearRect(0, 0, W, H);
+        ctx.beginPath(); ctx.moveTo(50, TRACK_Y); ctx.lineTo(W - 50, TRACK_Y);
+        ctx.strokeStyle = '#3f3f46'; ctx.lineWidth = 4; ctx.stroke();
+
+        const boxSize = 40;
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(B_X - boxSize/2, TRACK_Y - boxSize, boxSize, boxSize);
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.strokeRect(B_X - boxSize/2, TRACK_Y - boxSize, boxSize, boxSize);
+        ctx.beginPath(); ctx.arc(B_X, TRACK_Y - boxSize, 6, Math.PI, 0); ctx.fillStyle = '#06b6d4'; ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('B', B_X, TRACK_Y - boxSize + 25); ctx.fillText('接收', B_X, TRACK_Y + 30);
+
+        if (pos_x1 !== null) {
+            let label_x1 = pulse1Received ? `x₁ ≈ ${(t1 * V_SOUND).toFixed(1)} m` : 'x₁';
+            drawDimensionLine(B_X, pos_x1, 100, label_x1);
+        }
+        if (pos_x2 !== null) {
+            let label_x2 = pulse2Received ? `x₂ ≈ ${(t2 * V_SOUND).toFixed(1)} m` : 'x₂';
+            drawDimensionLine(B_X, pos_x2, 160, label_x2);
+            let label_dx = (pulse1Received && pulse2Received) ? `Δx ≈ ${((t2 - t1) * V_SOUND).toFixed(1)} m` : 'Δx';
+            drawDimensionLine(pos_x1, pos_x2, 100, label_dx, '#f59e0b');
+        }
+
+        irBeams.forEach(beam => {
+            ctx.beginPath(); ctx.moveTo(B_X, TRACK_Y - boxSize/2); ctx.lineTo(A_X, TRACK_Y - boxSize/2);
+            ctx.strokeStyle = `rgba(239, 68, 68, ${beam.alpha})`; ctx.lineWidth = 3; ctx.setLineDash([10, 10]); ctx.stroke(); ctx.setLineDash([]);
+            ctx.shadowBlur = 10; ctx.shadowColor = '#ef4444'; ctx.stroke(); ctx.shadowBlur = 0;
+        });
+
+        usWaves.forEach(wave => {
+            if (!wave.active) return;
+            ctx.beginPath(); ctx.arc(wave.x, TRACK_Y - boxSize/2, wave.radius, Math.PI*0.7, Math.PI*1.3);
+            ctx.strokeStyle = '#06b6d4'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
+            ctx.shadowBlur = 8; ctx.shadowColor = '#06b6d4'; ctx.stroke(); ctx.shadowBlur = 0;
+        });
+
+        const cartW = 70, cartH = 20;
+        ctx.fillStyle = '#334155'; ctx.fillRect(A_X - cartW/2, TRACK_Y - cartH - 10, cartW, cartH);
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath(); ctx.arc(A_X - 20, TRACK_Y - 10, 10, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(A_X + 20, TRACK_Y - 10, 10, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#64748b'; ctx.lineWidth = 2; ctx.stroke();
+        
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(A_X - boxSize/2, TRACK_Y - cartH - 10 - boxSize, boxSize, boxSize);
+        ctx.strokeStyle = '#94a3b8'; ctx.strokeRect(A_X - boxSize/2, TRACK_Y - cartH - 10 - boxSize, boxSize, boxSize);
+        ctx.beginPath(); ctx.moveTo(A_X - 10, TRACK_Y - cartH - 10 - boxSize); ctx.lineTo(A_X - 20, TRACK_Y - cartH - 10 - boxSize - 15); ctx.lineTo(A_X, TRACK_Y - cartH - 10 - boxSize - 15); ctx.closePath(); ctx.fillStyle = '#ef4444'; ctx.fill();
+        
+        ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('A', A_X, TRACK_Y - cartH - 10 - boxSize + 25); ctx.fillText('发射', A_X, TRACK_Y + 30);
+        
+        if (state === 'RUNNING' || state === 'PAUSED' || state === 'DONE') {
+            ctx.beginPath(); ctx.moveTo(A_X + 25, TRACK_Y - cartH - boxSize - 30); ctx.lineTo(A_X + 65, TRACK_Y - cartH - boxSize - 30);
+            ctx.strokeStyle = '#10b981'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.lineTo(A_X + 55, TRACK_Y - cartH - boxSize - 35); ctx.moveTo(A_X + 65, TRACK_Y - cartH - boxSize - 30); ctx.lineTo(A_X + 55, TRACK_Y - cartH - boxSize - 25); ctx.stroke();
+            ctx.fillStyle = '#10b981'; ctx.font = 'italic 16px "Cambria Math", serif'; ctx.fillText('v_real', A_X + 45, TRACK_Y - cartH - boxSize - 40);
+        }
+    }
+
+    function animate(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const dt = (timestamp - lastTimestamp) / 1000;
+        
+        renderScene();
+        
+        if (state === 'RUNNING') {
+            simTime += dt;
+            const visual_v_cart = v_cart * SCALE; 
+            A_X += visual_v_cart * dt;
+
+            if (simTime >= 0.5 && !pulse1Emitted) emitPulse(1, A_X);
+            if (simTime >= 0.5 + delta_t && !pulse2Emitted) emitPulse(2, A_X);
+
+            irBeams.forEach((beam, index) => {
+                beam.life -= dt;
+                beam.alpha = Math.max(0, beam.life / 0.15);
+                if (beam.life <= 0) irBeams.splice(index, 1);
+            });
+
+            usWaves.forEach(wave => {
+                if (!wave.active) return;
+                wave.radius += V_SOUND_VISUAL * dt; 
+                
+                const waveLeftX = wave.x - wave.radius;
+                if (waveLeftX <= B_X) {
+                    wave.active = false;
+                    
+                    if (wave.index === 1 && !pulse1Received) {
+                        pulse1Received = true;
+                        let true_t1 = ((wave.x - B_X) / SCALE) / V_SOUND;
+                        t1 = applyMeasurementError(true_t1); // 注入误差
+                        dataT1.textContent = t1.toFixed(3) + ' s';
+                        ind1.classList.remove('active');
+                    } else if (wave.index === 2 && !pulse2Received) {
+                        pulse2Received = true;
+                        let true_t2 = ((wave.x - B_X) / SCALE) / V_SOUND;
+                        t2 = applyMeasurementError(true_t2); // 注入误差
+                        dataT2.textContent = t2.toFixed(3) + ' s';
+                        ind2.classList.remove('active');
+                        
+                        // 计算含误差的结果
+                        const v_calc = (V_SOUND * (t2 - t1)) / delta_t;
+                        calcVal.textContent = v_calc.toFixed(2) + ' m/s';
+                        calcVal.parentElement.classList.add('highlight');
+                        
+                        // 显示误差率
+                        if (errorToggle.checked) {
+                            const errorPct = ((v_calc - v_cart) / v_cart * 100).toFixed(1);
+                            errorRateDisp.textContent = `${errorPct > 0 ? '+' : ''}${errorPct}% 误差`;
+                            errorRateDisp.style.display = 'inline-block';
+                        }
+                        
+                        // LaTeX 代入展示
+                        dynamicCalc.style.display = 'block';
+                        dynamicCalc.innerHTML = `\\( = \\frac{${V_SOUND} \\times (${t2.toFixed(3)} - ${t1.toFixed(3)})}{${delta_t.toFixed(1)}} \\approx ${v_calc.toFixed(2)} \\text{ m/s} \\)`;
+                        if (window.MathJax) { MathJax.typesetPromise([dynamicCalc]); }
+                        
+                        finishSim(); 
+                    }
+                }
+            });
+            
+            if (A_X > W + 100) resetSim();
+        }
+        
+        lastTimestamp = timestamp;
+        requestAnimationFrame(animate);
+    }
+
+    if (document.fonts) { document.fonts.ready.then(() => requestAnimationFrame(animate)); } 
+    else { requestAnimationFrame(animate); }
+})();
+</script>
+</body>
+</html>
