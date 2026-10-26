@@ -195,7 +195,7 @@ export default function AcademicPortal() {
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               exit={{ opacity: 0, y: -15, filter: 'blur(10px)' }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} 
-              className="p-4 sm:p-6 md:p-10 lg:p-16 max-w-5xl mx-auto w-full min-h-full flex flex-col overflow-x-hidden"
+              className="p-4 sm:p-6 md:p-10 lg:p-12 max-w-[1600px] mx-auto w-full min-h-full flex flex-col overflow-x-hidden"
             >
               {activeTab === 'home' && <HomeContent onEnter={() => setActiveTab('notes')} />}
               {activeTab === 'essays' && <EssaysContent />}
@@ -367,6 +367,7 @@ function TeachingContent() {
     { title: '三种理想元件的电压与电流关系', slug: 'r-l-c', desc: '' },
     { title: '斜交分解处理斜抛运动', slug: 'xie-jiao-fen-jie', desc: '斜交分解' },
     { title: '多质点系动力学：质心、动量与能量定理', slug: 'zhi-xin-fa', desc: '质心' },
+    { title: '静电感应与电容器', slug: 'jing-dian-gan-ying', desc: '静电感应-电容器' },
   ];
 
   return (
