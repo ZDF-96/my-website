@@ -31,13 +31,17 @@ export default function ChatPage() {
       });
 
       const data = await res.json();
-      
-      // 🚀 核心强制跳转逻辑：一旦检测到后端返回 error，立刻在新标签页打开 DeepSeek 充值
-      if (data.error) {
-        window.open("https://platform.deepseek.com/top_up", "_blank");
-      }
 
-      setMessages([...newMessages, { role: 'ai', text: data.reply || data.error }]);
+      // 只有“余额不足”才给充值入口；其余错误如实展示，不再强行弹充值页
+      const rechargeLink =
+        data.code === 'insufficient_balance'
+          ? '<p style="margin-top:8px;"><a href="https://platform.deepseek.com/top_up" target="_blank" rel="noreferrer" style="color:#22d3ee;text-decoration:underline;">前往 DeepSeek 充值 →</a></p>'
+          : '';
+
+      setMessages([
+        ...newMessages,
+        { role: 'ai', text: (data.reply || data.error || '<p>AI 没有返回内容，请重试。</p>') + rechargeLink }
+      ]);
     } catch (error) {
       setMessages([...newMessages, { role: 'ai', text: '<p>量子链路断开，请稍后再试。</p>' }]);
     } finally {

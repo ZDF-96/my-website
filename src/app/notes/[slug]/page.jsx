@@ -3,6 +3,8 @@ import path from 'path';
 import Link from 'next/link';
 import matter from 'gray-matter';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkCjkFriendly from 'remark-cjk-friendly';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
@@ -41,6 +43,7 @@ import RLCPhasorLab from '@/components/physics-dong-hua/r-l-c';
 import XieJiaoFenJieSimulations from '@/components/physics-dong-hua/xie-jiao-fen-jie';
 import ZhiXinFaSimulation from '@/components/physics-dong-hua/zhi-xin-fa';
 import ElectrostaticsAndCapacitorFullLab from '@/components/physics-dong-hua/jing-dian-gan-ying';
+import QuanXiChengXiangSim from '@/components/physics-dong-hua/quan-xi-cheng-xiang';
 
 
 
@@ -89,16 +92,16 @@ export default async function NotePage({ params }) {
         {/* 🌟 原生 React 背景组件 */}
         <QuantumBackground />
 
-        <main className={`relative z-10 mx-auto px-4 py-12 md:py-20 ${
-          currentSlug === 'jing-dian-gan-ying' ? 'w-full max-w-[1680px]' : 'max-w-4xl'
+        <main className={`relative z-10 mx-auto w-full px-4 py-12 md:py-20 ${
+          currentSlug === 'jing-dian-gan-ying' ? 'max-w-[1680px]' : 'max-w-5xl'
         }`}>
           
           <Link href="/" className="inline-flex items-center gap-2 text-cyan-500 hover:text-cyan-300 mb-8 font-mono text-sm transition-colors">
             &larr; 返回主页
           </Link>
           
-          <article className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-8 md:p-14">
-            <div className="mx-auto w-full max-w-[49rem]">
+          <article className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-6 md:p-10 lg:p-12">
+            <div className="mx-auto w-full max-w-[56rem]">
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight text-left">
                 {data.title || '未命名笔记'}
               </h1>
@@ -107,7 +110,7 @@ export default async function NotePage({ params }) {
                 发布日期: {displayDate}
               </p>
 
-              <div className="text-left text-[#E5E7EB] leading-loose text-lg tracking-wide
+              <div className="markdown-content text-left text-[#E5E7EB] leading-loose text-lg tracking-wide
               [&>p]:mb-6 [&>p]:indent-8
               [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-cyan-50 [&>h2]:mt-12 [&>h2]:mb-6
               [&>h3]:text-xl [&>h3]:font-bold [&>h3]:text-cyan-200 [&>h3]:mt-10 [&>h3]:mb-4
@@ -115,7 +118,7 @@ export default async function NotePage({ params }) {
               [&>ul]:list-disc [&>ul]:pl-8 [&>ul]:mb-6
               [&>ol]:list-decimal [&>ol]:pl-8 [&>ol]:mb-6">
                 <ReactMarkdown
-                  remarkPlugins={[remarkMath]}
+                  remarkPlugins={[remarkGfm, remarkCjkFriendly, remarkMath]}
                   rehypePlugins={[rehypeKatex]}
                 >
                   {content}
@@ -154,6 +157,7 @@ export default async function NotePage({ params }) {
                {currentSlug === 'xie-jiao-fen-jie' && <XieJiaoFenJieSimulations/>}
                {currentSlug === 'zhi-xin-fa' && <ZhiXinFaSimulation/>}
                {currentSlug === 'jing-dian-gan-ying' && <ElectrostaticsAndCapacitorFullLab/>}
+              {currentSlug === 'quan-xi-cheng-xiang' && <QuanXiChengXiangSim/>}
                
                
               

@@ -368,6 +368,8 @@ function TeachingContent() {
     { title: '斜交分解处理斜抛运动', slug: 'xie-jiao-fen-jie', desc: '斜交分解' },
     { title: '多质点系动力学：质心、动量与能量定理', slug: 'zhi-xin-fa', desc: '质心' },
     { title: '静电感应与电容器', slug: 'jing-dian-gan-ying', desc: '静电感应-电容器' },
+     { title: '全息成像', slug: 'quan-xi-cheng-xiang', desc: '全息成像' },
+     { title: '基尔霍夫定律', slug: 'ji-er-huo-fu-ding-lv', desc: '基尔霍夫方程组' },
   ];
 
   return (

@@ -57,4 +57,81 @@ body {
   .physics-article img {
     @apply rounded-lg my-8 mx-auto shadow-[0_0_15px_rgba(34,211,238,0.2)];
   }
+
+  .markdown-content {
+    min-width: 0;
+  }
+
+  /* 含公式的段落不参与首行缩进，避免把公式整体推离左边界 */
+  .markdown-content p:has(.katex-display) {
+    text-indent: 0;
+  }
+
+  .markdown-content .katex-display {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    padding: 0.35rem 0 0.75rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 211, 238, 0.4) transparent;
+  }
+
+  .markdown-content .katex-display::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .markdown-content .katex-display::-webkit-scrollbar-thumb {
+    background: rgba(34, 211, 238, 0.35);
+    border-radius: 999px;
+  }
+
+  .markdown-content .katex-display::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .markdown-content .katex-display > .katex {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    text-align: center;
+  }
+
+  /* 窄屏适当缩小行间公式字号，减少横向滚动 */
+  @media (max-width: 640px) {
+    .markdown-content .katex-display {
+      font-size: 0.82em;
+    }
+  }
+
+  .markdown-content table {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 2rem 0;
+    border-collapse: collapse;
+  }
+
+  .markdown-content th,
+  .markdown-content td {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    padding: 0.65rem 0.8rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .markdown-content th {
+    background: rgba(8, 47, 73, 0.55);
+    color: #cffafe;
+    font-weight: 700;
+  }
+
+  .markdown-content img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 2rem auto;
+    border-radius: 0.75rem;
+  }
 }
