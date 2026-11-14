@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX, SkipBack, SkipForward } from 'lucide-react';
+import { Volume2, VolumeX, SkipBack, SkipForward, Loader2 } from 'lucide-react';
 
 // ============================================================
 // 歌曲列表
@@ -220,11 +220,18 @@ const SONGS = [
 export default function MusicPlayer() {
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const currentSong = SONGS[currentSongIndex];
-  const [currentLyric, setCurrentLyric] = useState(currentSong.lyrics[0]?.text || "");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 绑定音频实例（保留初始值 null，兼容 JSX 与 TSX）
+  const currentSong = SONGS[currentSongIndex];
+  const initialLyric =
+    currentSong.lyrics[0]?.text || `♪ ${currentSong.title} - ${currentSong.artist} ♪`;
+  const [currentLyric, setCurrentLyric] = useState(initialLyric);
+
   const audioRef = useRef(null);
+  const isFirstRender = useRef(true);
+  const lastLyricRef = useRef(initialLyric);
+  // 关键：标记「资源就绪后是否需要自动播放」
+  const autoPlayRef = useRef(false);
 
   // 初始化默认音量
   useEffect(() => {
@@ -233,40 +240,90 @@ export default function MusicPlayer() {
     }
   }, []);
 
-  // 切换曲目时重置首句歌词，并在播放状态下自动续播
+  // 切换曲目时：重置首句歌词 + 若需要自动续播则显示加载态
   useEffect(() => {
-    setCurrentLyric(currentSong.lyrics[0]?.text || `♪ ${currentSong.title} - ${currentSong.artist} ♪`);
-    if (isPlaying && audioRef.current) {
-      audioRef.current.load();
-      audioRef.current.play().catch(() => {
-        setIsPlaying(false);
-      });
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const firstLine =
+      currentSong.lyrics[0]?.text ||
+      `♪ ${currentSong.title} - ${currentSong.artist} ♪`;
+    lastLyricRef.current = firstLine;
+    setCurrentLyric(firstLine);
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = 0.4;
+    }
+    if (autoPlayRef.current) {
+      setIsLoading(true);
     }
   }, [currentSongIndex]);
 
   const togglePlay = () => {
-    if (!audioRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
     if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+      // 用户主动暂停：清掉自动播放标记，避免 onCanPlay 把它又拽起来
+      autoPlayRef.current = false;
+      audio.pause();
     } else {
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-      }).catch((err) => {
-        console.error("Audio playback failed:", err);
+      // 用户主动播放：若资源未就绪，交给 onCanPlay 处理
+      autoPlayRef.current = true;
+      if (audio.readyState < 3) {
+        setIsLoading(true);
+      }
+      audio.play().catch((err) => {
+        if (err?.name !== 'AbortError') {
+          console.warn("音频播放未能启动:", err?.message || err);
+          autoPlayRef.current = false;
+          setIsLoading(false);
+          setIsPlaying(false);
+        }
       });
     }
   };
 
   const prevSong = () => {
+    // 仅在「正在播放」时切歌才自动续播
+    if (isPlaying) autoPlayRef.current = true;
     setCurrentSongIndex((prev) => (prev - 1 + SONGS.length) % SONGS.length);
   };
 
   const nextSong = () => {
+    if (isPlaying) autoPlayRef.current = true;
     setCurrentSongIndex((prev) => (prev + 1) % SONGS.length);
   };
 
-  // 监听播放进度，动态匹配当前时间轴对应的歌词
+  // 一首播放结束 → 标记自动播放 → 切到下一首
+  const handleEnded = () => {
+    autoPlayRef.current = true;
+    setCurrentSongIndex((prev) => (prev + 1) % SONGS.length);
+  };
+
+  // 新资源就绪后再启动播放（避免 play() 被 AbortError 打断）
+  const handleCanPlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (autoPlayRef.current) {
+      audio.play().catch((err) => {
+        if (err?.name !== 'AbortError') {
+          console.warn("自动播放下一首失败:", err?.message || err);
+          autoPlayRef.current = false;
+          setIsPlaying(false);
+          setIsLoading(false);
+        }
+      });
+    } else {
+      setIsLoading(false);
+    }
+  };
+
+  // 监听播放进度，通过 Ref 拦截重复渲染
   const handleTimeUpdate = () => {
     if (!audioRef.current) return;
     const currentTime = audioRef.current.currentTime;
@@ -274,8 +331,10 @@ export default function MusicPlayer() {
 
     for (let i = lyrics.length - 1; i >= 0; i--) {
       if (currentTime >= lyrics[i].time) {
-        if (lyrics[i].text !== currentLyric) {
-          setCurrentLyric(lyrics[i].text);
+        const nextText = lyrics[i].text;
+        if (nextText !== lastLyricRef.current) {
+          lastLyricRef.current = nextText;
+          setCurrentLyric(nextText);
         }
         break;
       }
@@ -286,16 +345,16 @@ export default function MusicPlayer() {
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end gap-3 select-none">
       {/* 全息悬浮歌词面板 */}
       <div
-        className={`transition-all duration-700 ease-out ${
-          isPlaying
+        className={`transform-gpu will-change-transform transition-all duration-500 ease-out ${
+          isPlaying || isLoading
             ? 'opacity-100 translate-y-0 scale-100'
             : 'opacity-0 translate-y-4 scale-95 pointer-events-none'
         }`}
       >
-        <div className="px-4 py-2.5 rounded-2xl bg-[#030305]/75 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col items-end gap-1 max-w-xs sm:max-w-md">
+        <div className="px-4 py-2.5 rounded-2xl bg-[#030305]/80 backdrop-blur-md border border-cyan-500/20 shadow-[0_0_25px_rgba(34,211,238,0.15)] flex flex-col items-end gap-1 max-w-xs sm:max-w-md">
           {/* 顶部曲目状态栏 */}
           <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 tracking-widest uppercase">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+            <span className={`w-1.5 h-1.5 rounded-full bg-cyan-400 ${isPlaying ? 'animate-ping' : ''}`} />
             <span className="truncate max-w-[200px]">
               {currentSong.title} · {currentSong.artist}
             </span>
@@ -304,24 +363,52 @@ export default function MusicPlayer() {
           {/* 渐变发光动态歌词 */}
           <p
             key={currentLyric}
-            className="text-xs md:text-sm font-mono font-medium bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent tracking-wider text-right drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] transition-all duration-300"
+            className="text-xs md:text-sm font-mono font-medium bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent tracking-wider text-right drop-shadow-[0_0_8px_rgba(34,211,238,0.35)] transition-opacity duration-200"
           >
-            {currentLyric}
+            {isLoading ? "音频缓冲中..." : currentLyric}
           </p>
         </div>
       </div>
 
-      {/* 原生音频引擎：一曲结束自动切换下一首 */}
+      {/* 原生音频引擎 */}
       <audio
         ref={audioRef}
         src={currentSong.src}
         preload="auto"
         onTimeUpdate={handleTimeUpdate}
-        onEnded={nextSong}
+        onPlay={() => {
+          setIsPlaying(true);
+          setIsLoading(false);
+        }}
+        onPlaying={() => {
+          setIsLoading(false);
+          // 真正开始出声后清掉自动播放标记，避免重复触发
+          autoPlayRef.current = false;
+        }}
+        onPause={() => {
+          // 切歌过程中（autoPlayRef 为 true）浏览器会触发一次 pause，
+          // 这时不更新 UI，保持「播放意图」，等 onCanPlay 续播
+          if (!autoPlayRef.current) setIsPlaying(false);
+        }}
+        onWaiting={() => setIsLoading(true)}
+        onCanPlay={handleCanPlay}
+        onEnded={handleEnded}
+        onError={() => {
+          const mediaError = audioRef.current?.error;
+          // 忽略切歌或刷新时浏览器主动中断音频流 (MEDIA_ERR_ABORTED = 1)
+          if (mediaError?.code === 1) return;
+          console.warn(
+            `音频资源加载异常 (${currentSong.src}):`,
+            mediaError?.message || `错误码 ${mediaError?.code}`
+          );
+          autoPlayRef.current = false;
+          setIsLoading(false);
+          setIsPlaying(false);
+        }}
       />
 
       {/* 胶囊控制舱：上一首 / 播放暂停 / 下一首 */}
-      <div className="flex items-center gap-1.5 p-1.5 rounded-full bg-[#030305]/60 backdrop-blur-xl border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.6)]">
+      <div className="flex items-center gap-1.5 p-1.5 rounded-full bg-[#030305]/60 backdrop-blur-md border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.6)]">
         <button
           onClick={prevSong}
           className="w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-cyan-300 hover:bg-white/5 transition-all duration-200"
@@ -339,7 +426,13 @@ export default function MusicPlayer() {
           }`}
           title={isPlaying ? "暂停音乐" : "播放音乐"}
         >
-          {isPlaying ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          {isLoading ? (
+            <Loader2 size={18} className="animate-spin text-cyan-400" />
+          ) : isPlaying ? (
+            <Volume2 size={18} />
+          ) : (
+            <VolumeX size={18} />
+          )}
         </button>
 
         <button

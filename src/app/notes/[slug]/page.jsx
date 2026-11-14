@@ -44,7 +44,7 @@ import XieJiaoFenJieSimulations from '@/components/physics-dong-hua/xie-jiao-fen
 import ZhiXinFaSimulation from '@/components/physics-dong-hua/zhi-xin-fa';
 import ElectrostaticsAndCapacitorFullLab from '@/components/physics-dong-hua/jing-dian-gan-ying';
 import QuanXiChengXiangSim from '@/components/physics-dong-hua/quan-xi-cheng-xiang';
-
+import  KirchhoffLawSimulation from '@/components/physics-dong-hua/ji-er-huo-fu-ding-lv';
 
 
 export default async function NotePage({ params }) {
@@ -158,8 +158,9 @@ export default async function NotePage({ params }) {
                {currentSlug === 'zhi-xin-fa' && <ZhiXinFaSimulation/>}
                {currentSlug === 'jing-dian-gan-ying' && <ElectrostaticsAndCapacitorFullLab/>}
               {currentSlug === 'quan-xi-cheng-xiang' && <QuanXiChengXiangSim/>}
+              {currentSlug === 'ji-er-huo-fu-ding-lv' && <KirchhoffLawSimulation/>}
                
-               
+              
               
             </div>
 

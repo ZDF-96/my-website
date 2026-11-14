@@ -4,9 +4,19 @@ import OpenAI from "openai";
 export const maxDuration = 60;
 
 // DeepSeek 配置全部从环境变量读取，避免密钥硬编码在代码里，也方便随时更换
-const DEEPSEEK_API_KEY = (process.env.DEEPSEEK_API_KEY || "").trim();
-const DEEPSEEK_BASE_URL = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com").trim();
-const DEEPSEEK_MODEL = (process.env.DEEPSEEK_MODEL || "deepseek-flash").trim();
+// （顺手去掉复制粘贴时常见的首尾引号，Vercel 后台填值时很容易带上）
+const cleanEnv = (value) => (value || "").trim().replace(/^["']|["']$/g, "").trim();
+
+const DEEPSEEK_API_KEY = cleanEnv(process.env.DEEPSEEK_API_KEY);
+const DEEPSEEK_BASE_URL = cleanEnv(process.env.DEEPSEEK_BASE_URL) || "https://api.deepseek.com";
+const DEEPSEEK_MODEL = cleanEnv(process.env.DEEPSEEK_MODEL) || "deepseek-flash";
+
+// 本地与线上配置入口不同，提示语要分开，避免线上用户被指引去改 .env.local
+const IS_DEPLOYED = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+const CONFIG_WHERE = IS_DEPLOYED
+  ? "线上环境变量（Vercel → Settings → Environment Variables）中"
+  : "项目根目录 .env.local 中";
+const CONFIG_AFTER = IS_DEPLOYED ? "保存后重新部署（Redeploy）" : "保存后重启开发服务器";
 
 const openai = DEEPSEEK_API_KEY
   ? new OpenAI({
@@ -15,6 +25,17 @@ const openai = DEEPSEEK_API_KEY
       timeout: 120_000,
     })
   : null;
+
+// 供线上自检：访问 /api/chat 即可看到密钥是否已配置（不会返回密钥本身）
+export async function GET() {
+  return Response.json({
+    configured: Boolean(DEEPSEEK_API_KEY),
+    model: DEEPSEEK_MODEL,
+    baseURL: DEEPSEEK_BASE_URL,
+    env: process.env.NODE_ENV,
+    nodeEnvVer: process.env.VERCEL_ENV || null,
+  });
+}
 
 export async function POST(request) {
   try {
@@ -48,8 +69,7 @@ export async function POST(request) {
       return Response.json(
         {
           code: "missing_api_key",
-          error:
-            '<p style="color:#f87171;">⚠️ 尚未配置 DeepSeek 密钥：请在项目根目录 <code>.env.local</code> 中写入 <code>DEEPSEEK_API_KEY=你的新密钥</code>，保存后重启开发服务器。</p>',
+          error: `<p style="color:#f87171;">⚠️ 尚未配置 DeepSeek 密钥：请在${CONFIG_WHERE}写入 <code>DEEPSEEK_API_KEY=你的密钥</code>，${CONFIG_AFTER}。</p>`,
         },
         { status: 500 }
       );
@@ -60,8 +80,8 @@ export async function POST(request) {
       messages: fullMessages,
       max_tokens: 4096,
     };
-    // deepseek-reasoner 不支持采样参数，传了可能报 400
-    if (!/reasoner/i.test(DEEPSEEK_MODEL)) payload.temperature = 0.5;
+    // deepseek 的推理模型对采样参数支持不一，保守起见只在普通对话模型上传
+    if (!/reasoner|reasoning/i.test(DEEPSEEK_MODEL)) payload.temperature = 0.5;
 
     const response = await openai.chat.completions.create(payload);
 
@@ -80,8 +100,7 @@ export async function POST(request) {
 
     if (status === 401) {
       code = "invalid_api_key";
-      message =
-        "DeepSeek 密钥无效或已被停用（账户余额可能仍然存在，但 Key 已失效）。请到 platform.deepseek.com/api_keys 重新生成密钥，写入 .env.local 的 DEEPSEEK_API_KEY 后重启服务。";
+      message = `DeepSeek 密钥无效或已被停用（账户余额可能仍然存在，但 Key 已失效）。请到 platform.deepseek.com/api_keys 重新生成密钥，写入${CONFIG_WHERE}的 DEEPSEEK_API_KEY，${CONFIG_AFTER}。`;
     } else if (status === 402) {
       code = "insufficient_balance";
       message = "DeepSeek 账户余额不足，请充值后重试。";
